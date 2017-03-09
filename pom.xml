@@ -10,10 +10,27 @@
 
     <properties>
         <main.class>org.openlmis.migration.tool.App</main.class>
+
+        <jdk.version>1.8</jdk.version>
+
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+        <check.code.skip>${maven.test.skip}</check.code.skip>
+        <pmd.skip>${check.code.skip}</pmd.skip>
+        <checkstyle.skip>${check.code.skip}</checkstyle.skip>
     </properties>
 
     <build>
         <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.6.1</version>
+                <configuration>
+                    <source>${jdk.version}</source>
+                    <target>${jdk.version}</target>
+                </configuration>
+            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
@@ -26,7 +43,67 @@
                     </archive>
                 </configuration>
             </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-pmd-plugin</artifactId>
+                <version>3.7</version>
+                <configuration>
+                    <rulesets>
+                        <ruleset>config/pmd/pmd.xml</ruleset>
+                    </rulesets>
+                    <includeTests>false</includeTests>
+                    <targetJdk>${jdk.version}</targetJdk>
+                    <skip>${pmd.skip}</skip>
+                </configuration>
+                <executions>
+                    <execution>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>check</goal>
+                            <goal>cpd-check</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-checkstyle-plugin</artifactId>
+                <version>2.17</version>
+                <dependencies>
+                    <dependency>
+                        <groupId>com.puppycrawl.tools</groupId>
+                        <artifactId>checkstyle</artifactId>
+                        <version>7.6</version>
+                    </dependency>
+                </dependencies>
+                <configuration>
+                    <configLocation>config/checkstyle/checkstyle.xml</configLocation>
+                    <includeTestSourceDirectory>false</includeTestSourceDirectory>
+                    <enableFilesSummary>true</enableFilesSummary>
+                    <failsOnError>true</failsOnError>
+                    <consoleOutput>true</consoleOutput>
+                    <skip>${checkstyle.skip}</skip>
+                </configuration>
+                <executions>
+                    <execution>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
+
+    <reporting>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jxr-plugin</artifactId>
+                <version>2.5</version>
+            </plugin>
+        </plugins>
+    </reporting>
 
 </project>
