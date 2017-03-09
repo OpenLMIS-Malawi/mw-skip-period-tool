@@ -20,5 +20,5 @@ mvn clean install
 3. Execute the generated jar file from the target directory.
 
 ```shell
-java -jar target/scm-migration-tool-1.0-SNAPSHOT.jar
+java -jar target/scm-migration-tool.jar
 ```
