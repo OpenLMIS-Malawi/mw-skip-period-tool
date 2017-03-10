@@ -3,9 +3,13 @@ package org.openlmis.migration.tool;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.ParameterException;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.Optional;
 
 public class App {
+  private static final Logger LOGGER = LoggerFactory.getLogger(App.class);
 
   /**
    * The application start method.
@@ -28,7 +32,7 @@ public class App {
       commander.parse(args);
       return Optional.of(arguments);
     } catch (ParameterException exp) {
-      System.out.println("ERROR: " + exp.getMessage());
+      LOGGER.error(exp.getMessage());
       commander.usage();
 
       return Optional.empty();
