@@ -17,7 +17,7 @@ public class Arguments {
       names = { "--access-file", "-af" },
       description = "Path to an access database file",
       required = true,
-      validateValueWith = FileExistsValidator.class
+      validateValueWith = AccessFileValidator.class
   )
   private Path file;
 
