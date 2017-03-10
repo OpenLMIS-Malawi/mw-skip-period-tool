@@ -2,6 +2,10 @@
 <configuration>
 
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>WARN</level>
+        </filter>
+
         <encoder>
             <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{5} - %msg%n</pattern>
         </encoder>
@@ -9,6 +13,11 @@
 
     <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>log</file>
+
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>INFO</level>
+        </filter>
+
         <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
             <Pattern>%d{yyyy-MM-dd_HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</Pattern>
         </encoder>
@@ -24,7 +33,17 @@
         </triggeringPolicy>
     </appender>
 
-    <root level="INFO">
+    <!--
+        The root element has set level attribute to TRACE to accept all logs from the application.
+        This should not be changed.
+
+        Each appender has a filter element that define what logs should be handled and what logs
+        can be omitted by the appender.
+
+        With this solution we can provide only important information to console output and all
+        needed diagnostic details to a log file.
+    -->
+    <root level="TRACE">
         <appender-ref ref="STDOUT"/>
         <appender-ref ref="FILE"/>
     </root>
