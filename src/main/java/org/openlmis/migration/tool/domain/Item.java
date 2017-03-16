@@ -1,23 +1,26 @@
 package org.openlmis.migration.tool.domain;
 
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
+
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import lombok.ToString;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.util.List;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
+import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 
 @Getter
 @Setter
-@ToString
 @NoArgsConstructor
 @Entity(name = "CTF_Item")
 public class Item implements Serializable {
@@ -45,7 +48,7 @@ public class Item implements Serializable {
   private CategoryProductJoin categoryProduct;
 
   @OneToOne(fetch = FetchType.EAGER)
-  @JoinColumn(name = "lngProductID", referencedColumnName = "Pr_lngProductID")
+  @JoinColumn(name = "lngProductID")
   private Product product;
 
   @Column(name = "Open_Bal")
@@ -61,7 +64,11 @@ public class Item implements Serializable {
   private Integer dispensedQuantity;
 
   @Column(name = "Adjustments")
-  private Integer adjustments;
+  private Integer adjustmentCount;
+
+  @OneToMany(fetch = FetchType.EAGER, mappedBy = "item")
+  @Fetch(FetchMode.SELECT)
+  private List<Adjustment> adjustments;
 
   @OneToOne(fetch = FetchType.EAGER)
   @JoinColumn(name = "Adj_Type")
@@ -107,7 +114,7 @@ public class Item implements Serializable {
   private Integer receivedQuantity;
 
   @Column(name = "txtNotes")
-  private String notes;
+  private String note;
 
   @Column(name = "Qty_OnOrder")
   private Integer onOrderQuantity;
@@ -138,5 +145,13 @@ public class Item implements Serializable {
 
   @Column(name = "ERR_MaxStock")
   private Boolean errorMaxStockQuantity;
+
+  @OneToMany(fetch = FetchType.EAGER, mappedBy = "item")
+  @Fetch(FetchMode.SELECT)
+  private List<Purpose> purposes;
+
+  @OneToMany(fetch = FetchType.EAGER, mappedBy = "item")
+  @Fetch(FetchMode.SELECT)
+  private List<Comment> notes;
 
 }
