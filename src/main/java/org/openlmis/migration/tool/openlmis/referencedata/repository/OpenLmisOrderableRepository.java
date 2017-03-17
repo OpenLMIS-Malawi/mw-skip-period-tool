@@ -1,40 +1,43 @@
 package org.openlmis.migration.tool.openlmis.referencedata.repository;
 
-import com.google.common.collect.Maps;
-
 import org.openlmis.migration.tool.domain.Item;
+import org.openlmis.migration.tool.openlmis.InMemoryRepository;
 import org.openlmis.migration.tool.openlmis.referencedata.domain.Code;
 import org.openlmis.migration.tool.openlmis.referencedata.domain.Orderable;
 import org.openlmis.migration.tool.openlmis.referencedata.domain.TradeItem;
 import org.springframework.stereotype.Service;
 
-import java.util.Collection;
-import java.util.Map;
 import java.util.UUID;
 
 @Service
-public class OpenLmisOrderableRepository {
-  private static final Map<String, Orderable> ORDERABLES = Maps.newConcurrentMap();
+public class OpenLmisOrderableRepository extends InMemoryRepository<Orderable> {
 
   /**
-   * Find orderable object by the passing item.
+   * Finds orderable object by name.
    */
-  public Orderable find(Item item) {
-    Orderable orderableDto = ORDERABLES.get(item.getProductName());
+  public Orderable findByName(Item item) {
+    Orderable found = database
+        .values()
+        .stream()
+        .filter(orderable -> item.getProductName().equals(orderable.getName()))
+        .findFirst()
+        .orElse(null);
 
-    if (null == orderableDto) {
-      orderableDto = new TradeItem();
-      orderableDto.setId(UUID.randomUUID());
-      orderableDto.setProductCode(new Code(item.getProduct().getProductId()));
-      orderableDto.setName(item.getProductName());
-
-      ORDERABLES.put(item.getProductName(), orderableDto);
+    if (null == found) {
+      save(create(item));
+      return findByName(item);
     }
 
-    return orderableDto;
+    return found;
   }
 
-  public Collection<Orderable> findAll() {
-    return ORDERABLES.values();
+  private Orderable create(Item item) {
+    Orderable orderable = new TradeItem();
+    orderable.setId(UUID.randomUUID());
+    orderable.setProductCode(new Code(item.getProduct().getProductId()));
+    orderable.setName(item.getProductName());
+
+    return orderable;
   }
+
 }

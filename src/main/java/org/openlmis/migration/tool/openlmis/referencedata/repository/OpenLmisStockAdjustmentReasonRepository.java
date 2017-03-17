@@ -1,44 +1,45 @@
 package org.openlmis.migration.tool.openlmis.referencedata.repository;
 
-import com.google.common.collect.Maps;
-
 import org.openlmis.migration.tool.domain.AdjustmentType;
+import org.openlmis.migration.tool.openlmis.InMemoryRepository;
 import org.openlmis.migration.tool.openlmis.referencedata.domain.Program;
 import org.openlmis.migration.tool.openlmis.referencedata.domain.StockAdjustmentReason;
 import org.springframework.stereotype.Service;
 
-import java.util.Collection;
-import java.util.Map;
 import java.util.UUID;
 
 @Service
-public class OpenLmisStockAdjustmentReasonRepository {
-  private static final Map<String, StockAdjustmentReason> REASONS = Maps.newConcurrentMap();
+public class OpenLmisStockAdjustmentReasonRepository
+    extends InMemoryRepository<StockAdjustmentReason> {
 
   /**
-   * Find stock adjustment reason based on arguments.
+   * Finds stock adjustment reason based on program.
    */
-  public StockAdjustmentReason find(Program programDto, int order,
-                                    AdjustmentType adjustmentType) {
-    StockAdjustmentReason stockAdjustmentReasonDto = REASONS.get(adjustmentType.getCode());
+  public StockAdjustmentReason findByProgram(Program program, AdjustmentType adjustmentType) {
+    StockAdjustmentReason found = database
+        .values()
+        .stream()
+        .filter(reason -> program.getId().equals(reason.getProgram().getId()))
+        .findFirst()
+        .orElse(null);
 
-    if (null == stockAdjustmentReasonDto) {
-      stockAdjustmentReasonDto = new StockAdjustmentReason();
-      stockAdjustmentReasonDto.setId(UUID.randomUUID());
-      stockAdjustmentReasonDto.setProgram(programDto);
-      stockAdjustmentReasonDto.setName(adjustmentType.getCode());
-      stockAdjustmentReasonDto.setDescription(adjustmentType.getName());
-      stockAdjustmentReasonDto.setAdditive(!adjustmentType.getNegative());
-      stockAdjustmentReasonDto.setDisplayOrder(order);
-
-      REASONS.put(adjustmentType.getCode(), stockAdjustmentReasonDto);
+    if (null == found) {
+      save(create(program, adjustmentType));
+      return findByProgram(program, adjustmentType);
     }
 
-    return stockAdjustmentReasonDto;
+    return found;
   }
 
-  public Collection<StockAdjustmentReason> findAll() {
-    return REASONS.values();
+  private StockAdjustmentReason create(Program programDto, AdjustmentType adjustmentType) {
+    StockAdjustmentReason reason = new StockAdjustmentReason();
+    reason.setId(UUID.randomUUID());
+    reason.setProgram(programDto);
+    reason.setName(adjustmentType.getCode());
+    reason.setDescription(adjustmentType.getName());
+    reason.setAdditive(!adjustmentType.getNegative());
+
+    return reason;
   }
 
 }

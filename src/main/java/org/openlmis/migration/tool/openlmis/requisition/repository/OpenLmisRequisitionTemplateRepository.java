@@ -30,7 +30,7 @@ import static org.openlmis.migration.tool.openlmis.requisition.domain.SourceType
 import com.google.common.collect.ImmutableMap;
 
 import org.openlmis.migration.tool.domain.SystemDefault;
-import org.openlmis.migration.tool.openlmis.referencedata.domain.Program;
+import org.openlmis.migration.tool.openlmis.InMemoryRepository;
 import org.openlmis.migration.tool.openlmis.requisition.domain.AvailableRequisitionColumn;
 import org.openlmis.migration.tool.openlmis.requisition.domain.RequisitionTemplate;
 import org.openlmis.migration.tool.openlmis.requisition.domain.RequisitionTemplateColumn;
@@ -43,24 +43,41 @@ import java.util.EnumSet;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
 @Service
-public class OpenLmisRequisitionTemplateRepository {
+public class OpenLmisRequisitionTemplateRepository extends InMemoryRepository<RequisitionTemplate> {
 
   @Autowired
   private SystemDefaultRepository systemDefaultRepository;
 
   /**
-   * Retrieve a requisition template for the given program.
+   * Finds Requisiton template for the given program id.
    */
-  public RequisitionTemplate find(Program program) {
+  public RequisitionTemplate findByProgramId(UUID programId) {
+    RequisitionTemplate found = database
+        .values()
+        .stream()
+        .filter(template -> programId.equals(template.getProgramId()))
+        .findFirst()
+        .orElse(null);
+
+    if (null == found) {
+      save(createTemplate(programId));
+      return findByProgramId(programId);
+    }
+
+    return found;
+  }
+
+  private RequisitionTemplate createTemplate(UUID programId) {
     SystemDefault systemDefault = systemDefaultRepository
         .findAll()
         .iterator()
         .next();
 
     RequisitionTemplate template = new RequisitionTemplate();
-    template.setProgramId(program.getId());
+    template.setProgramId(programId);
     template.setNumberOfPeriodsToAverage(systemDefault.getNumberOfPeriodsToAverage().intValue());
     template.setColumnsMap(getRequisitionTemplateColumnMap());
 
