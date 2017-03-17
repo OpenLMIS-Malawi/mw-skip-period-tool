@@ -72,7 +72,7 @@ public class ProcessingPeriod extends BaseEntity {
   }
 
   public static ProcessingPeriod newPeriod(String name, ProcessingSchedule schedule,
-                                            LocalDate startDate, LocalDate endDate) {
+                                           LocalDate startDate, LocalDate endDate) {
     return new ProcessingPeriod(name, schedule, startDate, endDate);
   }
 
@@ -84,10 +84,10 @@ public class ProcessingPeriod extends BaseEntity {
    */
   public static ProcessingPeriod newPeriod(Importer importer) {
     ProcessingPeriod newPeriod = new ProcessingPeriod(
-          importer.getName(),
-          importer.getProcessingSchedule(),
-          importer.getStartDate(),
-          importer.getEndDate());
+        importer.getName(),
+        importer.getProcessingSchedule(),
+        importer.getStartDate(),
+        importer.getEndDate());
     newPeriod.id = importer.getId();
     newPeriod.description = importer.getDescription();
     return newPeriod;
@@ -139,7 +139,7 @@ public class ProcessingPeriod extends BaseEntity {
     }
     ProcessingPeriod period = (ProcessingPeriod) obj;
     return Objects.equals(name, period.name)
-          && Objects.equals(processingSchedule, period.processingSchedule);
+        && Objects.equals(processingSchedule, period.processingSchedule);
   }
 
   public interface Exporter {

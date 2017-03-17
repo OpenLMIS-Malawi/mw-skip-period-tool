@@ -38,11 +38,13 @@ public class OrderedDisplayValue {
   @Getter
   private int displayOrder;
 
-  private OrderedDisplayValue() {}
+  private OrderedDisplayValue() {
+  }
 
   /**
    * Create a new ordered display value.
-   * @param displayName a name for end-user display.
+   *
+   * @param displayName  a name for end-user display.
    * @param displayOrder the order of which to display this.
    */
   public OrderedDisplayValue(String displayName, int displayOrder) {

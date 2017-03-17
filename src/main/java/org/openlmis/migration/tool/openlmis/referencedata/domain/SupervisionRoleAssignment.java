@@ -116,7 +116,7 @@ public class SupervisionRoleAssignment extends RoleAssignment {
    */
   public Set<Facility> getSupervisedFacilities(Right right, Program program) {
     Set<Facility> possibleFacilities = new HashSet<>();
-    
+
     if (supervisoryNode == null) {
       return possibleFacilities;
     }

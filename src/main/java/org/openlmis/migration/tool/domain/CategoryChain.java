@@ -18,7 +18,7 @@ import javax.persistence.Entity;
 @ToString
 @NoArgsConstructor
 @Entity(name = "tlkCategoryChain")
-public class CategoryChain implements Serializable  {
+public class CategoryChain implements Serializable {
   private static final long serialVersionUID = -2832247471947637244L;
 
   @EmbeddedId

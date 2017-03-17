@@ -48,5 +48,5 @@ public class MainReader extends AbstractPagingItemReader<Main> {
   protected void doJumpToPage(int itemIndex) {
     // we don't need to do anything special here
   }
-  
+
 }

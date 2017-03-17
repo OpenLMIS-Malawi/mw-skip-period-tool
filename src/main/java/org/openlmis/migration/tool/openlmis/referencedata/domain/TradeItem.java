@@ -31,8 +31,8 @@ import javax.persistence.ManyToOne;
  *
  * <p>TradeItem's also may:
  * <ul>
- *   <li>have a GlobalTradeItemNumber</li>
- *   <li>a MSRP</li>
+ * <li>have a GlobalTradeItemNumber</li>
+ * <li>a MSRP</li>
  * </ul>
  */
 @Entity
@@ -58,6 +58,7 @@ public final class TradeItem extends Orderable {
   /**
    * A TradeItem can fulfill for the given product if the product is this trade item or if this
    * product's CommodityType is the given product.
+   *
    * @param product the product we'd like to fulfill for.
    * @return true if we can fulfill for the given product, false otherwise.
    */
@@ -68,11 +69,12 @@ public final class TradeItem extends Orderable {
 
   /**
    * Factory method to create a new trade item.
-   * @param productCode a unique product code
-   * @param name name of product
-   * @param packSize the # of dispensing units contained
+   *
+   * @param productCode           a unique product code
+   * @param name                  name of product
+   * @param packSize              the # of dispensing units contained
    * @param packRoundingThreshold determines how number of packs is rounded
-   * @param roundToZero determines if number of packs can be rounded to zero
+   * @param roundToZero           determines if number of packs can be rounded to zero
    * @return a new trade item or armageddon if failure
    */
   @JsonCreator
@@ -81,7 +83,7 @@ public final class TradeItem extends Orderable {
                                        @JsonProperty("name") String name,
                                        @JsonProperty("packSize") long packSize,
                                        @JsonProperty("packRoundingThreshold")
-                                             long packRoundingThreshold,
+                                           long packRoundingThreshold,
                                        @JsonProperty("roundToZero") boolean roundToZero) {
     Code code = Code.code(productCode);
     Dispensable dispensable = Dispensable.createNew(dispensingUnit);
@@ -91,6 +93,7 @@ public final class TradeItem extends Orderable {
 
   /**
    * Assign a commodity type.
+   *
    * @param commodityType the given commodity type, or null to un-assign.
    */
   void assignCommodityType(CommodityType commodityType) {

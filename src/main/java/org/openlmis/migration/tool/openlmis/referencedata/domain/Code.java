@@ -37,6 +37,7 @@ public class Code {
 
   /**
    * Code equality ignores whitespace and case.
+   *
    * @param object the Code to test against.
    * @return true if both represent the same code, false otherwise.
    */
@@ -66,6 +67,7 @@ public class Code {
 
   /**
    * Creates a new Code value.
+   *
    * @param code the code
    * @return a new Code with the given code.  Uses a blank code if given null.
    */

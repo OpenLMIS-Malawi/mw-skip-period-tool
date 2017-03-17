@@ -17,10 +17,9 @@ package org.openlmis.migration.tool.openlmis;
 
 import com.fasterxml.jackson.annotation.JsonView;
 
-import org.openlmis.util.View;
-
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Type;
+import org.openlmis.util.View;
 
 import lombok.Getter;
 import lombok.Setter;

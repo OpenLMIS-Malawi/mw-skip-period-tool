@@ -16,12 +16,13 @@
 package org.openlmis.migration.tool.openlmis.referencedata.domain;
 
 import com.fasterxml.jackson.annotation.JsonView;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 import org.openlmis.migration.tool.openlmis.BaseEntity;
 import org.openlmis.util.View;
+
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.util.Arrays;
 import java.util.HashSet;

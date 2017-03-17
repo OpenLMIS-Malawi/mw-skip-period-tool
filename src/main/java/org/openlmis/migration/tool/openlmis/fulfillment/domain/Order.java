@@ -19,7 +19,6 @@ import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.Type;
 import org.openlmis.migration.tool.openlmis.BaseEntity;
-import org.openlmis.migration.tool.openlmis.referencedata.domain.User;
 import org.openlmis.migration.tool.openlmis.requisition.domain.Requisition;
 
 import lombok.Getter;
@@ -190,6 +189,9 @@ public class Order extends BaseEntity {
         .ifPresent(list -> list.forEach(consumer));
   }
 
+  /**
+   * Creates new order instance based on requisition.
+   */
   public static Order newOrder(Requisition requisition) {
     Order order = new Order();
     order.setExternalId(requisition.getId());

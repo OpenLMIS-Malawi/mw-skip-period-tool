@@ -22,7 +22,7 @@ import javax.persistence.OneToOne;
 @ToString
 @NoArgsConstructor
 @Entity(name = "CTF_Main_Users")
-public class MainUser implements Serializable  {
+public class MainUser implements Serializable {
   private static final long serialVersionUID = 4074723721261730494L;
 
   @EmbeddedId

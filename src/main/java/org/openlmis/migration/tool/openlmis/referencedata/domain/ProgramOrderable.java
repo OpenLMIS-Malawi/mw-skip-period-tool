@@ -91,6 +91,7 @@ public class ProgramOrderable extends BaseEntity {
 
   /**
    * Returns true if this association is for given Program.
+   *
    * @param program the {@link Program} to ask about
    * @return true if this association is for the given Program, false otherwise.
    */
@@ -101,18 +102,19 @@ public class ProgramOrderable extends BaseEntity {
   /**
    * Create program orderable association.
    * See {@link #createNew(Program,
-   *  OrderableDisplayCategory,
-   *  Orderable,
-   *  Integer,
-   *  boolean,
-   *  boolean,
-   *  int,
-   *  Money,
-   *  CurrencyUnit)}.
+   * OrderableDisplayCategory,
+   * Orderable,
+   * Integer,
+   * boolean,
+   * boolean,
+   * int,
+   * Money,
+   * CurrencyUnit)}.
    * Uses sensible defaults.
-   * @param program see other
+   *
+   * @param program  see other
    * @param category see other
-   * @param product see other
+   * @param product  see other
    * @return see other
    */
   public static final ProgramOrderable createNew(Program program,
@@ -126,13 +128,14 @@ public class ProgramOrderable extends BaseEntity {
 
   /**
    * Create program orderable.
-   * @param program The Program this Product will be in.
-   * @param category the category this Product will be in, in this Program.
-   * @param product the Product.
+   *
+   * @param program         The Program this Product will be in.
+   * @param category        the category this Product will be in, in this Program.
+   * @param product         the Product.
    * @param dosesPerPatient the number of doses a patient needs of this orderable.
-   * @param active weather this orderable is active in this program at this time.
-   * @param displayOrder the display order of this Product in this category of this Program.
-   * @param pricePerPack the price of one pack.
+   * @param active          weather this orderable is active in this program at this time.
+   * @param displayOrder    the display order of this Product in this category of this Program.
+   * @param pricePerPack    the price of one pack.
    * @return a new ProgramOrderable.
    */
   public static final ProgramOrderable createNew(Program program,
@@ -158,6 +161,7 @@ public class ProgramOrderable extends BaseEntity {
   /**
    * Equal if both represent association between same Program and Product.  e.g. Ibuprofen in the
    * Essential Meds Program is always the same association regardless of the other properties.
+   *
    * @param other the other ProgramOrderable
    * @return true if for same Program-Orderable association, false otherwise.
    */

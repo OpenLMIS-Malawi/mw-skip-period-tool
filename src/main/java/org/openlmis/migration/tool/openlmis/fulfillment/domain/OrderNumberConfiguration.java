@@ -96,6 +96,7 @@ public class OrderNumberConfiguration extends BaseEntity {
   /**
    * Create new instance of OrderNumberConfiguration based on given
    * {@link Importer}
+   *
    * @param importer instance of {@link Importer}
    * @return instance of OrderNumberConfiguration.
    */

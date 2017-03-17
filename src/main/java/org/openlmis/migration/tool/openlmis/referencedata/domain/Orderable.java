@@ -87,6 +87,7 @@ public abstract class Orderable extends BaseEntity {
 
   /**
    * Return this orderable product's unique product code.
+   *
    * @return a copy of this product's unique product code.
    */
   @JsonProperty
@@ -101,6 +102,7 @@ public abstract class Orderable extends BaseEntity {
 
   /**
    * Return this orderable product's name.
+   *
    * @return this product's name.
    */
   @JsonProperty
@@ -110,6 +112,7 @@ public abstract class Orderable extends BaseEntity {
 
   /**
    * Adds product for ordering within a program.
+   *
    * @param programOrderable the association to a {@link Program}
    * @return true if successful, false otherwise.
    */
@@ -140,9 +143,10 @@ public abstract class Orderable extends BaseEntity {
 
   /**
    * Get the association to a {@link Program}.
+   *
    * @param program the Program this product is (maybe) in.
    * @return the asssociation to the given {@link Program}, or null if this product is not in the
-   *        given program.
+   *         given program.
    */
   public ProgramOrderable getProgramOrderable(Program program) {
     for (ProgramOrderable programOrderable : programOrderables) {
@@ -160,6 +164,7 @@ public abstract class Orderable extends BaseEntity {
   /**
    * Returns the number of packs to order. For this Orderable given a desired number of
    * dispensing units, will return the number of packs that should be ordered.
+   *
    * @param dispensingUnits # of dispensing units we'd like to order for
    * @return the number of packs that should be ordered.
    */
@@ -184,6 +189,7 @@ public abstract class Orderable extends BaseEntity {
 
   /**
    * Determines if product may be used to fulfill for the given product.
+   *
    * @param product the product we'd like to fulfill for.
    * @return true if this product can fulfill for the given product.  False otherwise.
    */
@@ -191,6 +197,7 @@ public abstract class Orderable extends BaseEntity {
 
   /**
    * Determines equality based on product codes.
+   *
    * @param object another Orderable, ideally.
    * @return true if the two are semantically equal.  False otherwise.
    */

@@ -29,11 +29,11 @@ import org.hibernate.annotations.Type;
 import org.joda.money.CurrencyUnit;
 import org.joda.money.Money;
 import org.openlmis.migration.tool.openlmis.BaseEntity;
+import org.openlmis.migration.tool.openlmis.CurrencyConfig;
 import org.openlmis.migration.tool.openlmis.referencedata.domain.FacilityTypeApprovedProduct;
 import org.openlmis.migration.tool.openlmis.referencedata.domain.Orderable;
 import org.openlmis.migration.tool.openlmis.referencedata.domain.ProgramOrderable;
 import org.openlmis.migration.tool.openlmis.referencedata.domain.StockAdjustmentReason;
-import org.openlmis.migration.tool.openlmis.CurrencyConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

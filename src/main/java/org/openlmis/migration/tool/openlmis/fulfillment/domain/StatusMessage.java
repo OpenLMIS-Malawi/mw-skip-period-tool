@@ -62,6 +62,7 @@ public class StatusMessage extends BaseEntity {
 
   /**
    * Create new instance of StatusMessage based on given {@link Importer}
+   *
    * @param importer instance of {@link Importer}
    * @return instance of StatusMessage.
    */

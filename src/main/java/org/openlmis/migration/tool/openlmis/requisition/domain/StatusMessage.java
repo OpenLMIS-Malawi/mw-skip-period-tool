@@ -80,7 +80,7 @@ public class StatusMessage extends BaseTimestampedEntity {
     this.status = Objects.requireNonNull(requisition.getStatus());
     this.body = Objects.requireNonNull(body);
   }
-  
+
   public static StatusMessage newStatusMessage(Requisition requisition, UUID authorId,
                                                String authorFirstName, String authorLastName,
                                                String body) {
@@ -116,7 +116,7 @@ public class StatusMessage extends BaseTimestampedEntity {
     void setRequisitionId(UUID requisitionId);
 
     void setBody(String body);
-    
+
     void setStatus(RequisitionStatus status);
 
     void setCreatedDate(ZonedDateTime createdDate);

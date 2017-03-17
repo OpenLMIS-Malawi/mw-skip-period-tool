@@ -18,7 +18,7 @@ import javax.persistence.Entity;
 @ToString
 @NoArgsConstructor
 @Entity(name = "tblFacilityTypeProducts")
-public class FacilityTypeProduct implements Serializable  {
+public class FacilityTypeProduct implements Serializable {
   private static final long serialVersionUID = 5275900602653013323L;
 
   @EmbeddedId

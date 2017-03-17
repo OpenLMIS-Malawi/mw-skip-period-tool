@@ -19,7 +19,7 @@ import javax.persistence.Entity;
 @ToString
 @NoArgsConstructor
 @Entity(name = "CTF_Demand_Status")
-public class DemandStatus implements Serializable  {
+public class DemandStatus implements Serializable {
   private static final long serialVersionUID = -1358681106006555033L;
 
   @EmbeddedId

@@ -18,7 +18,7 @@ import javax.persistence.Entity;
 @ToString
 @NoArgsConstructor
 @Entity(name = "tblMTTableManagement")
-public class TableManagement implements Serializable  {
+public class TableManagement implements Serializable {
   private static final long serialVersionUID = -5989915997784315427L;
 
   @EmbeddedId

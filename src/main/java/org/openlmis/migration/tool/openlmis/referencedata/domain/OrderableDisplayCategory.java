@@ -74,7 +74,8 @@ public class OrderableDisplayCategory extends BaseEntity {
   /**
    * Creates a new OrderableDisplayCategory.
    *
-   * @param orderableDisplayCategoryCode this OrderableDisplayCategory's unique implementation code.
+   * @param orderableDisplayCategoryCode this OrderableDisplayCategory's unique implementation
+   *                                     code.
    * @return a new OrderableDisplayCategory using default display value and order
    * @throws NullPointerException if parameter is null.
    */
@@ -86,8 +87,9 @@ public class OrderableDisplayCategory extends BaseEntity {
   /**
    * Creates a new OrderableDisplayCategory.
    *
-   * @param orderableDisplayCategoryCode this OrderableDisplayCategory's unique implementation code.
-   * @param displayValue        the display values of this OrderableDisplayCategory.
+   * @param orderableDisplayCategoryCode this OrderableDisplayCategory's unique implementation
+   *                                     code.
+   * @param displayValue                 the display values of this OrderableDisplayCategory.
    * @return a new OrderableDisplayCategory.
    * @throws NullPointerException if either parameter is null.
    */

@@ -18,10 +18,12 @@ package org.openlmis.migration.tool.openlmis.referencedata.domain;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+
 import lombok.NoArgsConstructor;
 
 import java.util.HashSet;
 import java.util.Set;
+
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
 import javax.persistence.OneToMany;
@@ -49,12 +51,12 @@ public final class CommodityType extends Orderable {
   /**
    * Create a new commodity type.
    *
-   * @param productCode a unique product code
-   * @param name name of product
-   * @param description the description to display in ordering, fulfilling, etc
-   * @param packSize    the number of dispensing units in the pack
+   * @param productCode           a unique product code
+   * @param name                  name of product
+   * @param description           the description to display in ordering, fulfilling, etc
+   * @param packSize              the number of dispensing units in the pack
    * @param packRoundingThreshold determines how number of packs is rounded
-   * @param roundToZero determines if number of packs can be rounded to zero
+   * @param roundToZero           determines if number of packs can be rounded to zero
    * @return a new CommodityType
    */
   @JsonCreator
@@ -65,7 +67,7 @@ public final class CommodityType extends Orderable {
                                                @JsonProperty("description") String description,
                                                @JsonProperty("packSize") long packSize,
                                                @JsonProperty("packRoundingThreshold")
-                                                     long packRoundingThreshold,
+                                                   long packRoundingThreshold,
                                                @JsonProperty("roundToZero") boolean roundToZero) {
     Code code = Code.code(productCode);
     Dispensable dispensable = Dispensable.createNew(dispensingUnit);
@@ -102,6 +104,7 @@ public final class CommodityType extends Orderable {
 
   /**
    * Sets the associated {@link TradeItem} that may fulfill for this.
+   *
    * @param tradeItems the trade items.
    */
   public void setTradeItems(Set<TradeItem> tradeItems) {

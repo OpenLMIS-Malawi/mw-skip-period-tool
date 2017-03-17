@@ -21,7 +21,7 @@ import javax.persistence.OneToOne;
 @ToString
 @NoArgsConstructor
 @Entity(name = "tlkReportingGroupChain")
-public class ReportingGroupChain implements Serializable  {
+public class ReportingGroupChain implements Serializable {
   private static final long serialVersionUID = 1129691435921819904L;
 
   @EmbeddedId

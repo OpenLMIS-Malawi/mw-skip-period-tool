@@ -75,6 +75,7 @@ public class TemplateParameter extends BaseEntity {
 
   /**
    * Create new instance of TemplateParameter based on given {@link Importer}
+   *
    * @param importer instance of {@link Importer}
    * @return instance of TemplateParameter.
    */

@@ -67,6 +67,9 @@ public class OrderLineItem extends BaseEntity {
   @Setter
   private Long packsToShip;
 
+  /**
+   * Creates new instance of order line item based on requisition line item.
+   */
   public static OrderLineItem newOrderLineItem(RequisitionLineItem line) {
     OrderLineItem orderLineItem = new OrderLineItem();
     orderLineItem.setOrderableId(line.getOrderableId());

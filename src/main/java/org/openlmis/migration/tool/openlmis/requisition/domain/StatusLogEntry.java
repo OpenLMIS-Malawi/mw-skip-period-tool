@@ -26,7 +26,8 @@ public class StatusLogEntry {
   private UUID authorId;
   private ZonedDateTime changeDate;
 
-  public StatusLogEntry(){}
+  public StatusLogEntry() {
+  }
 
   public StatusLogEntry(UUID authorId, ZonedDateTime changeDate) {
     this.authorId = authorId;

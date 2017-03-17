@@ -66,7 +66,7 @@ public class ProcessingSchedule extends BaseEntity {
   }
 
   /**
-   * Static factory method for constructing a new processing schedule using an importer (DTO). 
+   * Static factory method for constructing a new processing schedule using an importer (DTO).
    * Uses the {@link #ProcessingSchedule(String, String)} constructor} to help create the object.
    *
    * @param importer the importer (DTO)
