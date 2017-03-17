@@ -2,11 +2,11 @@ package org.openlmis.migration.tool.openlmis.referencedata.repository;
 
 import org.openlmis.migration.tool.openlmis.InMemoryRepository;
 import org.openlmis.migration.tool.openlmis.referencedata.domain.Facility;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Repository;
 
 import java.util.UUID;
 
-@Service
+@Repository
 public class OpenLmisFacilityRepository extends InMemoryRepository<Facility> {
 
   /**

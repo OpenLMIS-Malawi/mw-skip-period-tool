@@ -6,6 +6,11 @@ import org.openlmis.migration.tool.domain.Adjustment;
 import org.openlmis.migration.tool.domain.AdjustmentType;
 import org.openlmis.migration.tool.domain.Item;
 import org.openlmis.migration.tool.domain.Main;
+import org.openlmis.migration.tool.openlmis.fulfillment.domain.Order;
+import org.openlmis.migration.tool.openlmis.fulfillment.domain.OrderStatus;
+import org.openlmis.migration.tool.openlmis.fulfillment.domain.ProofOfDelivery;
+import org.openlmis.migration.tool.openlmis.fulfillment.repository.OrderRepository;
+import org.openlmis.migration.tool.openlmis.fulfillment.repository.ProofOfDeliveryRepository;
 import org.openlmis.migration.tool.openlmis.referencedata.domain.Facility;
 import org.openlmis.migration.tool.openlmis.referencedata.domain.Orderable;
 import org.openlmis.migration.tool.openlmis.referencedata.domain.ProcessingPeriod;
@@ -56,6 +61,12 @@ public class MainProcessor implements ItemProcessor<Main, Requisition> {
 
   @Autowired
   private OpenLmisOrderableRepository openLmisOrderableRepository;
+
+  @Autowired
+  private OrderRepository orderRepository;
+
+  @Autowired
+  private ProofOfDeliveryRepository proofOfDeliveryRepository;
 
   /**
    * Converts the given {@link Main} object into {@link Requisition} object.
@@ -108,7 +119,7 @@ public class MainProcessor implements ItemProcessor<Main, Requisition> {
     requisition.authorize(products, null);
     requisition.approve(null, products);
 
-    //TODO: convert to order
+    convertToOrder(requisition);
 
     return requisition;
   }
@@ -182,6 +193,28 @@ public class MainProcessor implements ItemProcessor<Main, Requisition> {
         requisition.getNumberOfMonthsInPeriod()
     );
     return requisitionLineItem;
+  }
+
+  private void convertToOrder(Requisition requisition) {
+    // TODO: change that (or validate this is correct)
+    requisition.setSupplyingFacilityId(requisition.getFacilityId());
+    requisition.setStatus(RequisitionStatus.RELEASED);
+
+    Order order = Order.newOrder(requisition);
+    order.setStatus(OrderStatus.RECEIVED);
+
+    // TODO: determine proper values for those properties
+    ProofOfDelivery proofOfDelivery = new ProofOfDelivery(order);
+    proofOfDelivery.setDeliveredBy(null);
+    proofOfDelivery.setReceivedBy(null);
+    proofOfDelivery.setReceivedDate(null);
+
+    proofOfDelivery
+        .getProofOfDeliveryLineItems()
+        .forEach(line -> line.setQuantityReceived(null));
+
+    orderRepository.save(order);
+    proofOfDeliveryRepository.save(proofOfDelivery);
   }
 
 }

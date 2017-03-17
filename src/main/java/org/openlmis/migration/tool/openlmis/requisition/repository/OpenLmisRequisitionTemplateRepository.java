@@ -37,7 +37,7 @@ import org.openlmis.migration.tool.openlmis.requisition.domain.RequisitionTempla
 import org.openlmis.migration.tool.openlmis.requisition.domain.SourceType;
 import org.openlmis.migration.tool.repository.SystemDefaultRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Repository;
 
 import java.util.EnumSet;
 import java.util.Locale;
@@ -45,7 +45,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
-@Service
+@Repository
 public class OpenLmisRequisitionTemplateRepository extends InMemoryRepository<RequisitionTemplate> {
 
   @Autowired

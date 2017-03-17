@@ -17,6 +17,7 @@ package org.openlmis.migration.tool.openlmis.fulfillment.domain;
 
 import org.hibernate.annotations.Type;
 import org.openlmis.migration.tool.openlmis.BaseEntity;
+import org.openlmis.migration.tool.openlmis.requisition.domain.RequisitionLineItem;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -66,4 +67,19 @@ public class OrderLineItem extends BaseEntity {
   @Setter
   private Long packsToShip;
 
+  public static OrderLineItem newOrderLineItem(RequisitionLineItem line) {
+    OrderLineItem orderLineItem = new OrderLineItem();
+    orderLineItem.setOrderableId(line.getOrderableId());
+    orderLineItem.setFilledQuantity(0L);
+    orderLineItem.setApprovedQuantity(line.getApprovedQuantity().longValue());
+    orderLineItem.setPacksToShip(line.getPacksToShip());
+
+    if (line.getRequestedQuantity() != null) {
+      orderLineItem.setOrderedQuantity(line.getRequestedQuantity().longValue());
+    } else {
+      orderLineItem.setOrderedQuantity(line.getCalculatedOrderQuantity().longValue());
+    }
+
+    return orderLineItem;
+  }
 }

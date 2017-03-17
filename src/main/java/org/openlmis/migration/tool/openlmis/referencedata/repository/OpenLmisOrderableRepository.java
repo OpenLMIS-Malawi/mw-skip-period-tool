@@ -5,11 +5,11 @@ import org.openlmis.migration.tool.openlmis.InMemoryRepository;
 import org.openlmis.migration.tool.openlmis.referencedata.domain.Code;
 import org.openlmis.migration.tool.openlmis.referencedata.domain.Orderable;
 import org.openlmis.migration.tool.openlmis.referencedata.domain.TradeItem;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Repository;
 
 import java.util.UUID;
 
-@Service
+@Repository
 public class OpenLmisOrderableRepository extends InMemoryRepository<Orderable> {
 
   /**

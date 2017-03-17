@@ -3,9 +3,9 @@ package org.openlmis.migration.tool.openlmis.referencedata.repository;
 import org.openlmis.migration.tool.domain.Main;
 import org.openlmis.migration.tool.openlmis.InMemoryRepository;
 import org.openlmis.migration.tool.openlmis.referencedata.domain.Program;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Repository;
 
-@Service
+@Repository
 public class OpenLmisProgramRepository extends InMemoryRepository<Program> {
 
   /**

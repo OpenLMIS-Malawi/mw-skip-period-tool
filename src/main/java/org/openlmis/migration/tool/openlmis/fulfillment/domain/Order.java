@@ -19,6 +19,8 @@ import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.Type;
 import org.openlmis.migration.tool.openlmis.BaseEntity;
+import org.openlmis.migration.tool.openlmis.referencedata.domain.User;
+import org.openlmis.migration.tool.openlmis.requisition.domain.Requisition;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -30,6 +32,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -185,6 +188,32 @@ public class Order extends BaseEntity {
   public void forEachStatus(Consumer<StatusMessage> consumer) {
     Optional.ofNullable(statusMessages)
         .ifPresent(list -> list.forEach(consumer));
+  }
+
+  public static Order newOrder(Requisition requisition) {
+    Order order = new Order();
+    order.setExternalId(requisition.getId());
+    order.setEmergency(requisition.getEmergency());
+    order.setFacilityId(requisition.getFacilityId());
+    order.setProcessingPeriodId(requisition.getProcessingPeriodId());
+    order.setQuotedCost(BigDecimal.ZERO);
+
+    order.setReceivingFacilityId(requisition.getFacilityId());
+    order.setRequestingFacilityId(requisition.getFacilityId());
+
+    order.setSupplyingFacilityId(requisition.getSupplyingFacilityId());
+    order.setProgramId(requisition.getProgramId());
+
+    order.setOrderLineItems(
+        requisition
+            .getRequisitionLineItems()
+            .stream()
+            .filter(line -> !line.getSkipped())
+            .map(OrderLineItem::newOrderLineItem)
+            .collect(Collectors.toList())
+    );
+
+    return order;
   }
 
 }

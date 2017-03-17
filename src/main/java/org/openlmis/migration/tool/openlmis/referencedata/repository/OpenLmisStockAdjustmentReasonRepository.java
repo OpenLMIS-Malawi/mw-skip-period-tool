@@ -4,11 +4,11 @@ import org.openlmis.migration.tool.domain.AdjustmentType;
 import org.openlmis.migration.tool.openlmis.InMemoryRepository;
 import org.openlmis.migration.tool.openlmis.referencedata.domain.Program;
 import org.openlmis.migration.tool.openlmis.referencedata.domain.StockAdjustmentReason;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Repository;
 
 import java.util.UUID;
 
-@Service
+@Repository
 public class OpenLmisStockAdjustmentReasonRepository
     extends InMemoryRepository<StockAdjustmentReason> {
 

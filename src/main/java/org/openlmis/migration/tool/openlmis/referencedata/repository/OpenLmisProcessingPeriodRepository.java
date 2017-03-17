@@ -8,13 +8,13 @@ import org.openlmis.migration.tool.openlmis.InMemoryRepository;
 import org.openlmis.migration.tool.openlmis.referencedata.domain.ProcessingPeriod;
 import org.openlmis.migration.tool.repository.SystemDefaultRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-@Service
+@Repository
 public class OpenLmisProcessingPeriodRepository extends InMemoryRepository<ProcessingPeriod> {
 
   @Autowired
