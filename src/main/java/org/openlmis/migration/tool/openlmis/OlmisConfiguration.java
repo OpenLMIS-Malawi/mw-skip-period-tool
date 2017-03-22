@@ -1,11 +1,13 @@
 package org.openlmis.migration.tool.openlmis;
 
+import static org.hibernate.cfg.AvailableSettings.DIALECT;
 import static org.hibernate.cfg.AvailableSettings.HBM2DDL_AUTO;
 import static org.hibernate.cfg.AvailableSettings.IMPLICIT_NAMING_STRATEGY;
 import static org.hibernate.cfg.AvailableSettings.PHYSICAL_NAMING_STRATEGY;
 import static org.hibernate.cfg.AvailableSettings.SHOW_SQL;
 
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl;
+import org.hibernate.dialect.PostgreSQL94Dialect;
 import org.postgresql.Driver;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -55,6 +57,7 @@ public class OlmisConfiguration {
         IMPLICIT_NAMING_STRATEGY, ImplicitNamingStrategyJpaCompliantImpl.class.getName()
     );
     properties.setProperty(PHYSICAL_NAMING_STRATEGY, CustomPhysicalNamingStrategy.class.getName());
+    properties.setProperty(DIALECT, PostgreSQL94Dialect.class.getName());
     properties.setProperty(SHOW_SQL, "false");
     // TODO: change that to validate
     properties.setProperty(HBM2DDL_AUTO, "create-drop");
@@ -69,6 +72,7 @@ public class OlmisConfiguration {
    */
   @Bean
   DataSource olmisDataSource() {
+    // TODO: make it configurable. The question is how much?
     Properties connectionProperties = new Properties();
     connectionProperties.put("stringtype", "unspecified");
 

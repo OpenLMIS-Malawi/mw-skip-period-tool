@@ -61,8 +61,7 @@ public class FacilityType extends BaseEntity {
   }
 
   /**
-   * Copy method. TODO: eventually replace with importer/exporter pattern (e.g. Right.Importer and
-   * Right.Exporter with export() method and importer constructor.
+   * Copy method.
    */
   public void updateFrom(FacilityType facilityType) {
     this.code = facilityType.code;

@@ -56,6 +56,7 @@ public class RequsitionUtil {
         .iterator()
         .next();
 
+    // TODO: how we should handle requisition template?
     RequisitionTemplate template = new RequisitionTemplate();
     template.setProgramId(programId);
     template.setNumberOfPeriodsToAverage(systemDefault.getNumberOfPeriodsToAverage().intValue());

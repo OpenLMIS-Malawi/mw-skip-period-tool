@@ -1,5 +1,6 @@
 package org.openlmis.migration.tool.batch;
 
+import org.openlmis.migration.tool.openlmis.requisition.repository.OlmisRequisitionRepository;
 import org.openlmis.migration.tool.scm.domain.Comment;
 import org.openlmis.migration.tool.scm.domain.Item;
 import org.openlmis.migration.tool.scm.domain.Main;
@@ -45,11 +46,15 @@ public class RequisitionWriter implements ItemWriter<Requisition> {
   @Autowired
   private OlmisOrderableRepository olmisOrderableRepository;
 
+  @Autowired
+  private OlmisRequisitionRepository olmisRequisitionRepository;
+
   /**
    * Writes Reuisitons into OpenLMIS database.
    */
   @Override
   public void write(List<? extends Requisition> requisitions) {
+    olmisRequisitionRepository.save(requisitions);
     requisitions.forEach(this::print);
   }
 
@@ -70,6 +75,7 @@ public class RequisitionWriter implements ItemWriter<Requisition> {
       Main main = mainRepository
           .findOne(new Main.ComplexId(item.getFacility(), item.getProcessingDate()));
 
+      // TODO: does this field are necessary? Where they should be in the openlmis system?
       System.err.printf(
           "Date Received: %s Date Shipment Received: %s%n%n",
           printDate(main.getReceivedDate()), printDate(main.getShipmentReceivedData())
@@ -86,6 +92,10 @@ public class RequisitionWriter implements ItemWriter<Requisition> {
         item = itemRepository.findOne(Integer.valueOf(line.getRemarks()));
         Orderable orderableDto = olmisOrderableRepository.findByName(item.getProductName());
 
+        // TODO: how to handle properties from item instance?
+        // example there is no such column like  adjustment type, purpose of use, month of stock,
+        // stocked out?
+        // Notes are also differently treated in the OpenLMIS
         System.err.printf(
             format,
             orderableDto.getProductCode(),
@@ -106,6 +116,7 @@ public class RequisitionWriter implements ItemWriter<Requisition> {
         );
       }
 
+      // TODO: how to handle how create/modified the requisition
       System.err.println();
       System.err.printf(
           "First input (date):  %-10s (%-10s)%n",
@@ -115,6 +126,7 @@ public class RequisitionWriter implements ItemWriter<Requisition> {
           "Last changed (date): %-10s (%-10s)%n",
           main.getModifiedBy(), printDate(requisition.getModifiedDate())
       );
+      // TODO: how to handle general comment and notes for each product/column
       System.err.printf(
           "Comment: %s%n",
           Optional.ofNullable(requisition.getDraftStatusMessage()).orElse("")

@@ -4,6 +4,7 @@ import static java.time.temporal.TemporalAdjusters.firstDayOfMonth;
 
 import com.google.common.collect.Lists;
 
+import org.apache.commons.lang3.RandomStringUtils;
 import org.openlmis.migration.tool.openlmis.fulfillment.domain.Order;
 import org.openlmis.migration.tool.openlmis.fulfillment.domain.OrderStatus;
 import org.openlmis.migration.tool.openlmis.fulfillment.domain.ProofOfDelivery;
@@ -38,7 +39,12 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Component
@@ -101,18 +107,12 @@ public class MainProcessor implements ItemProcessor<Main, Requisition> {
     ProcessingPeriod period = olmisProcessingPeriodRepository
         .findByStartDate(main.getId().getProcessingDate().toLocalDate().with(firstDayOfMonth()));
 
+    // TODO: how to find correct OpenLMIS program based on data from SCMgr?
     Program program = olmisProgramRepository.findByName(main.getProgramName());
     RequisitionTemplate template = olmisRequisitionTemplateRepository
         .findByProgramId(program.getId());
 
-    Requisition requisition = initRequisition(main, template, program, period);
-    requisition.setRequisitionLineItems(
-        items
-            .stream()
-            .map(item -> createLine(item,requisition, template, program, period))
-            .collect(Collectors.toList())
-    );
-
+    Requisition requisition = initRequisition(main, template, program, period, items);
     List<Orderable> products = Lists.newArrayList(olmisOrderableRepository.findAll());
 
     requisition.submit(products, null);
@@ -121,31 +121,61 @@ public class MainProcessor implements ItemProcessor<Main, Requisition> {
 
     convertToOrder(requisition);
 
-    return olmisRequisitionRepository.save(requisition);
+    return requisition;
   }
 
-  private Requisition initRequisition(Main main, RequisitionTemplate template, Program programDto,
-                                      ProcessingPeriod processingPeriodDto) {
+  private Requisition initRequisition(Main main, RequisitionTemplate template, Program program,
+                                      ProcessingPeriod processingPeriod, List<Item> items) {
     org.openlmis.migration.tool.scm.domain.Facility mainFacility = main.getId().getFacility();
     Facility facility = olmisFacilityRepository
         .findByNameAndCode(mainFacility.getName(), mainFacility.getCode());
 
     Requisition requisition = new Requisition();
     requisition.setFacilityId(facility.getId());
-    requisition.setProgramId(programDto.getId());
-    requisition.setProcessingPeriodId(processingPeriodDto.getId());
+    requisition.setProgramId(program.getId());
+    requisition.setProcessingPeriodId(processingPeriod.getId());
     requisition.setCreatedDate(safeNull(main.getCreatedDate()));
     requisition.setModifiedDate(safeNull(main.getModifiedDate()));
+    // TODO: howo to handle notes?
     requisition.setDraftStatusMessage(main.getNotes());
     requisition.setTemplate(template);
-    requisition.setNumberOfMonthsInPeriod(processingPeriodDto.getDurationInMonths());
+    requisition.setNumberOfMonthsInPeriod(processingPeriod.getDurationInMonths());
     requisition.setStatus(RequisitionStatus.INITIATED);
+    // TODO: each product tracking form should be treated as a standard requsition?
+    // if there are emergency requisitions how to handle them?
+    // where is the difference?
     requisition.setEmergency(false);
 
-    return olmisRequisitionRepository.save(requisition);
+    int numberOfPreviousPeriodsToAverage;
+    List<Requisition> previousRequisitions;
+    if (template.getNumberOfPeriodsToAverage() == null) {
+      numberOfPreviousPeriodsToAverage = 0;
+      previousRequisitions = getRecentRequisitions(requisition, 1);
+    } else {
+      numberOfPreviousPeriodsToAverage = template.getNumberOfPeriodsToAverage() - 1;
+      previousRequisitions =
+          getRecentRequisitions(requisition, numberOfPreviousPeriodsToAverage);
+    }
+
+    if (numberOfPreviousPeriodsToAverage > previousRequisitions.size()) {
+      numberOfPreviousPeriodsToAverage = previousRequisitions.size();
+    }
+
+    requisition.setPreviousRequisitions(previousRequisitions);
+    requisition.setRequisitionLineItems(
+        items
+            .stream()
+            .map(item -> createLine(item, requisition, template, program, processingPeriod))
+            .collect(Collectors.toList())
+    );
+
+    requisition.setPreviousAdjustedConsumptions(numberOfPreviousPeriodsToAverage);
+
+    return requisition;
   }
 
   private ZonedDateTime safeNull(LocalDateTime dateTime) {
+    // TODO: what shoule be zone used? UTC? SAST (UTC+2)?
     return null == dateTime
         ? null
         : dateTime.atZone(ZoneId.of("UTC"));
@@ -161,6 +191,7 @@ public class MainProcessor implements ItemProcessor<Main, Requisition> {
         BigDecimal.valueOf(processingPeriodDto.getDurationInMonths())
     );
     requisitionLineItem.setRequisition(requisition);
+    // TODO: should we handle skipped items? How to handle that? How is it handled in SCM?
     requisitionLineItem.setSkipped(false);
     requisitionLineItem.setOrderableId(orderableDto.getId());
     requisitionLineItem.setTotalReceivedQuantity(item.getReceipts());
@@ -186,12 +217,14 @@ public class MainProcessor implements ItemProcessor<Main, Requisition> {
     requisitionLineItem.setRequestedQuantityExplanation("lagacy data");
     requisitionLineItem.setAdjustedConsumption(item.getAdjustedDispensedQuantity());
 
+    // TODO: temporary to find correct item for save/print step
     requisitionLineItem.setRemarks(item.getId().toString());
 
     requisitionLineItem.calculateAndSetFields(
         template, Lists.newArrayList(olmisStockAdjustmentReasonRepository.findAll()),
         requisition.getNumberOfMonthsInPeriod()
     );
+
     return requisitionLineItem;
   }
 
@@ -202,7 +235,8 @@ public class MainProcessor implements ItemProcessor<Main, Requisition> {
 
     Order order = Order.newOrder(requisition);
     order.setStatus(OrderStatus.RECEIVED);
-    order.setOrderCode("O" + requisition.getId() + "R");
+    // TODO: how to set order code without requisition ID
+    order.setOrderCode("O" + requisition.getId() + "R" + RandomStringUtils.random(10));
 
     // TODO: determine proper values for those properties
     ProofOfDelivery proofOfDelivery = new ProofOfDelivery(order);
@@ -216,6 +250,59 @@ public class MainProcessor implements ItemProcessor<Main, Requisition> {
 
     orderRepository.save(order);
     proofOfDeliveryRepository.save(proofOfDelivery);
+  }
+
+  private List<Requisition> getRecentRequisitions(Requisition requisition, int amount) {
+    List<ProcessingPeriod> previousPeriods =
+        findPreviousPeriods(requisition.getProcessingPeriodId(), amount);
+
+    List<Requisition> recentRequisitions = new ArrayList<>();
+    for (ProcessingPeriod period : previousPeriods) {
+      List<Requisition> requisitionsByPeriod = getRequisitionsByPeriod(requisition, period);
+      if (!requisitionsByPeriod.isEmpty()) {
+        Requisition requisitionByPeriod = requisitionsByPeriod.get(0);
+        recentRequisitions.add(requisitionByPeriod);
+      }
+    }
+    return recentRequisitions;
+  }
+
+  private List<ProcessingPeriod> findPreviousPeriods(UUID periodId, int amount) {
+    ProcessingPeriod period = olmisProcessingPeriodRepository.findOne(periodId);
+
+    if (null == period) {
+      return Collections.emptyList();
+    }
+
+    Collection<ProcessingPeriod> collection = olmisProcessingPeriodRepository
+        .findByProcessingScheduleAndStartDate(
+            period.getProcessingSchedule(),
+            period.getStartDate()
+        );
+
+    if (null == collection || collection.isEmpty()) {
+      return Collections.emptyList();
+    }
+
+    // create a list...
+    List<ProcessingPeriod> list = new ArrayList<>(collection);
+    // ...remove the latest period from the list...
+    list.removeIf(p -> p.getId().equals(periodId));
+    // .. and sort elements by startDate property DESC.
+    list.sort(Comparator.comparing(ProcessingPeriod::getStartDate).reversed());
+
+    if (amount > list.size()) {
+      return list;
+    }
+    
+    return list.subList(0, amount);
+  }
+
+  private List<Requisition> getRequisitionsByPeriod(Requisition requisition,
+                                                    ProcessingPeriod period) {
+    return olmisRequisitionRepository.findByFacilityIdAndProgramIdAndProcessingPeriodId(
+        requisition.getFacilityId(), requisition.getProgramId(), period.getId()
+    );
   }
 
 }

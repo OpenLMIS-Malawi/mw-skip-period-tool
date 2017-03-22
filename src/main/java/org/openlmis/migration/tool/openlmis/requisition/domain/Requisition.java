@@ -446,7 +446,7 @@ public class Requisition extends BaseTimestampedEntity {
    * Sets appropriate value for Previous Adjusted Consumptions field in
    * each {@link RequisitionLineItem}.
    */
-  void setPreviousAdjustedConsumptions(int numberOfPreviousPeriodsToAverage) {
+  public void setPreviousAdjustedConsumptions(int numberOfPreviousPeriodsToAverage) {
     List<RequisitionLineItem> previousRequisitionLineItems = RequisitionHelper
         .getNonSkippedLineItems(previousRequisitions.subList(0, numberOfPreviousPeriodsToAverage));
 
