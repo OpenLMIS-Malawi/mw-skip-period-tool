@@ -38,6 +38,7 @@ import javax.persistence.UniqueConstraint;
  */
 @Entity
 @Table(name = "requisition_group_program_schedules",
+    schema = "referencedata",
     uniqueConstraints = @UniqueConstraint(
         name = "requisition_group_program_schedule_unique_program_requisitionGroup",
         columnNames = {"requisitionGroupId", "programId"}))

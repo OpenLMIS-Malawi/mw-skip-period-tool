@@ -34,7 +34,7 @@ import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
 @Entity
-@Table(name = "status_messages")
+@Table(name = "status_messages", schema = "fulfillment")
 @NoArgsConstructor
 public class StatusMessage extends BaseEntity {
 

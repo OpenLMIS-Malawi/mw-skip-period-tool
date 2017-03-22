@@ -33,7 +33,7 @@ import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
 @Entity
-@Table(name = "order_line_items")
+@Table(name = "order_line_items", schema = "fulfillment")
 @NoArgsConstructor
 public class OrderLineItem extends BaseEntity {
 

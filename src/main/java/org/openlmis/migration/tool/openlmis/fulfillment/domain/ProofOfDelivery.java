@@ -48,7 +48,7 @@ import javax.persistence.Table;
 
 @Entity
 @NoArgsConstructor
-@Table(name = "proof_of_deliveries")
+@Table(name = "proof_of_deliveries", schema = "fulfillment")
 public class ProofOfDelivery extends BaseEntity {
   public static final String DELIVERED_BY = "deliveredBy";
   public static final String RECEIVED_BY = "receivedBy";

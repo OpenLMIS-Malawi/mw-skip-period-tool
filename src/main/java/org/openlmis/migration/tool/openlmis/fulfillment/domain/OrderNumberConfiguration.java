@@ -33,7 +33,7 @@ import javax.persistence.Table;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "order_number_configurations")
+@Table(name = "order_number_configurations", schema = "fulfillment")
 @EqualsAndHashCode(callSuper = false)
 public class OrderNumberConfiguration extends BaseEntity {
 

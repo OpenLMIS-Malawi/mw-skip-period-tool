@@ -38,7 +38,8 @@ import javax.persistence.Table;
 public class ProcessingPeriod extends BaseEntity {
 
   @ManyToOne
-  @JoinColumn(name = "processingScheduleId", nullable = false)
+  //@JoinColumn(name = "processingScheduleId", nullable = false)
+  @JoinColumn(name = "processingScheduleId")
   @Getter
   @Setter
   private ProcessingSchedule processingSchedule;

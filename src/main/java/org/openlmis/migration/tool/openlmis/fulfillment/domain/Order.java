@@ -45,7 +45,7 @@ import javax.persistence.PreUpdate;
 import javax.persistence.Table;
 
 @Entity
-@Table(name = "orders")
+@Table(name = "orders", schema = "fulfillment")
 @NoArgsConstructor
 public class Order extends BaseEntity {
   public static final String SUPPLYING_FACILITY_ID = "supplyingFacilityId";
@@ -54,13 +54,14 @@ public class Order extends BaseEntity {
   public static final String STATUS = "status";
   public static final String PROCESSING_PERIOD_ID = "processingPeriodId";
 
-  @Column(nullable = false, unique = true)
+  //@Column(nullable = false, unique = true)
+  @Column(unique = true)
   @Getter
   @Setter
   @Type(type = UUID_TYPE)
   private UUID externalId;
 
-  @Column(nullable = false)
+  //@Column(nullable = false)
   @Getter
   @Setter
   private Boolean emergency;
@@ -80,7 +81,7 @@ public class Order extends BaseEntity {
   @Column(columnDefinition = "timestamp with time zone")
   private ZonedDateTime createdDate;
 
-  @Column(nullable = false)
+  //@Column(nullable = false)
   @Getter
   @Setter
   @Type(type = UUID_TYPE)

@@ -35,7 +35,7 @@ import javax.persistence.OrderBy;
 import javax.persistence.Table;
 
 @Entity
-@Table(name = "order_file_templates")
+@Table(name = "order_file_templates", schema = "fulfillment")
 @NoArgsConstructor
 @AllArgsConstructor
 public class OrderFileTemplate extends BaseEntity {

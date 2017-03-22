@@ -39,7 +39,7 @@ import javax.persistence.PreUpdate;
 import javax.persistence.Table;
 
 @Entity
-@Table(name = "templates")
+@Table(name = "templates", schema = "fulfillment")
 @NoArgsConstructor
 @AllArgsConstructor
 public class Template extends BaseEntity {

@@ -76,6 +76,7 @@ public class RequisitionGroup extends BaseEntity {
 
   @ManyToMany(fetch = FetchType.EAGER)
   @JoinTable(name = "requisition_group_members",
+      schema = "referencedata",
       joinColumns = @JoinColumn(name = "requisitiongroupid", nullable = false),
       inverseJoinColumns = @JoinColumn(name = "facilityid", nullable = false))
   @Getter

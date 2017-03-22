@@ -31,7 +31,7 @@ import javax.persistence.Table;
 
 @Entity
 @NoArgsConstructor
-@Table(name = "proof_of_delivery_line_items")
+@Table(name = "proof_of_delivery_line_items", schema = "fulfillment")
 public class ProofOfDeliveryLineItem extends BaseEntity {
   public static final String QUANTITY_RECEIVED = "quantityReceived";
 

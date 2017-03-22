@@ -1,7 +1,7 @@
 package org.openlmis.migration.tool.batch;
 
-import org.openlmis.migration.tool.domain.Main;
-import org.openlmis.migration.tool.repository.MainRepository;
+import org.openlmis.migration.tool.scm.domain.Main;
+import org.openlmis.migration.tool.scm.repository.MainRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.batch.item.database.AbstractPagingItemReader;

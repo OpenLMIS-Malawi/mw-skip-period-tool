@@ -1,9 +1,10 @@
 package org.openlmis.migration.tool.openlmis.fulfillment.repository;
 
-import org.openlmis.migration.tool.openlmis.InMemoryRepository;
 import org.openlmis.migration.tool.openlmis.fulfillment.domain.ProofOfDelivery;
-import org.springframework.stereotype.Repository;
+import org.springframework.data.repository.CrudRepository;
 
-@Repository
-public class ProofOfDeliveryRepository extends InMemoryRepository<ProofOfDelivery> {
+import java.util.UUID;
+
+public interface ProofOfDeliveryRepository extends CrudRepository<ProofOfDelivery, UUID> {
+
 }

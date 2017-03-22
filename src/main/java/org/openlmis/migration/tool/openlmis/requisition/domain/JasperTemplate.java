@@ -37,7 +37,7 @@ import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
 @Entity
-@Table(name = "jasper_templates")
+@Table(name = "jasper_templates", schema = "requisition")
 @NoArgsConstructor
 @AllArgsConstructor
 public class JasperTemplate extends BaseEntity {

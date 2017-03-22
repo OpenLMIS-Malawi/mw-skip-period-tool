@@ -64,7 +64,8 @@ public class RequisitionTemplateColumn {
   @ManyToOne(
       cascade = {CascadeType.REFRESH},
       fetch = FetchType.EAGER)
-  @JoinColumn(name = "requisitionColumnId", nullable = false)
+  //@JoinColumn(name = "requisitionColumnId", nullable = false)
+  @JoinColumn(name = "requisitionColumnId")
   @Getter
   @Setter
   private AvailableRequisitionColumn columnDefinition;

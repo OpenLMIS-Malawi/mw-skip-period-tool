@@ -60,7 +60,7 @@ import javax.persistence.Table;
 
 @SuppressWarnings("PMD.TooManyMethods")
 @Entity
-@Table(name = "requisition_line_items")
+@Table(name = "requisition_line_items", schema = "requisition")
 public class RequisitionLineItem extends BaseEntity {
   public static final String REQUESTED_QUANTITY = "requestedQuantity";
   public static final String REQUESTED_QUANTITY_EXPLANATION = "requestedQuantityExplanation";
@@ -175,6 +175,7 @@ public class RequisitionLineItem extends BaseEntity {
   @ElementCollection
   @CollectionTable(
       name = "previous_adjusted_consumptions",
+      schema = "requisition",
       joinColumns = @JoinColumn(name = "requisitionLineItemId"))
   @Column(name = "previousAdjustedConsumption")
   @Setter

@@ -61,13 +61,15 @@ public class Facility extends BaseEntity {
   private String description;
 
   @ManyToOne
-  @JoinColumn(name = "geographiczoneid", nullable = false)
+  //@JoinColumn(name = "geographiczoneid", nullable = false)
+  @JoinColumn(name = "geographiczoneid")
   @Getter
   @Setter
   private GeographicZone geographicZone;
 
   @ManyToOne
-  @JoinColumn(name = "typeid", nullable = false)
+  //@JoinColumn(name = "typeid", nullable = false)
+  @JoinColumn(name = "typeid")
   @Getter
   @Setter
   private FacilityType type;

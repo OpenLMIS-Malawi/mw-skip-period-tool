@@ -25,7 +25,7 @@ import javax.persistence.Id;
 import javax.persistence.Table;
 
 @Entity
-@Table(name = "configuration_settings")
+@Table(name = "configuration_settings", schema = "fulfillment")
 @NoArgsConstructor
 public class ConfigurationSetting {
 

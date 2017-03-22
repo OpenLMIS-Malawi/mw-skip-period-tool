@@ -36,7 +36,7 @@ import javax.persistence.Table;
 
 @SuppressWarnings("PMD.TooManyMethods")
 @Entity
-@Table(name = "requisition_templates")
+@Table(name = "requisition_templates", schema = "requisition")
 @NoArgsConstructor
 public class RequisitionTemplate extends BaseTimestampedEntity {
 
@@ -58,6 +58,7 @@ public class RequisitionTemplate extends BaseTimestampedEntity {
   @Column(name = "value")
   @CollectionTable(
       name = "columns_maps",
+      schema = "requisition",
       joinColumns = @JoinColumn(name = "requisitionTemplateId"))
   @Getter
   @Setter

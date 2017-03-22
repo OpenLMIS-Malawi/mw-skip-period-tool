@@ -35,11 +35,9 @@ import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
 @Entity
-@Table(name = "status_messages")
+@Table(name = "status_messages", schema = "requisition")
 @NoArgsConstructor
 public class StatusMessage extends BaseTimestampedEntity {
-
-  private static final String UUID = "pg-uuid";
 
   @ManyToOne(cascade = {CascadeType.REFRESH})
   @JoinColumn(name = "requisitionId", nullable = false)
@@ -49,7 +47,7 @@ public class StatusMessage extends BaseTimestampedEntity {
 
   @Getter
   @Setter
-  @Type(type = UUID)
+  @Type(type = UUID_TYPE)
   private UUID authorId;
 
   @Getter

@@ -60,6 +60,7 @@ public class Right extends BaseEntity {
 
   @ManyToMany(fetch = FetchType.EAGER)
   @JoinTable(name = "right_attachments",
+      schema = "referencedata",
       joinColumns = @JoinColumn(name = "rightid", nullable = false),
       inverseJoinColumns = @JoinColumn(name = "attachmentid", nullable = false))
   @Getter

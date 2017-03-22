@@ -70,9 +70,9 @@ import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 
-@SuppressWarnings("PMD.TooManyMethods")
+@SuppressWarnings({"PMD.TooManyMethods", "PMD.AvoidDuplicateLiterals"})
 @Entity
-@Table(name = "requisitions")
+@Table(name = "requisitions", schema = "requisition")
 @NoArgsConstructor
 @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
 public class Requisition extends BaseTimestampedEntity {
@@ -162,6 +162,7 @@ public class Requisition extends BaseTimestampedEntity {
 
   @ManyToMany
   @JoinTable(name = "requisitions_previous_requisitions",
+      schema = "requisition",
       joinColumns = {@JoinColumn(name = "requisitionId")},
       inverseJoinColumns = {@JoinColumn(name = "previousRequisitionId")})
   @Getter
@@ -172,6 +173,7 @@ public class Requisition extends BaseTimestampedEntity {
   @Column(name = "value")
   @CollectionTable(
       name = "available_non_full_supply_products",
+      schema = "requisition",
       joinColumns = @JoinColumn(name = "requisitionId"))
   @Getter
   @Setter

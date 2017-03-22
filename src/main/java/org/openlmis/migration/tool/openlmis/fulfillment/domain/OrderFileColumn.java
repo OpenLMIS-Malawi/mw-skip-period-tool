@@ -32,7 +32,7 @@ import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
 @Entity
-@Table(name = "order_file_columns")
+@Table(name = "order_file_columns", schema = "fulfillment")
 @NoArgsConstructor
 @AllArgsConstructor
 public class OrderFileColumn extends BaseEntity {

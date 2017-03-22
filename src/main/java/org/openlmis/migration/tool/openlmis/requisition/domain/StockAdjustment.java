@@ -29,7 +29,7 @@ import javax.persistence.Entity;
 import javax.persistence.Table;
 
 @Entity
-@Table(name = "stock_adjustments")
+@Table(name = "stock_adjustments", schema = "requisition")
 @NoArgsConstructor
 public class StockAdjustment extends BaseEntity {
 

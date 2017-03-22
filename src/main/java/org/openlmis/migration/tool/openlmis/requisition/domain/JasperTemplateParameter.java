@@ -40,7 +40,7 @@ import javax.persistence.Table;
  * </p>
  */
 @Entity
-@Table(name = "template_parameters")
+@Table(name = "template_parameters", schema = "requisition")
 @NoArgsConstructor
 @AllArgsConstructor
 public class JasperTemplateParameter extends BaseEntity {

@@ -50,6 +50,7 @@ public class AvailableRequisitionColumn extends BaseEntity {
   @Column(name = "value")
   @CollectionTable(
       name = "available_requisition_column_sources",
+      schema = "requisition",
       joinColumns = @JoinColumn(name = "columnId")
   )
   private Set<SourceType> sources;

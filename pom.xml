@@ -55,11 +55,25 @@
             <artifactId>ucanaccess</artifactId>
             <version>4.0.1</version>
         </dependency>
+        <!-- databases -->
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+        </dependency>
         <!-- joda money -->
         <dependency>
             <groupId>org.joda</groupId>
             <artifactId>joda-money</artifactId>
             <version>0.12</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jadira.usertype</groupId>
+            <artifactId>usertype.core</artifactId>
+            <version>5.0.0.GA</version>
         </dependency>
         <!-- apache commons -->
         <dependency>

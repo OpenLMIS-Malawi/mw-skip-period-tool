@@ -1,11 +1,9 @@
 package org.openlmis.migration.tool.batch;
 
+import static java.time.temporal.TemporalAdjusters.firstDayOfMonth;
+
 import com.google.common.collect.Lists;
 
-import org.openlmis.migration.tool.domain.Adjustment;
-import org.openlmis.migration.tool.domain.AdjustmentType;
-import org.openlmis.migration.tool.domain.Item;
-import org.openlmis.migration.tool.domain.Main;
 import org.openlmis.migration.tool.openlmis.fulfillment.domain.Order;
 import org.openlmis.migration.tool.openlmis.fulfillment.domain.OrderStatus;
 import org.openlmis.migration.tool.openlmis.fulfillment.domain.ProofOfDelivery;
@@ -16,18 +14,22 @@ import org.openlmis.migration.tool.openlmis.referencedata.domain.Orderable;
 import org.openlmis.migration.tool.openlmis.referencedata.domain.ProcessingPeriod;
 import org.openlmis.migration.tool.openlmis.referencedata.domain.Program;
 import org.openlmis.migration.tool.openlmis.referencedata.domain.StockAdjustmentReason;
-import org.openlmis.migration.tool.openlmis.referencedata.repository.OpenLmisFacilityRepository;
-import org.openlmis.migration.tool.openlmis.referencedata.repository.OpenLmisOrderableRepository;
-import org.openlmis.migration.tool.openlmis.referencedata.repository.OpenLmisProcessingPeriodRepository;
-import org.openlmis.migration.tool.openlmis.referencedata.repository.OpenLmisProgramRepository;
-import org.openlmis.migration.tool.openlmis.referencedata.repository.OpenLmisStockAdjustmentReasonRepository;
+import org.openlmis.migration.tool.openlmis.referencedata.repository.OlmisFacilityRepository;
+import org.openlmis.migration.tool.openlmis.referencedata.repository.OlmisOrderableRepository;
+import org.openlmis.migration.tool.openlmis.referencedata.repository.OlmisProcessingPeriodRepository;
+import org.openlmis.migration.tool.openlmis.referencedata.repository.OlmisProgramRepository;
+import org.openlmis.migration.tool.openlmis.referencedata.repository.OlmisStockAdjustmentReasonRepository;
 import org.openlmis.migration.tool.openlmis.requisition.domain.Requisition;
 import org.openlmis.migration.tool.openlmis.requisition.domain.RequisitionLineItem;
 import org.openlmis.migration.tool.openlmis.requisition.domain.RequisitionStatus;
 import org.openlmis.migration.tool.openlmis.requisition.domain.RequisitionTemplate;
 import org.openlmis.migration.tool.openlmis.requisition.domain.StockAdjustment;
-import org.openlmis.migration.tool.openlmis.requisition.repository.OpenLmisRequisitionTemplateRepository;
-import org.openlmis.migration.tool.repository.ItemRepository;
+import org.openlmis.migration.tool.openlmis.requisition.repository.OlmisRequisitionRepository;
+import org.openlmis.migration.tool.openlmis.requisition.repository.OlmisRequisitionTemplateRepository;
+import org.openlmis.migration.tool.scm.domain.Adjustment;
+import org.openlmis.migration.tool.scm.domain.Item;
+import org.openlmis.migration.tool.scm.domain.Main;
+import org.openlmis.migration.tool.scm.repository.ItemRepository;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -37,6 +39,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Component
 public class MainProcessor implements ItemProcessor<Main, Requisition> {
@@ -45,28 +48,31 @@ public class MainProcessor implements ItemProcessor<Main, Requisition> {
   private ItemRepository itemRepository;
 
   @Autowired
-  private OpenLmisFacilityRepository openLmisFacilityRepository;
+  private OlmisFacilityRepository olmisFacilityRepository;
 
   @Autowired
-  private OpenLmisProgramRepository openLmisProgramRepository;
+  private OlmisProgramRepository olmisProgramRepository;
 
   @Autowired
-  private OpenLmisProcessingPeriodRepository openLmisProcessingPeriodRepository;
+  private OlmisProcessingPeriodRepository olmisProcessingPeriodRepository;
 
   @Autowired
-  private OpenLmisRequisitionTemplateRepository openLmisRequisitionTemplateRepository;
+  private OlmisRequisitionTemplateRepository olmisRequisitionTemplateRepository;
 
   @Autowired
-  private OpenLmisStockAdjustmentReasonRepository openLmisStockAdjustmentReasonRepository;
+  private OlmisStockAdjustmentReasonRepository olmisStockAdjustmentReasonRepository;
 
   @Autowired
-  private OpenLmisOrderableRepository openLmisOrderableRepository;
+  private OlmisOrderableRepository olmisOrderableRepository;
 
   @Autowired
   private OrderRepository orderRepository;
 
   @Autowired
   private ProofOfDeliveryRepository proofOfDeliveryRepository;
+
+  @Autowired
+  private OlmisRequisitionRepository olmisRequisitionRepository;
 
   /**
    * Converts the given {@link Main} object into {@link Requisition} object.
@@ -92,28 +98,22 @@ public class MainProcessor implements ItemProcessor<Main, Requisition> {
   }
 
   private Requisition createRequisition(Main main, List<Item> items) {
-    ProcessingPeriod period = openLmisProcessingPeriodRepository
-        .findByStartDate(main.getId().getProcessingDate());
+    ProcessingPeriod period = olmisProcessingPeriodRepository
+        .findByStartDate(main.getId().getProcessingDate().toLocalDate().with(firstDayOfMonth()));
 
-    Program program = openLmisProgramRepository.findByName(main);
-    RequisitionTemplate template = openLmisRequisitionTemplateRepository
+    Program program = olmisProgramRepository.findByName(main.getProgramName());
+    RequisitionTemplate template = olmisRequisitionTemplateRepository
         .findByProgramId(program.getId());
 
     Requisition requisition = initRequisition(main, template, program, period);
+    requisition.setRequisitionLineItems(
+        items
+            .stream()
+            .map(item -> createLine(item,requisition, template, program, period))
+            .collect(Collectors.toList())
+    );
 
-    List<RequisitionLineItem> requisitionLineItems = Lists.newArrayList();
-
-    for (Item item : items) {
-      RequisitionLineItem requisitionLineItem = createLine(
-          item, requisition, template, program, period
-      );
-
-      requisitionLineItems.add(requisitionLineItem);
-    }
-
-    requisition.setRequisitionLineItems(requisitionLineItems);
-
-    List<Orderable> products = Lists.newArrayList(openLmisOrderableRepository.findAll());
+    List<Orderable> products = Lists.newArrayList(olmisOrderableRepository.findAll());
 
     requisition.submit(products, null);
     requisition.authorize(products, null);
@@ -121,13 +121,13 @@ public class MainProcessor implements ItemProcessor<Main, Requisition> {
 
     convertToOrder(requisition);
 
-    return requisition;
+    return olmisRequisitionRepository.save(requisition);
   }
 
   private Requisition initRequisition(Main main, RequisitionTemplate template, Program programDto,
                                       ProcessingPeriod processingPeriodDto) {
-    org.openlmis.migration.tool.domain.Facility mainFacility = main.getId().getFacility();
-    Facility facility = openLmisFacilityRepository
+    org.openlmis.migration.tool.scm.domain.Facility mainFacility = main.getId().getFacility();
+    Facility facility = olmisFacilityRepository
         .findByNameAndCode(mainFacility.getName(), mainFacility.getCode());
 
     Requisition requisition = new Requisition();
@@ -140,8 +140,9 @@ public class MainProcessor implements ItemProcessor<Main, Requisition> {
     requisition.setTemplate(template);
     requisition.setNumberOfMonthsInPeriod(processingPeriodDto.getDurationInMonths());
     requisition.setStatus(RequisitionStatus.INITIATED);
+    requisition.setEmergency(false);
 
-    return requisition;
+    return olmisRequisitionRepository.save(requisition);
   }
 
   private ZonedDateTime safeNull(LocalDateTime dateTime) {
@@ -151,9 +152,9 @@ public class MainProcessor implements ItemProcessor<Main, Requisition> {
   }
 
   private RequisitionLineItem createLine(Item item, Requisition requisition,
-                                         RequisitionTemplate template, Program programDto,
+                                         RequisitionTemplate template, Program program,
                                          ProcessingPeriod processingPeriodDto) {
-    Orderable orderableDto = openLmisOrderableRepository.findByName(item);
+    Orderable orderableDto = olmisOrderableRepository.findByName(item.getProductName());
 
     RequisitionLineItem requisitionLineItem = new RequisitionLineItem();
     requisitionLineItem.setMaxPeriodsOfStock(
@@ -167,9 +168,8 @@ public class MainProcessor implements ItemProcessor<Main, Requisition> {
 
     List<StockAdjustment> stockAdjustments = Lists.newArrayList();
     for (Adjustment adjustment : item.getAdjustments()) {
-      AdjustmentType adjustmentType = adjustment.getType();
-      StockAdjustmentReason stockAdjustmentReasonDto = openLmisStockAdjustmentReasonRepository
-          .findByProgram(programDto, adjustmentType);
+      StockAdjustmentReason stockAdjustmentReasonDto = olmisStockAdjustmentReasonRepository
+          .findByProgramAndName(program, adjustment.getType().getCode());
 
       StockAdjustment stockAdjustment = new StockAdjustment();
       stockAdjustment.setReasonId(stockAdjustmentReasonDto.getId());
@@ -189,7 +189,7 @@ public class MainProcessor implements ItemProcessor<Main, Requisition> {
     requisitionLineItem.setRemarks(item.getId().toString());
 
     requisitionLineItem.calculateAndSetFields(
-        template, Lists.newArrayList(openLmisStockAdjustmentReasonRepository.findAll()),
+        template, Lists.newArrayList(olmisStockAdjustmentReasonRepository.findAll()),
         requisition.getNumberOfMonthsInPeriod()
     );
     return requisitionLineItem;
@@ -202,6 +202,7 @@ public class MainProcessor implements ItemProcessor<Main, Requisition> {
 
     Order order = Order.newOrder(requisition);
     order.setStatus(OrderStatus.RECEIVED);
+    order.setOrderCode("O" + requisition.getId() + "R");
 
     // TODO: determine proper values for those properties
     ProofOfDelivery proofOfDelivery = new ProofOfDelivery(order);

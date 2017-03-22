@@ -1,19 +1,19 @@
 package org.openlmis.migration.tool.batch;
 
-import org.openlmis.migration.tool.domain.Comment;
-import org.openlmis.migration.tool.domain.Item;
-import org.openlmis.migration.tool.domain.Main;
-import org.openlmis.migration.tool.domain.Purpose;
+import org.openlmis.migration.tool.scm.domain.Comment;
+import org.openlmis.migration.tool.scm.domain.Item;
+import org.openlmis.migration.tool.scm.domain.Main;
+import org.openlmis.migration.tool.scm.domain.Purpose;
 import org.openlmis.migration.tool.openlmis.referencedata.domain.Facility;
 import org.openlmis.migration.tool.openlmis.referencedata.domain.Orderable;
 import org.openlmis.migration.tool.openlmis.referencedata.domain.ProcessingPeriod;
-import org.openlmis.migration.tool.openlmis.referencedata.repository.OpenLmisFacilityRepository;
-import org.openlmis.migration.tool.openlmis.referencedata.repository.OpenLmisOrderableRepository;
-import org.openlmis.migration.tool.openlmis.referencedata.repository.OpenLmisProcessingPeriodRepository;
+import org.openlmis.migration.tool.openlmis.referencedata.repository.OlmisFacilityRepository;
+import org.openlmis.migration.tool.openlmis.referencedata.repository.OlmisOrderableRepository;
+import org.openlmis.migration.tool.openlmis.referencedata.repository.OlmisProcessingPeriodRepository;
 import org.openlmis.migration.tool.openlmis.requisition.domain.Requisition;
 import org.openlmis.migration.tool.openlmis.requisition.domain.RequisitionLineItem;
-import org.openlmis.migration.tool.repository.ItemRepository;
-import org.openlmis.migration.tool.repository.MainRepository;
+import org.openlmis.migration.tool.scm.repository.ItemRepository;
+import org.openlmis.migration.tool.scm.repository.MainRepository;
 import org.springframework.batch.item.ItemWriter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -37,13 +37,13 @@ public class RequisitionWriter implements ItemWriter<Requisition> {
   private ItemRepository itemRepository;
 
   @Autowired
-  private OpenLmisFacilityRepository openLmisFacilityRepository;
+  private OlmisFacilityRepository olmisFacilityRepository;
 
   @Autowired
-  private OpenLmisProcessingPeriodRepository openLmisProcessingPeriodRepository;
+  private OlmisProcessingPeriodRepository olmisProcessingPeriodRepository;
 
   @Autowired
-  private OpenLmisOrderableRepository openLmisOrderableRepository;
+  private OlmisOrderableRepository olmisOrderableRepository;
 
   /**
    * Writes Reuisitons into OpenLMIS database.
@@ -54,8 +54,8 @@ public class RequisitionWriter implements ItemWriter<Requisition> {
   }
 
   private void print(Requisition requisition) {
-    Facility facility = openLmisFacilityRepository.findOne(requisition.getFacilityId());
-    ProcessingPeriod period = openLmisProcessingPeriodRepository
+    Facility facility = olmisFacilityRepository.findOne(requisition.getFacilityId());
+    ProcessingPeriod period = olmisProcessingPeriodRepository
         .findOne(requisition.getProcessingPeriodId());
 
     String format =
@@ -84,7 +84,7 @@ public class RequisitionWriter implements ItemWriter<Requisition> {
 
       for (RequisitionLineItem line : requisition.getRequisitionLineItems()) {
         item = itemRepository.findOne(Integer.valueOf(line.getRemarks()));
-        Orderable orderableDto = openLmisOrderableRepository.findByName(item);
+        Orderable orderableDto = olmisOrderableRepository.findByName(item.getProductName());
 
         System.err.printf(
             format,

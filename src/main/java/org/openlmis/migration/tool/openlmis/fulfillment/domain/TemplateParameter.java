@@ -32,7 +32,7 @@ import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
 @Entity
-@Table(name = "template_parameters")
+@Table(name = "template_parameters", schema = "fulfillment")
 @NoArgsConstructor
 @AllArgsConstructor
 public class TemplateParameter extends BaseEntity {
