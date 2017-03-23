@@ -1,26 +1,30 @@
 package org.openlmis.migration.tool;
 
 import org.openlmis.migration.tool.openlmis.BaseEntity;
-import org.openlmis.migration.tool.openlmis.referencedata.domain.Facility;
+import org.openlmis.migration.tool.openlmis.referencedata.domain.FacilityType;
 import org.openlmis.migration.tool.openlmis.referencedata.domain.Orderable;
-import org.openlmis.migration.tool.openlmis.referencedata.domain.ProcessingPeriod;
+import org.openlmis.migration.tool.openlmis.referencedata.domain.OrderableDisplayCategory;
 import org.openlmis.migration.tool.openlmis.referencedata.domain.Program;
-import org.openlmis.migration.tool.openlmis.referencedata.domain.StockAdjustmentReason;
+import org.openlmis.migration.tool.openlmis.referencedata.domain.ProgramOrderable;
 import org.openlmis.migration.tool.openlmis.referencedata.repository.OlmisFacilityRepository;
+import org.openlmis.migration.tool.openlmis.referencedata.repository.OlmisFacilityTypeApprovedProductRepository;
+import org.openlmis.migration.tool.openlmis.referencedata.repository.OlmisFacilityTypeRepository;
 import org.openlmis.migration.tool.openlmis.referencedata.repository.OlmisOrderableRepository;
 import org.openlmis.migration.tool.openlmis.referencedata.repository.OlmisProcessingPeriodRepository;
+import org.openlmis.migration.tool.openlmis.referencedata.repository.OlmisProgramOrderableRepository;
 import org.openlmis.migration.tool.openlmis.referencedata.repository.OlmisProgramRepository;
 import org.openlmis.migration.tool.openlmis.referencedata.repository.OlmisStockAdjustmentReasonRepository;
+import org.openlmis.migration.tool.openlmis.referencedata.repository.custom.OlmisOrderableDisplayCategoryRepository;
 import org.openlmis.migration.tool.openlmis.referencedata.util.ReferenceDataUtil;
-import org.openlmis.migration.tool.openlmis.requisition.domain.RequisitionTemplate;
 import org.openlmis.migration.tool.openlmis.requisition.repository.OlmisRequisitionTemplateRepository;
 import org.openlmis.migration.tool.openlmis.requisition.util.RequsitionUtil;
-import org.openlmis.migration.tool.scm.domain.AdjustmentType;
 import org.openlmis.migration.tool.scm.domain.Main;
 import org.openlmis.migration.tool.scm.repository.AdjustmentTypeRepository;
 import org.openlmis.migration.tool.scm.repository.FacilityRepository;
 import org.openlmis.migration.tool.scm.repository.ItemRepository;
 import org.openlmis.migration.tool.scm.repository.MainRepository;
+import org.openlmis.migration.tool.scm.repository.ProductRepository;
+import org.openlmis.migration.tool.scm.repository.ProgramRepository;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.launch.JobLauncher;
@@ -33,18 +37,11 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 import java.util.Collection;
-import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 @SpringBootApplication
 public class AppConfiguration {
-
-  @Autowired
-  private JobLauncher jobLauncher;
-
-  @Autowired
-  private Job mainTransformJob;
 
   @Autowired
   private ReferenceDataUtil referenceDataUtil;
@@ -82,11 +79,29 @@ public class AppConfiguration {
   @Autowired
   private OlmisRequisitionTemplateRepository olmisRequisitionTemplateRepository;
 
+  @Autowired
+  private OlmisFacilityTypeRepository olmisFacilityTypeRepository;
+
+  @Autowired
+  private OlmisOrderableDisplayCategoryRepository olmisOrderableDisplayCategoryRepository;
+
+  @Autowired
+  private OlmisFacilityTypeApprovedProductRepository olmisFacilityTypeApprovedProductRepository;
+
+  @Autowired
+  private OlmisProgramOrderableRepository olmisProgramOrderableRepository;
+
+  @Autowired
+  private ProgramRepository programRepository;
+
+  @Autowired
+  private ProductRepository productRepository;
+
   /**
    * Here the application starts with spring context.
    */
   @Bean
-  public CommandLineRunner commandLineRunner() {
+  public CommandLineRunner commandLineRunner(JobLauncher jobLauncher, Job mainTransformJob) {
     return args -> {
       // create demo data (it will be removed in future)
       createDemoData();
@@ -97,64 +112,91 @@ public class AppConfiguration {
   }
 
   private void createDemoData() {
-    List<Orderable> orderables = StreamSupport
-        .stream(itemRepository.findAll().spliterator(), false)
-        .map(referenceDataUtil::create)
-        .collect(Collectors.toList());
+    FacilityType facilityType = olmisFacilityTypeRepository.save(referenceDataUtil.create());
 
-    olmisOrderableRepository.save(orderables);
-
-    List<Facility> facilities = StreamSupport
+    StreamSupport
         .stream(facilityRepository.findAll().spliterator(), false)
-        .map(facility -> referenceDataUtil.create(facility.getName(), facility.getCode()))
-        .collect(Collectors.toList());
+        .map(facility -> referenceDataUtil.create(
+            facility.getName(), facility.getCode(), facilityType
+        ))
+        .forEach(olmisFacilityRepository::save);
 
-    olmisFacilityRepository.save(facilities);
-
-    List<ProcessingPeriod> periods = StreamSupport
+    StreamSupport
         .stream(mainRepository.findAll().spliterator(), false)
         .map(Main::getId)
         .map(Main.ComplexId::getProcessingDate)
+        .distinct()
         .map(referenceDataUtil::create)
-        .collect(Collectors.toList());
+        .forEach(olmisProcessingPeriodRepository::save);
 
-    olmisProcessingPeriodRepository.save(periods);
+    StreamSupport
+        .stream(programRepository.findAll().spliterator(), false)
+        .map(referenceDataUtil::create)
+        .forEach(olmisOrderableDisplayCategoryRepository::save);
 
-    List<Program> programs = StreamSupport
+    StreamSupport
+        .stream(productRepository.findAll().spliterator(), false)
+        .map(referenceDataUtil::create)
+        .forEach(olmisOrderableRepository::save);
+
+    StreamSupport
         .stream(mainRepository.findAll().spliterator(), false)
-        .map(referenceDataUtil::create)
-        .collect(Collectors.toList());
+        .map(main ->
+            new Pair<>(main, itemRepository.findByProcessingDateAndFacility(
+                main.getId().getProcessingDate(), main.getId().getFacility()
+            ))
+        )
+        .map(pair -> {
+          Main main = pair.getLeft();
+          Program program = olmisProgramRepository.save(referenceDataUtil.create(main));
 
-    olmisProgramRepository.save(programs);
+          return pair
+              .getRight()
+              .stream()
+              .map(item -> {
+                Orderable orderable = olmisOrderableRepository.findByNameIgnoreCase(
+                    item.getProductName()
+                );
 
-    List<StockAdjustmentReason> reasons = StreamSupport
+                OrderableDisplayCategory category = olmisOrderableDisplayCategoryRepository
+                    .findByDisplayName(item.getCategoryProduct().getProgram().getName());
+
+                ProgramOrderable programOrderable = olmisProgramOrderableRepository.save(
+                    referenceDataUtil.create(
+                        program, orderable, category, item.getCategoryProduct().getOrder(), 5
+                    )
+                );
+
+                return referenceDataUtil.create(facilityType, programOrderable);
+              })
+              .collect(Collectors.toList());
+        })
+        .forEach(olmisFacilityTypeApprovedProductRepository::save);
+
+    StreamSupport
         .stream(adjustmentTypeRepository.findAll().spliterator(), false)
         .map(type ->
-            programs
-                .stream()
-                .map(program -> new Pair(type, program))
+            StreamSupport
+                .stream(olmisProgramRepository.findAll().spliterator(), false)
+                .map(program -> new Pair<>(type, program))
                 .collect(Collectors.toList())
         )
         .flatMap(Collection::stream)
-        .map(pair -> referenceDataUtil.create(pair.getProgram(), pair.getType()))
-        .collect(Collectors.toList());
+        .map(pair -> referenceDataUtil.create(pair.getRight(), pair.getLeft()))
+        .forEach(olmisStockAdjustmentReasonRepository::save);
 
-    olmisStockAdjustmentReasonRepository.save(reasons);
-
-    List<RequisitionTemplate> templates = programs
-        .stream()
+    StreamSupport
+        .stream(olmisProgramRepository.findAll().spliterator(), false)
         .map(BaseEntity::getId)
         .map(requsitionUtil::createTemplate)
-        .collect(Collectors.toList());
-
-    olmisRequisitionTemplateRepository.save(templates);
+        .forEach(olmisRequisitionTemplateRepository::save);
   }
 
   @AllArgsConstructor
   @Getter
-  private static class Pair {
-    private final AdjustmentType type;
-    private final Program program;
+  private static class Pair<L, R> {
+    private final L left;
+    private final R right;
   }
 
 }

@@ -21,8 +21,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.util.UUID;
-
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.JoinColumn;
@@ -60,19 +58,6 @@ public class FacilityTypeApprovedProduct extends BaseEntity {
   @Getter
   @Setter
   private Double emergencyOrderPoint;
-
-  /**
-   * Export this object to the specified exporter (DTO).
-   *
-   * @param exporter exporter to export to
-   */
-  public void export(Exporter exporter) {
-    exporter.setId(id);
-    exporter.setProgramOrderable(programOrderable);
-    exporter.setMaxPeriodsOfStock(maxPeriodsOfStock);
-    exporter.setMinPeriodsOfStock(minPeriodsOfStock);
-    exporter.setEmergencyOrderPoint(emergencyOrderPoint);
-  }
 
   @Override
   public boolean equals(Object other) {
@@ -112,30 +97,5 @@ public class FacilityTypeApprovedProduct extends BaseEntity {
     result = 31 * result + (minPeriodsOfStock != null ? minPeriodsOfStock.hashCode() : 0);
     result = 31 * result + (emergencyOrderPoint != null ? emergencyOrderPoint.hashCode() : 0);
     return result;
-  }
-
-
-  public interface Exporter {
-    void setId(UUID id);
-
-    void setProgramOrderable(ProgramOrderable programOrderable);
-
-    void setMaxPeriodsOfStock(Double maxPeriodsOfStock);
-
-    void setMinPeriodsOfStock(Double minPeriodsOfStock);
-
-    void setEmergencyOrderPoint(Double emergencyOrderPoint);
-  }
-
-  public interface Importer {
-    UUID getId();
-
-    ProgramOrderable.Importer getProgramOrderable();
-
-    Double getMaxPeriodsOfStock();
-
-    Double getMinPeriodsOfStock();
-
-    Double getEmergencyOrderPoint();
   }
 }

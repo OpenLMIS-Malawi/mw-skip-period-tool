@@ -11,4 +11,9 @@ public interface ItemRepository extends ReadOnlyRepository<Item, Integer> {
 
   List<Item> findByProcessingDateAndFacility(LocalDateTime processingDate, Facility facility);
 
+  Item findByProcessingDateAndFacilityAndProductName(LocalDateTime processingDate,
+                                                     Facility facility, String productName);
+
+  Item findByProductName(String productName);
+
 }

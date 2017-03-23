@@ -177,7 +177,6 @@ public class Requisition extends BaseTimestampedEntity {
       joinColumns = @JoinColumn(name = "requisitionId"))
   @Getter
   @Setter
-  @Type(type = UUID_TYPE)
   private Set<UUID> availableNonFullSupplyProducts;
 
   /**
@@ -446,7 +445,7 @@ public class Requisition extends BaseTimestampedEntity {
    * Sets appropriate value for Previous Adjusted Consumptions field in
    * each {@link RequisitionLineItem}.
    */
-  public void setPreviousAdjustedConsumptions(int numberOfPreviousPeriodsToAverage) {
+  private void setPreviousAdjustedConsumptions(int numberOfPreviousPeriodsToAverage) {
     List<RequisitionLineItem> previousRequisitionLineItems = RequisitionHelper
         .getNonSkippedLineItems(previousRequisitions.subList(0, numberOfPreviousPeriodsToAverage));
 

@@ -15,11 +15,6 @@
 
 package org.openlmis.migration.tool.openlmis.referencedata.domain;
 
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.databind.SerializerProvider;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.fasterxml.jackson.databind.ser.std.StdSerializer;
-
 import org.hibernate.annotations.Parameter;
 import org.hibernate.annotations.Type;
 import org.joda.money.CurrencyUnit;
@@ -31,10 +26,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.Objects;
-import java.util.UUID;
 
 import javax.persistence.Entity;
 import javax.persistence.JoinColumn;
@@ -44,35 +37,29 @@ import javax.persistence.Table;
 @Entity
 @Table(name = "program_orderables", schema = "referencedata")
 @NoArgsConstructor
-@JsonSerialize(using = ProgramOrderable.ProgramOrderableSerializer.class)
+@Getter
+@Setter
 public class ProgramOrderable extends BaseEntity {
 
   @ManyToOne
   @JoinColumn(name = "programId", nullable = false)
-  @Getter
   private Program program;
 
   @ManyToOne
   @JoinColumn(name = "orderableId", nullable = false)
-  @Getter
   private Orderable product;
 
   private Integer dosesPerPatient;
 
-  @Getter
   private boolean active;
 
   @ManyToOne
   @JoinColumn(name = "orderableDisplayCategoryId", nullable = false)
-  @Getter
   private OrderableDisplayCategory orderableDisplayCategory;
 
-  @Getter
   private boolean fullSupply;
   private int displayOrder;
 
-  @Getter
-  @Setter
   @Type(type = "org.jadira.usertype.moneyandcurrency.joda.PersistentMoneyAmount",
       parameters = {@Parameter(name = "currencyCode", value = CurrencyConfig.CURRENCY_CODE)})
   private Money pricePerPack;
@@ -180,120 +167,4 @@ public class ProgramOrderable extends BaseEntity {
     return Objects.hash(program, product);
   }
 
-  /**
-   * JSON Serializer for ProgramOrderables.
-   */
-  public static class ProgramOrderableSerializer extends StdSerializer<ProgramOrderable> {
-    public ProgramOrderableSerializer() {
-      this(null);
-    }
-
-    public ProgramOrderableSerializer(Class<ProgramOrderable> programOrderableClass) {
-      super(programOrderableClass);
-    }
-
-    @Override
-    public void serialize(ProgramOrderable programOrderable, JsonGenerator generator,
-                          SerializerProvider provider) throws IOException {
-      generator.writeStartObject();
-      generator.writeStringField("programId", programOrderable.program.getId().toString());
-      generator.writeStringField("orderableId", programOrderable.product.getId().toString());
-      generator.writeStringField("orderableDisplayCategoryId",
-          programOrderable.orderableDisplayCategory.getId().toString());
-      generator.writeStringField("orderableCategoryDisplayName",
-          programOrderable.orderableDisplayCategory.getOrderedDisplayValue().getDisplayName());
-      generator.writeNumberField("orderableCategoryDisplayOrder",
-          programOrderable.orderableDisplayCategory.getOrderedDisplayValue().getDisplayOrder());
-      generator.writeBooleanField("active", programOrderable.active);
-      generator.writeBooleanField("fullSupply", programOrderable.fullSupply);
-      generator.writeNumberField("displayOrder", programOrderable.displayOrder);
-      if (null != programOrderable.dosesPerPatient) {
-        generator.writeNumberField("dosesPerPatient", programOrderable.dosesPerPatient);
-      }
-      if (null != programOrderable.pricePerPack) {
-        generator.writeNumberField("pricePerPack", programOrderable.pricePerPack.getAmount());
-      }
-      generator.writeEndObject();
-    }
-  }
-
-  /**
-   * Export this object to the specified exporter (DTO).
-   *
-   * @param exporter exporter to export to
-   */
-  public void export(Exporter exporter) {
-    exporter.setId(id);
-    exporter.setOrderableId(product.getId());
-    exporter.setOrderableName(product.getName());
-    exporter.setOrderableCode(product.getProductCode());
-    exporter.setOrderablePackSize(product.getPackSize());
-    exporter.setOrderableDisplayCategoryId(orderableDisplayCategory.getId());
-    exporter.setOrderableCategoryDisplayName(
-        orderableDisplayCategory.getOrderedDisplayValue().getDisplayName());
-    exporter.setOrderableCategoryDisplayOrder(
-        orderableDisplayCategory.getOrderedDisplayValue().getDisplayOrder());
-    exporter.setActive(active);
-    exporter.setFullSupply(fullSupply);
-    exporter.setDisplayOrder(displayOrder);
-    exporter.setDosesPerPatient(dosesPerPatient);
-    if (pricePerPack != null) {
-      exporter.setPricePerPack(pricePerPack);
-    }
-
-  }
-
-  public interface Exporter {
-    void setId(UUID id);
-
-    void setOrderableId(UUID productId);
-
-    void setOrderableName(String productName);
-
-    void setOrderableCode(Code productCode);
-
-    void setOrderablePackSize(Long packSize);
-
-    void setOrderableDisplayCategoryId(UUID orderableDisplayCategoryId);
-
-    void setOrderableCategoryDisplayName(String orderableCategoryDisplayName);
-
-    void setOrderableCategoryDisplayOrder(int orderableCategoryDisplayOrder);
-
-    void setActive(boolean active);
-
-    void setFullSupply(boolean fullSupply);
-
-    void setDisplayOrder(int displayOrder);
-
-    void setDosesPerPatient(Integer dosesPerPatient);
-
-    void setPricePerPack(Money pricePerPack);
-  }
-
-  public interface Importer {
-    UUID getId();
-
-    String getOrderableName();
-
-    Code getOrderableCode();
-
-    Long getOrderablePackSize();
-
-    UUID getOrderableDisplayCategoryId();
-
-    String getOrderableCategoryDisplayName();
-
-    int getOrderableCategoryDisplayOrder();
-
-    boolean isActive();
-
-    boolean isFullSupply();
-
-    int getDisplayOrder();
-
-    Integer getDosesPerPatient();
-
-    Money getPricePerPack();
-  }
 }

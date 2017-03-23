@@ -7,6 +7,6 @@ import java.util.UUID;
 
 public interface OlmisOrderableRepository extends CrudRepository<Orderable, UUID> {
 
-  Orderable findByName(String name);
+  Orderable findByNameIgnoreCase(String name);
 
 }

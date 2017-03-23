@@ -20,6 +20,7 @@ import com.google.common.base.Strings;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.util.Objects;
 
@@ -30,6 +31,7 @@ import javax.persistence.Embeddable;
  * a simple immutable value meant to be used in fuller entities.
  */
 @Embeddable
+@NoArgsConstructor
 public class OrderedDisplayValue {
   @JsonProperty
   @Getter
@@ -37,9 +39,6 @@ public class OrderedDisplayValue {
   @JsonProperty
   @Getter
   private int displayOrder;
-
-  private OrderedDisplayValue() {
-  }
 
   /**
    * Create a new ordered display value.

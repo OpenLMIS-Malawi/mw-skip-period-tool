@@ -8,6 +8,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.boot.Banner;
 import org.springframework.boot.SpringApplication;
 
+import java.util.Properties;
+
 public class App {
   private static final Logger LOGGER = LoggerFactory.getLogger(App.class);
 
@@ -27,7 +29,11 @@ public class App {
     try {
       commander.parse(args);
 
+      Properties properties = new Properties();
+      properties.setProperty("spring.batch.job.enabled", "false");
+
       SpringApplication application = new SpringApplication(AppConfiguration.class);
+      application.setDefaultProperties(properties);
       application.setBannerMode(Banner.Mode.LOG);
       application.addInitializers(
           cxt -> cxt

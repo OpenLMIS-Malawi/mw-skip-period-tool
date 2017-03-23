@@ -1,7 +1,6 @@
 package org.openlmis.migration.tool.openlmis;
 
 import static org.hibernate.cfg.AvailableSettings.DIALECT;
-import static org.hibernate.cfg.AvailableSettings.HBM2DDL_AUTO;
 import static org.hibernate.cfg.AvailableSettings.IMPLICIT_NAMING_STRATEGY;
 import static org.hibernate.cfg.AvailableSettings.PHYSICAL_NAMING_STRATEGY;
 import static org.hibernate.cfg.AvailableSettings.SHOW_SQL;
@@ -20,6 +19,8 @@ import org.springframework.transaction.PlatformTransactionManager;
 
 import java.util.Properties;
 
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
 import javax.sql.DataSource;
 
 @Configuration
@@ -33,19 +34,33 @@ public class OlmisConfiguration {
    */
   @Bean
   PlatformTransactionManager olmisTransactionManager() {
-    return new JpaTransactionManager(olmisEntityManagerFactory().getObject());
+    return new JpaTransactionManager(olmisEntityManagerFactory());
+  }
+
+  @Bean
+  EntityManager olmisEntityManager() {
+    return olmisEntityManagerFactory().createEntityManager();
+  }
+
+  @Bean
+  EntityManagerFactory olmisEntityManagerFactory() {
+    return olmisEntityManagerFactoryBean().getObject();
   }
 
   /**
    * Declare the SCMgr entity manager factory.
    */
   @Bean
-  LocalContainerEntityManagerFactoryBean olmisEntityManagerFactory() {
+  LocalContainerEntityManagerFactoryBean olmisEntityManagerFactoryBean() {
     LocalContainerEntityManagerFactoryBean entityManagerFactory =
         new LocalContainerEntityManagerFactoryBean();
 
     entityManagerFactory.setDataSource(olmisDataSource());
-    entityManagerFactory.setPackagesToScan("org.openlmis.migration.tool.openlmis");
+    entityManagerFactory.setPackagesToScan(
+        "org.openlmis.migration.tool.openlmis.fulfillment.domain",
+        "org.openlmis.migration.tool.openlmis.requisition.domain",
+        "org.openlmis.migration.tool.openlmis.referencedata.domain"
+    );
 
     HibernateJpaVendorAdapter vendorAdapter = new HibernateJpaVendorAdapter();
     vendorAdapter.setGenerateDdl(true);
@@ -59,8 +74,7 @@ public class OlmisConfiguration {
     properties.setProperty(PHYSICAL_NAMING_STRATEGY, CustomPhysicalNamingStrategy.class.getName());
     properties.setProperty(DIALECT, PostgreSQL94Dialect.class.getName());
     properties.setProperty(SHOW_SQL, "false");
-    // TODO: change that to validate
-    properties.setProperty(HBM2DDL_AUTO, "create-drop");
+    properties.setProperty("hibernate.hbm2ddl.auto", "create-drop");
 
     entityManagerFactory.setJpaProperties(properties);
 

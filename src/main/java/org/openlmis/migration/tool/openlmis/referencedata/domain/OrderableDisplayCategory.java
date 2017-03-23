@@ -20,6 +20,8 @@ import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import org.openlmis.migration.tool.openlmis.BaseEntity;
 
 import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.util.Objects;
 
@@ -32,34 +34,17 @@ import javax.persistence.Table;
  */
 @Entity
 @Table(name = "orderable_display_categories", schema = "referencedata")
+@Getter
+@Setter
+@NoArgsConstructor
 public class OrderableDisplayCategory extends BaseEntity {
 
   @Embedded
-  @Getter
   private Code code;
 
   @Embedded
   @JsonUnwrapped
-  @Getter
   private OrderedDisplayValue orderedDisplayValue;
-
-  private OrderableDisplayCategory() {
-  }
-
-  /**
-   * Creates a new OrderableDisplayCategory.
-   *
-   * @param code         this OrderableDisplayCategory's unique implementation code.
-   * @param displayValue the display values of this OrderableDisplayCategory.
-   * @return a new OrderableDisplayCategory.
-   * @throws NullPointerException if either parameter is null.
-   */
-  protected OrderableDisplayCategory(Code code, OrderedDisplayValue displayValue) {
-    Objects.requireNonNull(code);
-    Objects.requireNonNull(displayValue);
-    this.code = code;
-    this.orderedDisplayValue = displayValue;
-  }
 
   /**
    * Update this from another.  Copies display values from the other OrderableDisplayCategory
@@ -69,33 +54,6 @@ public class OrderableDisplayCategory extends BaseEntity {
    */
   public void updateFrom(OrderableDisplayCategory orderableDisplayCategory) {
     this.orderedDisplayValue = orderableDisplayCategory.orderedDisplayValue;
-  }
-
-  /**
-   * Creates a new OrderableDisplayCategory.
-   *
-   * @param orderableDisplayCategoryCode this OrderableDisplayCategory's unique implementation
-   *                                     code.
-   * @return a new OrderableDisplayCategory using default display value and order
-   * @throws NullPointerException if parameter is null.
-   */
-  public static OrderableDisplayCategory createNew(Code orderableDisplayCategoryCode) {
-    return OrderableDisplayCategory.createNew(orderableDisplayCategoryCode,
-        new OrderedDisplayValue(orderableDisplayCategoryCode.toString(), 1));
-  }
-
-  /**
-   * Creates a new OrderableDisplayCategory.
-   *
-   * @param orderableDisplayCategoryCode this OrderableDisplayCategory's unique implementation
-   *                                     code.
-   * @param displayValue                 the display values of this OrderableDisplayCategory.
-   * @return a new OrderableDisplayCategory.
-   * @throws NullPointerException if either parameter is null.
-   */
-  public static OrderableDisplayCategory createNew(Code orderableDisplayCategoryCode,
-                                                   OrderedDisplayValue displayValue) {
-    return new OrderableDisplayCategory(orderableDisplayCategoryCode, displayValue);
   }
 
   @Override
