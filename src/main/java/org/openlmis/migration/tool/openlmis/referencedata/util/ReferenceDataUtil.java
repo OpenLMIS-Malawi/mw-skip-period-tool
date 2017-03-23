@@ -111,6 +111,9 @@ public class ReferenceDataUtil {
     return reason;
   }
 
+  /**
+   * Creates new facility type.
+   */
   public FacilityType create() {
     FacilityType type = new FacilityType();
     type.setCode("first_facility_type");
@@ -118,6 +121,9 @@ public class ReferenceDataUtil {
     return type;
   }
 
+  /**
+   * Creates new orderable display category.
+   */
   public OrderableDisplayCategory create(org.openlmis.migration.tool.scm.domain.Program program) {
     String displayName = program.getName();
     Integer displayOrder = program.getOrder();
@@ -129,6 +135,9 @@ public class ReferenceDataUtil {
     return category;
   }
 
+  /**
+   * Creates new program orderable.
+   */
   public ProgramOrderable create(Program program, Orderable product,
                                  OrderableDisplayCategory category,
                                  int displayOrder, double pricePerPack) {
@@ -144,6 +153,9 @@ public class ReferenceDataUtil {
     return programOrderable;
   }
 
+  /**
+   * Creates new facility type approved product.
+   */
   public FacilityTypeApprovedProduct create(FacilityType facilityType,
                                             ProgramOrderable programOrderable) {
     FacilityTypeApprovedProduct approvedProduct = new FacilityTypeApprovedProduct();

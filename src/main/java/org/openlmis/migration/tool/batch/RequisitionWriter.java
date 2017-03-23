@@ -70,23 +70,25 @@ public class RequisitionWriter implements ItemWriter<Requisition> {
   }
 
   private void print(Requisition requisition) {
-    Facility oFacility = olmisFacilityRepository.findOne(requisition.getFacilityId());
+    Facility olmisFacility = olmisFacilityRepository.findOne(requisition.getFacilityId());
     ProcessingPeriod period = olmisProcessingPeriodRepository
         .findOne(requisition.getProcessingPeriodId());
 
     String format =
         "%-8s|%-57s|%-14s|%-18s|%-16s|%-18s|%-17s|%-17s|%-21s|%-18s|%-20s|%-17s|%-9s|%-13s|%-5s%n";
 
-    System.err.printf("Facility (code): %s (%s)%n", oFacility.getName(), oFacility.getCode());
+    System.err.printf(
+        "Facility (code): %s (%s)%n", olmisFacility.getName(), olmisFacility.getCode()
+    );
     System.err.printf("Period: %s%n", printPeriod(period));
 
     Program program = olmisProgramRepository.findOne(requisition.getProgramId());
     String[] programName = program.getName().split(" ");
-    org.openlmis.migration.tool.scm.domain.Facility sFacility = facilityRepository
+    org.openlmis.migration.tool.scm.domain.Facility scmFacility = facilityRepository
         .findByCode(programName[1]);
     LocalDateTime processingDate = LocalDate.parse(programName[2]).atStartOfDay();
 
-    Main main = mainRepository.findOne(new Main.ComplexId(sFacility, processingDate));
+    Main main = mainRepository.findOne(new Main.ComplexId(scmFacility, processingDate));
 
     // TODO: does this field are necessary? Where they should be in the openlmis system?
     System.err.printf(
