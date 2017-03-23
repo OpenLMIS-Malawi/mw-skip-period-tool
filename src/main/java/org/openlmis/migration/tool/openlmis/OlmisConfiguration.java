@@ -1,5 +1,7 @@
 package org.openlmis.migration.tool.openlmis;
 
+import static org.apache.commons.lang3.ObjectUtils.defaultIfNull;
+import static org.apache.commons.lang3.StringUtils.defaultIfBlank;
 import static org.hibernate.cfg.AvailableSettings.DIALECT;
 import static org.hibernate.cfg.AvailableSettings.IMPLICIT_NAMING_STRATEGY;
 import static org.hibernate.cfg.AvailableSettings.PHYSICAL_NAMING_STRATEGY;
@@ -7,6 +9,7 @@ import static org.hibernate.cfg.AvailableSettings.SHOW_SQL;
 
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl;
 import org.hibernate.dialect.PostgreSQL94Dialect;
+import org.openlmis.migration.tool.Arguments;
 import org.postgresql.Driver;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -33,29 +36,29 @@ public class OlmisConfiguration {
    * Declare the SCMgr transaction manager.
    */
   @Bean
-  PlatformTransactionManager olmisTransactionManager() {
-    return new JpaTransactionManager(olmisEntityManagerFactory());
+  PlatformTransactionManager olmisTransactionManager(Arguments arguments) {
+    return new JpaTransactionManager(olmisEntityManagerFactory(arguments));
   }
 
   @Bean
-  EntityManager olmisEntityManager() {
-    return olmisEntityManagerFactory().createEntityManager();
+  EntityManager olmisEntityManager(Arguments arguments) {
+    return olmisEntityManagerFactory(arguments).createEntityManager();
   }
 
   @Bean
-  EntityManagerFactory olmisEntityManagerFactory() {
-    return olmisEntityManagerFactoryBean().getObject();
+  EntityManagerFactory olmisEntityManagerFactory(Arguments arguments) {
+    return olmisEntityManagerFactoryBean(arguments).getObject();
   }
 
   /**
    * Declare the SCMgr entity manager factory.
    */
   @Bean
-  LocalContainerEntityManagerFactoryBean olmisEntityManagerFactoryBean() {
+  LocalContainerEntityManagerFactoryBean olmisEntityManagerFactoryBean(Arguments arguments) {
     LocalContainerEntityManagerFactoryBean entityManagerFactory =
         new LocalContainerEntityManagerFactoryBean();
 
-    entityManagerFactory.setDataSource(olmisDataSource());
+    entityManagerFactory.setDataSource(olmisDataSource(arguments));
     entityManagerFactory.setPackagesToScan(
         "org.openlmis.migration.tool.openlmis.fulfillment.domain",
         "org.openlmis.migration.tool.openlmis.requisition.domain",
@@ -85,19 +88,27 @@ public class OlmisConfiguration {
    * Declare the SCMgr data source.
    */
   @Bean
-  DataSource olmisDataSource() {
+  DataSource olmisDataSource(Arguments arguments) {
     // TODO: make it configurable. The question is how much?
     Properties connectionProperties = new Properties();
     connectionProperties.put("stringtype", "unspecified");
 
     DriverManagerDataSource dataSource = new DriverManagerDataSource();
     dataSource.setDriverClassName(Driver.class.getName());
-    dataSource.setUrl("jdbc:postgresql://localhost:5432/open_lmis_scm");
-    dataSource.setUsername("postgres");
-    dataSource.setPassword("p@ssw0rd");
+    dataSource.setUrl(generateUrl(arguments));
+    dataSource.setUsername(defaultIfBlank(arguments.getUsername(), "postgres"));
+    dataSource.setPassword(defaultIfBlank(arguments.getPassword(), "p@ssw0rd"));
     dataSource.setConnectionProperties(connectionProperties);
 
     return dataSource;
+  }
+
+  private String generateUrl(Arguments arguments) {
+    String host = defaultIfBlank(arguments.getHost(), "localhost");
+    Integer port = defaultIfNull(arguments.getPort(), 5432);
+    String database = defaultIfBlank(arguments.getDatabase(), "open_lmis");
+
+    return String.format("jdbc:postgresql://%s:%d/%s", host, port, database);
   }
 
 }

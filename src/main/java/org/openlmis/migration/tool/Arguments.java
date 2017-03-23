@@ -21,4 +21,34 @@ public class Arguments {
   )
   private Path file;
 
+  @Parameter(
+      names = {"--target-host", "-th"},
+      description = "OpenLMIS database host address"
+  )
+  private String host;
+
+  @Parameter(
+      names = {"--target-port", "-tp"},
+      description = "OpenLMIS database port number"
+  )
+  private Integer port;
+
+  @Parameter(
+      names = {"--target-database", "-td"},
+      description = "OpenLMIS database name"
+  )
+  private String database;
+
+  @Parameter(
+      names = {"--target-user", "-tu"},
+      description = "OpenLMIS database username"
+  )
+  private String username;
+
+  @Parameter(
+      names = {"--target-password", "-tpass"},
+      description = "Password for the given username of OpenLMIS database"
+  )
+  private String password;
+
 }
