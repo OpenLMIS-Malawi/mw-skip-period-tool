@@ -18,7 +18,6 @@ import org.openlmis.migration.tool.openlmis.referencedata.domain.ProgramOrderabl
 import org.openlmis.migration.tool.openlmis.referencedata.domain.StockAdjustmentReason;
 import org.openlmis.migration.tool.openlmis.referencedata.domain.TradeItem;
 import org.openlmis.migration.tool.scm.domain.AdjustmentType;
-import org.openlmis.migration.tool.scm.domain.Main;
 import org.openlmis.migration.tool.scm.domain.Product;
 import org.openlmis.migration.tool.scm.domain.SystemDefault;
 import org.openlmis.migration.tool.scm.repository.SystemDefaultRepository;
@@ -88,10 +87,10 @@ public class ReferenceDataUtil {
   /**
    * Creates new program.
    */
-  public Program create(Main main) {
+  public Program create(String programCode) {
     Program program = new Program();
-    program.setName(main.getProgramName());
-    program.setCode(new Code(main.getProgramName().replace(' ', '_')));
+    program.setName(programCode);
+    program.setCode(new Code(programCode));
     program.setPeriodsSkippable(true);
 
     return program;

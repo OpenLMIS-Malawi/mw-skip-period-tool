@@ -3,6 +3,7 @@ package org.openlmis.migration.tool.batch;
 import static java.time.temporal.TemporalAdjusters.firstDayOfMonth;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Multimap;
 
 import org.apache.commons.lang3.RandomStringUtils;
 import org.openlmis.migration.tool.openlmis.fulfillment.domain.Order;
@@ -33,6 +34,7 @@ import org.openlmis.migration.tool.scm.domain.Adjustment;
 import org.openlmis.migration.tool.scm.domain.Item;
 import org.openlmis.migration.tool.scm.domain.Main;
 import org.openlmis.migration.tool.scm.repository.ItemRepository;
+import org.openlmis.migration.tool.scm.util.ItemUtil;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -48,7 +50,7 @@ import java.util.List;
 import java.util.UUID;
 
 @Component
-public class MainProcessor implements ItemProcessor<Main, Requisition> {
+public class MainProcessor implements ItemProcessor<Main, List<Requisition>> {
 
   @Autowired
   private ItemRepository itemRepository;
@@ -87,17 +89,26 @@ public class MainProcessor implements ItemProcessor<Main, Requisition> {
    * Converts the given {@link Main} object into {@link Requisition} object.
    */
   @Override
-  public Requisition process(Main main) {
-    return createRequisition(main);
+  public List<Requisition> process(Main main) {
+    List<Item> items = itemRepository.findByProcessingDateAndFacility(
+        main.getId().getProcessingDate(), main.getId().getFacility()
+    );
+
+    Multimap<String, Item> map = ItemUtil.groupByProgram(items);
+    List<Requisition> requisitions = Lists.newArrayList();
+
+    map
+        .asMap()
+        .forEach((code, products) -> requisitions.add(createRequisition(code, products, main)));
+
+    return requisitions;
   }
 
-  private Requisition createRequisition(Main main) {
+  private Requisition createRequisition(String programCode, Collection<Item> items, Main main) {
     org.openlmis.migration.tool.scm.domain.Facility mainFacility = main.getId().getFacility();
-    Facility facility = olmisFacilityRepository
-        .findByNameAndCode(mainFacility.getName(), mainFacility.getCode());
+    Facility facility = olmisFacilityRepository.findByCode(mainFacility.getCode());
 
-    // TODO: how to find correct OpenLMIS program based on data from SCMgr?
-    Program program = olmisProgramRepository.findByName(main.getProgramName());
+    Program program = olmisProgramRepository.findByName(programCode);
 
     Requisition requisition = new Requisition();
     requisition.setFacilityId(facility.getId());
@@ -155,7 +166,7 @@ public class MainProcessor implements ItemProcessor<Main, Requisition> {
 
     requisition
         .getRequisitionLineItems()
-        .forEach(line -> updateLine(line, requisition, main.getId()));
+        .forEach(line -> updateLine(line, requisition, items));
 
     List<Orderable> products = Lists.newArrayList(olmisOrderableRepository.findAll());
 
@@ -169,11 +180,14 @@ public class MainProcessor implements ItemProcessor<Main, Requisition> {
     return requisition;
   }
 
-  private void updateLine(RequisitionLineItem line, Requisition requisition, Main.ComplexId id) {
+  private void updateLine(RequisitionLineItem line, Requisition requisition,
+                          Collection<Item> items) {
     Orderable orderable = olmisOrderableRepository.findOne(line.getOrderableId());
-    Item item = itemRepository.findByProcessingDateAndFacilityAndProductName(
-        id.getProcessingDate(), id.getFacility(), orderable.getName()
-    );
+    Item item = items
+        .stream()
+        .filter(elem -> elem.getProductName().equals(orderable.getName()))
+        .findFirst()
+        .orElseThrow(() -> new IllegalStateException("Cannot find proper item element"));
 
     RequisitionLineItem requisitionLineItem = new RequisitionLineItem();
     // TODO: should we handle skipped items? How to handle that? How is it handled in SCM?
@@ -294,6 +308,5 @@ public class MainProcessor implements ItemProcessor<Main, Requisition> {
         requisition.getFacilityId(), requisition.getProgramId(), period.getId()
     );
   }
-
 
 }

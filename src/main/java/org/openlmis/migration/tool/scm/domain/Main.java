@@ -91,8 +91,4 @@ public class Main implements Serializable {
 
   }
 
-  public String getProgramName() {
-    return String.format("MAIN %s %s", id.facility.getCode(), id.processingDate.toLocalDate());
-  }
-
 }

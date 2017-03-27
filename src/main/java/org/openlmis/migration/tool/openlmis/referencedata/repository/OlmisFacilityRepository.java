@@ -7,6 +7,6 @@ import java.util.UUID;
 
 public interface OlmisFacilityRepository extends CrudRepository<Facility, UUID> {
 
-  Facility findByNameAndCode(String name, String code);
+  Facility findByCode(String code);
 
 }

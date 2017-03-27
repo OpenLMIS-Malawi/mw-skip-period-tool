@@ -1,7 +1,10 @@
 package org.openlmis.migration.tool;
 
+import com.beust.jcommander.internal.Lists;
+
 import org.openlmis.migration.tool.openlmis.BaseEntity;
 import org.openlmis.migration.tool.openlmis.referencedata.domain.FacilityType;
+import org.openlmis.migration.tool.openlmis.referencedata.domain.FacilityTypeApprovedProduct;
 import org.openlmis.migration.tool.openlmis.referencedata.domain.Orderable;
 import org.openlmis.migration.tool.openlmis.referencedata.domain.OrderableDisplayCategory;
 import org.openlmis.migration.tool.openlmis.referencedata.domain.Program;
@@ -25,6 +28,7 @@ import org.openlmis.migration.tool.scm.repository.ItemRepository;
 import org.openlmis.migration.tool.scm.repository.MainRepository;
 import org.openlmis.migration.tool.scm.repository.ProductRepository;
 import org.openlmis.migration.tool.scm.repository.ProgramRepository;
+import org.openlmis.migration.tool.scm.util.ItemUtil;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.launch.JobLauncher;
@@ -37,6 +41,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
@@ -141,35 +146,40 @@ public class AppConfiguration {
 
     StreamSupport
         .stream(mainRepository.findAll().spliterator(), false)
-        .map(main ->
-            new Pair<>(main, itemRepository.findByProcessingDateAndFacility(
-                main.getId().getProcessingDate(), main.getId().getFacility()
-            ))
-        )
-        .map(pair -> {
-          Main main = pair.getLeft();
-          Program program = olmisProgramRepository.save(referenceDataUtil.create(main));
+        .map(main -> itemRepository.findByProcessingDateAndFacility(
+            main.getId().getProcessingDate(), main.getId().getFacility()
+        ))
+        .map(ItemUtil::groupByProgram)
+        .map(programs -> {
+          List<FacilityTypeApprovedProduct> approvedProducts = Lists.newArrayList();
 
-          return pair
-              .getRight()
-              .stream()
-              .map(item -> {
-                Orderable orderable = olmisOrderableRepository.findByNameIgnoreCase(
-                    item.getProductName()
-                );
+          programs
+              .asMap()
+              .forEach((code, items) -> {
+                Program program = olmisProgramRepository.save(referenceDataUtil.create(code));
 
-                OrderableDisplayCategory category = olmisOrderableDisplayCategoryRepository
-                    .findByDisplayName(item.getCategoryProduct().getProgram().getName());
+                items
+                    .forEach(item -> {
+                      Orderable orderable = olmisOrderableRepository.findFirstByName(
+                          item.getProduct().getName()
+                      );
 
-                ProgramOrderable programOrderable = olmisProgramOrderableRepository.save(
-                    referenceDataUtil.create(
-                        program, orderable, category, item.getCategoryProduct().getOrder(), 5
-                    )
-                );
+                      OrderableDisplayCategory category = olmisOrderableDisplayCategoryRepository
+                          .findByDisplayName(item.getCategoryProduct().getProgram().getName());
 
-                return referenceDataUtil.create(facilityType, programOrderable);
-              })
-              .collect(Collectors.toList());
+                      ProgramOrderable programOrderable = olmisProgramOrderableRepository.save(
+                          referenceDataUtil.create(
+                              program, orderable, category, item.getCategoryProduct().getOrder(), 5
+                          )
+                      );
+
+                      approvedProducts.add(
+                          referenceDataUtil.create(facilityType, programOrderable)
+                      );
+                    });
+              });
+
+          return approvedProducts;
         })
         .forEach(olmisFacilityTypeApprovedProductRepository::save);
 

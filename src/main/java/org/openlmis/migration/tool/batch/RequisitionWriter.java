@@ -34,7 +34,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Component
-public class RequisitionWriter implements ItemWriter<Requisition> {
+public class RequisitionWriter implements ItemWriter<List<Requisition>> {
 
   @Autowired
   private MainRepository mainRepository;
@@ -61,12 +61,14 @@ public class RequisitionWriter implements ItemWriter<Requisition> {
   private FacilityRepository facilityRepository;
 
   /**
-   * Writes Reuisitons into OpenLMIS database.
+   * Writes Requisitions into OpenLMIS database.
    */
   @Override
-  public void write(List<? extends Requisition> requisitions) {
-    olmisRequisitionRepository.save(requisitions);
-    requisitions.forEach(this::print);
+  public void write(List<? extends List<Requisition>> items) throws Exception {
+    items.forEach(requisitions -> {
+      olmisRequisitionRepository.save(requisitions);
+      requisitions.forEach(this::print);
+    });
   }
 
   private void print(Requisition requisition) {

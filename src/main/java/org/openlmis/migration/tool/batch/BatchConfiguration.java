@@ -14,6 +14,8 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import java.util.List;
+
 @Configuration
 @EnableBatchProcessing
 public class BatchConfiguration {
@@ -39,7 +41,7 @@ public class BatchConfiguration {
                                 MainProcessor processor) {
     return stepBuilderFactory
         .get("mainTransformStep")
-        .<Main, Requisition>chunk(1)
+        .<Main, List<Requisition>>chunk(1)
         .reader(reader)
         .processor(processor)
         .writer(writer)
