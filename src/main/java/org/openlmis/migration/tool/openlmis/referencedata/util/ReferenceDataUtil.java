@@ -21,6 +21,8 @@ import org.openlmis.migration.tool.scm.domain.AdjustmentType;
 import org.openlmis.migration.tool.scm.domain.Product;
 import org.openlmis.migration.tool.scm.domain.SystemDefault;
 import org.openlmis.migration.tool.scm.repository.SystemDefaultRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -30,6 +32,7 @@ import java.util.UUID;
 
 @Component
 public class ReferenceDataUtil {
+  private static final Logger LOGGER = LoggerFactory.getLogger(ReferenceDataUtil.class);
 
   @Autowired
   private SystemDefaultRepository systemDefaultRepository;
@@ -38,6 +41,8 @@ public class ReferenceDataUtil {
    * Creates a new instance of OpenLMIS facility.
    */
   public Facility create(String name, String code, FacilityType facilityType) {
+    LOGGER.info("Create facility: {}", code);
+
     Facility facility = new Facility();
     facility.setId(UUID.randomUUID());
     facility.setName(name);
@@ -53,6 +58,8 @@ public class ReferenceDataUtil {
    * Creates new orderable instance.
    */
   public Orderable create(Product product) {
+    LOGGER.info("Create orderable: {}", product.getName());
+
     Orderable orderable = new TradeItem();
     orderable.setId(UUID.randomUUID());
     orderable.setProductCode(new Code(product.getProductId()));
@@ -65,6 +72,8 @@ public class ReferenceDataUtil {
    * Creates processing period.
    */
   public ProcessingPeriod create(LocalDateTime dateTime) {
+    LOGGER.info("Create processing period: {}", dateTime);
+
     SystemDefault systemDefault = systemDefaultRepository
         .findAll()
         .iterator()
@@ -88,6 +97,8 @@ public class ReferenceDataUtil {
    * Creates new program.
    */
   public Program create(String programCode) {
+    LOGGER.info("Create program: {}", programCode);
+
     Program program = new Program();
     program.setName(programCode);
     program.setCode(new Code(programCode));
@@ -100,6 +111,8 @@ public class ReferenceDataUtil {
    * Creates new stock adjustment reason.
    */
   public StockAdjustmentReason create(Program program, AdjustmentType adjustmentType) {
+    LOGGER.info("Create stock adjustment reason: {}", adjustmentType.getCode());
+
     StockAdjustmentReason reason = new StockAdjustmentReason();
     reason.setId(UUID.randomUUID());
     reason.setProgram(program);
@@ -114,6 +127,8 @@ public class ReferenceDataUtil {
    * Creates new facility type.
    */
   public FacilityType create() {
+    LOGGER.info("Create facility type");
+
     FacilityType type = new FacilityType();
     type.setCode("first_facility_type");
 
@@ -124,6 +139,8 @@ public class ReferenceDataUtil {
    * Creates new orderable display category.
    */
   public OrderableDisplayCategory create(org.openlmis.migration.tool.scm.domain.Program program) {
+    LOGGER.info("Create orderable display category: {}", program.getName());
+
     String displayName = program.getName();
     Integer displayOrder = program.getOrder();
 
@@ -140,6 +157,8 @@ public class ReferenceDataUtil {
   public ProgramOrderable create(Program program, Orderable product,
                                  OrderableDisplayCategory category,
                                  int displayOrder, double pricePerPack) {
+    LOGGER.info("Create program orderable: {};{}", program.getName(), product.getName());
+
     ProgramOrderable programOrderable = new ProgramOrderable();
     programOrderable.setProgram(program);
     programOrderable.setProduct(product);
@@ -157,6 +176,8 @@ public class ReferenceDataUtil {
    */
   public FacilityTypeApprovedProduct create(FacilityType facilityType,
                                             ProgramOrderable programOrderable) {
+    LOGGER.info("Create facility type approved product");
+
     FacilityTypeApprovedProduct approvedProduct = new FacilityTypeApprovedProduct();
     approvedProduct.setFacilityType(facilityType);
     approvedProduct.setProgramOrderable(programOrderable);

@@ -21,7 +21,7 @@ public class MainReader extends AbstractPagingItemReader<Main> {
   private MainRepository mainRepository;
 
   public MainReader() {
-    setPageSize(1);
+    setPageSize(10);
   }
 
   @Override

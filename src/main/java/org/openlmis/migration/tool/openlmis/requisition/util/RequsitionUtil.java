@@ -34,6 +34,8 @@ import org.openlmis.migration.tool.openlmis.requisition.domain.RequisitionTempla
 import org.openlmis.migration.tool.openlmis.requisition.domain.SourceType;
 import org.openlmis.migration.tool.scm.domain.SystemDefault;
 import org.openlmis.migration.tool.scm.repository.SystemDefaultRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -43,6 +45,7 @@ import java.util.UUID;
 
 @Component
 public class RequsitionUtil {
+  private static final Logger LOGGER = LoggerFactory.getLogger(RequsitionUtil.class);
 
   @Autowired
   private SystemDefaultRepository systemDefaultRepository;
@@ -51,6 +54,8 @@ public class RequsitionUtil {
    * Creates new template for the givne program.
    */
   public RequisitionTemplate createTemplate(UUID programId) {
+    LOGGER.info("Create requisition template for program: {}", programId);
+
     SystemDefault systemDefault = systemDefaultRepository
         .findAll()
         .iterator()

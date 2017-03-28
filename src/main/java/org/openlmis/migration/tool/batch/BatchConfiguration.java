@@ -8,6 +8,7 @@ import org.springframework.batch.core.configuration.annotation.EnableBatchProces
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
+import org.springframework.batch.core.step.skip.AlwaysSkipItemSkipPolicy;
 import org.springframework.boot.autoconfigure.batch.BatchDatabaseInitializer;
 import org.springframework.boot.autoconfigure.batch.BatchProperties;
 import org.springframework.context.ApplicationContext;
@@ -27,7 +28,7 @@ public class BatchConfiguration {
 
   @Bean
   public BatchDatabaseInitializer batchDatabaseInitializer(ApplicationContext applicationContext,
-                                                            BatchProperties batchProperties) {
+                                                           BatchProperties batchProperties) {
     return new AppBatchDatabaseInitializer(batchConfigurer(), applicationContext, batchProperties);
   }
 
@@ -41,10 +42,15 @@ public class BatchConfiguration {
                                 MainProcessor processor) {
     return stepBuilderFactory
         .get("mainTransformStep")
-        .<Main, List<Requisition>>chunk(1)
+        .<Main, List<Requisition>>chunk(10)
         .reader(reader)
         .processor(processor)
         .writer(writer)
+        .faultTolerant()
+        .skipPolicy(new AlwaysSkipItemSkipPolicy())
+        .listener(new MainReadListener())
+        .listener(new MainProcessListener())
+        .listener(new RequisitionWriteListener())
         .build();
   }
 

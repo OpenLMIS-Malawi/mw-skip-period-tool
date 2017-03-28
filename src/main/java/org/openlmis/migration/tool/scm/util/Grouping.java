@@ -5,25 +5,24 @@ import static org.apache.commons.lang3.StringUtils.containsIgnoreCase;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 
-import org.openlmis.migration.tool.scm.domain.Item;
-
-import java.util.List;
+import java.util.function.Function;
 
 @SuppressWarnings("PMD.CyclomaticComplexity")
-public final class ItemUtil {
+public final class Grouping {
 
-  private ItemUtil() {
+  private Grouping() {
     throw new UnsupportedOperationException();
   }
 
   /**
    * Groups a list of items to correct programs. The key in the map is equal to program code.
    */
-  public static Multimap<String, Item> groupByProgram(List<Item> items) {
-    Multimap<String, Item> map = HashMultimap.create(5, items.size());
+  public static <T> Multimap<String, T> groupByCategoryName(Iterable<T> items,
+                                                      Function<? super T, String> nameExtractor) {
+    Multimap<String, T> map = HashMultimap.create();
 
-    for (Item item : items) {
-      String category = item.getCategoryProduct().getProgram().getName();
+    for (T item : items) {
+      String category = nameExtractor.apply(item);
 
       if (containsIgnoreCase(category, "Tablets/Capsules")
           || containsIgnoreCase(category, "Injectables")

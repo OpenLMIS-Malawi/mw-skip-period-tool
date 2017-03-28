@@ -3,18 +3,15 @@ package org.openlmis.migration.tool.batch;
 import org.openlmis.migration.tool.openlmis.referencedata.domain.Facility;
 import org.openlmis.migration.tool.openlmis.referencedata.domain.Orderable;
 import org.openlmis.migration.tool.openlmis.referencedata.domain.ProcessingPeriod;
-import org.openlmis.migration.tool.openlmis.referencedata.domain.Program;
 import org.openlmis.migration.tool.openlmis.referencedata.repository.OlmisFacilityRepository;
 import org.openlmis.migration.tool.openlmis.referencedata.repository.OlmisOrderableRepository;
 import org.openlmis.migration.tool.openlmis.referencedata.repository.OlmisProcessingPeriodRepository;
-import org.openlmis.migration.tool.openlmis.referencedata.repository.OlmisProgramRepository;
 import org.openlmis.migration.tool.openlmis.requisition.domain.Requisition;
 import org.openlmis.migration.tool.openlmis.requisition.domain.RequisitionLineItem;
 import org.openlmis.migration.tool.openlmis.requisition.repository.OlmisRequisitionRepository;
 import org.openlmis.migration.tool.scm.domain.Comment;
 import org.openlmis.migration.tool.scm.domain.Item;
 import org.openlmis.migration.tool.scm.domain.Main;
-import org.openlmis.migration.tool.scm.domain.Purpose;
 import org.openlmis.migration.tool.scm.repository.FacilityRepository;
 import org.openlmis.migration.tool.scm.repository.ItemRepository;
 import org.openlmis.migration.tool.scm.repository.MainRepository;
@@ -22,12 +19,11 @@ import org.springframework.batch.item.ItemWriter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.chrono.ChronoLocalDateTime;
 import java.time.chrono.ChronoZonedDateTime;
 import java.time.format.TextStyle;
+import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
@@ -55,9 +51,6 @@ public class RequisitionWriter implements ItemWriter<List<Requisition>> {
   private OlmisRequisitionRepository olmisRequisitionRepository;
 
   @Autowired
-  private OlmisProgramRepository olmisProgramRepository;
-
-  @Autowired
   private FacilityRepository facilityRepository;
 
   /**
@@ -65,10 +58,13 @@ public class RequisitionWriter implements ItemWriter<List<Requisition>> {
    */
   @Override
   public void write(List<? extends List<Requisition>> items) throws Exception {
-    items.forEach(requisitions -> {
-      olmisRequisitionRepository.save(requisitions);
-      requisitions.forEach(this::print);
-    });
+    items
+        .stream()
+        .flatMap(Collection::stream)
+        .forEach(requisition -> {
+          olmisRequisitionRepository.save(requisition);
+          print(requisition);
+        });
   }
 
   private void print(Requisition requisition) {
@@ -77,18 +73,16 @@ public class RequisitionWriter implements ItemWriter<List<Requisition>> {
         .findOne(requisition.getProcessingPeriodId());
 
     String format =
-        "%-8s|%-57s|%-14s|%-18s|%-16s|%-18s|%-17s|%-17s|%-21s|%-18s|%-20s|%-17s|%-9s|%-13s|%-5s%n";
+        "%-8s|%-57s|%-14s|%-18s|%-16s|%-18s|%-17s|%-21s|%-18s|%-20s|%-17s|%-9s|%-13s|%-5s%n";
 
     System.err.printf(
         "Facility (code): %s (%s)%n", olmisFacility.getName(), olmisFacility.getCode()
     );
     System.err.printf("Period: %s%n", printPeriod(period));
 
-    Program program = olmisProgramRepository.findOne(requisition.getProgramId());
-    String[] programName = program.getName().split(" ");
     org.openlmis.migration.tool.scm.domain.Facility scmFacility = facilityRepository
-        .findByCode(programName[1]);
-    LocalDateTime processingDate = LocalDate.parse(programName[2]).atStartOfDay();
+        .findByCode(olmisFacility.getCode());
+    LocalDateTime processingDate = period.getStartDate().atStartOfDay();
 
     Main main = mainRepository.findOne(new Main.ComplexId(scmFacility, processingDate));
 
@@ -100,7 +94,7 @@ public class RequisitionWriter implements ItemWriter<List<Requisition>> {
     System.err.printf(
         format,
         "Product", "Product Description", "Stock on Hand",
-        "Adjustment Amount", "Adjustment Type", "Quantity Consumed", "Purpose of Use",
+        "Adjustment Amount", "Adjustment Type", "Quantity Consumed",
         "Stocked Out Days", "Adjusted Consumption", "Months of Stock", "Calculated Quantity",
         "Reorder Quantity", "Receipts", "Stocked Out?", "Notes"
     );
@@ -120,17 +114,16 @@ public class RequisitionWriter implements ItemWriter<List<Requisition>> {
           orderable.getName(),
           line.getStockOnHand(),
           line.getTotalLossesAndAdjustments(),
-          item.getAdjustmentType(),
+          null == item ? "" : item.getAdjustmentType(),
           line.getTotalConsumedQuantity(),
-          countPurposes(item.getPurposes()),
           line.getTotalStockoutDays(),
           line.getAdjustedConsumption(),
-          getMonthsOfStock(line),
+          line.getMaxPeriodsOfStock(),
           line.getCalculatedOrderQuantity(),
           line.getRequestedQuantity(),
           line.getTotalReceivedQuantity(),
-          item.getProductStockedOut(),
-          printNotes(item.getNotes())
+          null == item ? "" : item.getProductStockedOut(),
+          null == item ? "" : printNotes(item.getNotes())
       );
     }
 
@@ -149,12 +142,6 @@ public class RequisitionWriter implements ItemWriter<List<Requisition>> {
         "Comment: %s%n",
         Optional.ofNullable(requisition.getDraftStatusMessage()).orElse("")
     );
-  }
-
-  private int countPurposes(List<Purpose> purposes) {
-    return null != purposes
-        ? purposes.stream().map(Purpose::getQuantity).reduce(0, (left, right) -> left + right)
-        : 0;
   }
 
   private String printNotes(List<Comment> comments) {
@@ -183,20 +170,6 @@ public class RequisitionWriter implements ItemWriter<List<Requisition>> {
         period.getEndDate().getMonth().getDisplayName(TextStyle.SHORT, Locale.ENGLISH),
         period.getStartDate().getYear()
     );
-  }
-
-  private Double getMonthsOfStock(RequisitionLineItem requisitionLineItem) {
-    if (0 == requisitionLineItem.getAdjustedConsumption()) {
-      return 0.0;
-    }
-
-    return BigDecimal.valueOf(requisitionLineItem.getStockOnHand())
-        .divide(
-            BigDecimal.valueOf(requisitionLineItem.getAdjustedConsumption()),
-            1,
-            BigDecimal.ROUND_HALF_UP
-        )
-        .doubleValue();
   }
 
 }

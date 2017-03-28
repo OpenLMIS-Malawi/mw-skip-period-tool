@@ -2,10 +2,6 @@
 <configuration>
 
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
-        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
-            <level>ERROR</level>
-        </filter>
-
         <encoder>
             <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{5} - %msg%n</pattern>
         </encoder>
@@ -13,10 +9,6 @@
 
     <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>log</file>
-
-        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
-            <level>INFO</level>
-        </filter>
 
         <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
             <Pattern>%d{yyyy-MM-dd_HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</Pattern>
@@ -29,22 +21,15 @@
         </rollingPolicy>
 
         <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
-            <MaxFileSize>10MB</MaxFileSize>
+            <MaxFileSize>250MB</MaxFileSize>
         </triggeringPolicy>
     </appender>
 
-    <!--
-        The root element has set level attribute to TRACE to accept all logs from the application.
-        This should not be changed.
-
-        Each appender has a filter element that define what logs should be handled and what logs
-        can be omitted by the appender.
-
-        With this solution we can provide only important information to console output and all
-        needed diagnostic details to a log file.
-    -->
-    <root level="TRACE">
+    <logger name="org.openlmis.migration.tool" level="INFO" additivity="true">
         <appender-ref ref="STDOUT"/>
+    </logger>
+
+    <root level="INFO">
         <appender-ref ref="FILE"/>
     </root>
 

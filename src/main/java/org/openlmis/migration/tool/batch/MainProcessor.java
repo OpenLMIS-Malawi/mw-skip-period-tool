@@ -3,7 +3,6 @@ package org.openlmis.migration.tool.batch;
 import static java.time.temporal.TemporalAdjusters.firstDayOfMonth;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Multimap;
 
 import org.apache.commons.lang3.RandomStringUtils;
 import org.openlmis.migration.tool.openlmis.fulfillment.domain.Order;
@@ -34,7 +33,7 @@ import org.openlmis.migration.tool.scm.domain.Adjustment;
 import org.openlmis.migration.tool.scm.domain.Item;
 import org.openlmis.migration.tool.scm.domain.Main;
 import org.openlmis.migration.tool.scm.repository.ItemRepository;
-import org.openlmis.migration.tool.scm.util.ItemUtil;
+import org.openlmis.migration.tool.scm.util.Grouping;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -48,6 +47,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Component
 public class MainProcessor implements ItemProcessor<Main, List<Requisition>> {
@@ -94,14 +94,13 @@ public class MainProcessor implements ItemProcessor<Main, List<Requisition>> {
         main.getId().getProcessingDate(), main.getId().getFacility()
     );
 
-    Multimap<String, Item> map = ItemUtil.groupByProgram(items);
-    List<Requisition> requisitions = Lists.newArrayList();
-
-    map
+    return Grouping
+        .groupByCategoryName(items, item -> item.getCategoryProduct().getProgram().getName())
         .asMap()
-        .forEach((code, products) -> requisitions.add(createRequisition(code, products, main)));
-
-    return requisitions;
+        .entrySet()
+        .stream()
+        .map(entry -> createRequisition(entry.getKey(), entry.getValue(), main))
+        .collect(Collectors.toList());
   }
 
   private Requisition createRequisition(String programCode, Collection<Item> items, Main main) {
@@ -185,42 +184,44 @@ public class MainProcessor implements ItemProcessor<Main, List<Requisition>> {
     Orderable orderable = olmisOrderableRepository.findOne(line.getOrderableId());
     Item item = items
         .stream()
-        .filter(elem -> elem.getProductName().equals(orderable.getName()))
+        .filter(elem -> elem.getProduct().getName().equals(orderable.getName()))
         .findFirst()
-        .orElseThrow(() -> new IllegalStateException("Cannot find proper item element"));
+        .orElse(null);
 
     RequisitionLineItem requisitionLineItem = new RequisitionLineItem();
-    // TODO: should we handle skipped items? How to handle that? How is it handled in SCM?
-    requisitionLineItem.setSkipped(false);
-    requisitionLineItem.setTotalReceivedQuantity(item.getReceipts());
-    requisitionLineItem.setTotalConsumedQuantity(item.getDispensedQuantity());
+    requisitionLineItem.setSkipped(null == item);
 
-    Program program = olmisProgramRepository.findOne(requisition.getProgramId());
-    List<StockAdjustment> stockAdjustments = Lists.newArrayList();
-    for (Adjustment adjustment : item.getAdjustments()) {
-      StockAdjustmentReason stockAdjustmentReasonDto = olmisStockAdjustmentReasonRepository
-          .findByProgramAndName(program, adjustment.getType().getCode());
+    if (null != item) {
+      requisitionLineItem.setTotalReceivedQuantity(item.getReceipts());
+      requisitionLineItem.setTotalConsumedQuantity(item.getDispensedQuantity());
 
-      StockAdjustment stockAdjustment = new StockAdjustment();
-      stockAdjustment.setReasonId(stockAdjustmentReasonDto.getId());
-      stockAdjustment.setQuantity(adjustment.getQuantity());
+      Program program = olmisProgramRepository.findOne(requisition.getProgramId());
+      List<StockAdjustment> stockAdjustments = Lists.newArrayList();
+      for (Adjustment adjustment : item.getAdjustments()) {
+        StockAdjustmentReason stockAdjustmentReasonDto = olmisStockAdjustmentReasonRepository
+            .findByProgramAndName(program, adjustment.getType().getCode());
 
-      stockAdjustments.add(stockAdjustment);
+        StockAdjustment stockAdjustment = new StockAdjustment();
+        stockAdjustment.setReasonId(stockAdjustmentReasonDto.getId());
+        stockAdjustment.setQuantity(adjustment.getQuantity());
+
+        stockAdjustments.add(stockAdjustment);
+      }
+
+      requisitionLineItem.setStockAdjustments(stockAdjustments);
+      requisitionLineItem.setTotalStockoutDays(item.getStockedOutDays().intValue());
+      requisitionLineItem.setStockOnHand(item.getClosingBalance());
+      requisitionLineItem.setCalculatedOrderQuantity(item.getCalculatedRequiredQuantity());
+      requisitionLineItem.setRequestedQuantity(item.getRequiredQuantity());
+      requisitionLineItem.setRequestedQuantityExplanation("migrated from SCM");
+      requisitionLineItem.setAdjustedConsumption(item.getAdjustedDispensedQuantity());
+
+      requisitionLineItem.calculateAndSetFields(
+          requisition.getTemplate(),
+          Lists.newArrayList(olmisStockAdjustmentReasonRepository.findAll()),
+          requisition.getNumberOfMonthsInPeriod()
+      );
     }
-
-    requisitionLineItem.setStockAdjustments(stockAdjustments);
-    requisitionLineItem.setTotalStockoutDays(item.getStockedOutDays().intValue());
-    requisitionLineItem.setStockOnHand(item.getClosingBalance());
-    requisitionLineItem.setCalculatedOrderQuantity(item.getCalculatedRequiredQuantity());
-    requisitionLineItem.setRequestedQuantity(item.getRequiredQuantity());
-    requisitionLineItem.setRequestedQuantityExplanation("migrated from SCM");
-    requisitionLineItem.setAdjustedConsumption(item.getAdjustedDispensedQuantity());
-
-    requisitionLineItem.calculateAndSetFields(
-        requisition.getTemplate(),
-        Lists.newArrayList(olmisStockAdjustmentReasonRepository.findAll()),
-        requisition.getNumberOfMonthsInPeriod()
-    );
 
     line.updateFrom(requisitionLineItem);
   }
