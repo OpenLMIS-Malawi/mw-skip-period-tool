@@ -25,7 +25,6 @@ import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.Program;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.StockAdjustmentReason;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.User;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.OlmisFacilityRepository;
-import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.OlmisFacilityTypeApprovedProductRepository;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.OlmisOrderableRepository;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.OlmisProcessingPeriodRepository;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.OlmisProgramRepository;
@@ -91,9 +90,6 @@ public class MainProcessor implements ItemProcessor<Main, List<Requisition>> {
 
   @Autowired
   private OlmisRequisitionRepository olmisRequisitionRepository;
-
-  @Autowired
-  private OlmisFacilityTypeApprovedProductRepository olmisFacilityTypeApprovedProductRepository;
 
   @Autowired
   private OlmisUserRepository olmisUserRepository;

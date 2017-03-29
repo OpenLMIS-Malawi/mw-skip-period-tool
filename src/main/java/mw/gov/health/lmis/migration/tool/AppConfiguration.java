@@ -16,15 +16,14 @@ import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.Orderable
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.Program;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.ProgramOrderable;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.OlmisFacilityRepository;
-import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.OlmisFacilityTypeApprovedProductRepository;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.OlmisFacilityTypeRepository;
+import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.OlmisOrderableDisplayCategoryRepository;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.OlmisOrderableRepository;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.OlmisProcessingPeriodRepository;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.OlmisProgramOrderableRepository;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.OlmisProgramRepository;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.OlmisStockAdjustmentReasonRepository;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.OlmisUserRepository;
-import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.custom.OlmisOrderableDisplayCategoryRepository;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.util.ReferenceDataUtil;
 import mw.gov.health.lmis.migration.tool.openlmis.requisition.repository.OlmisRequisitionTemplateRepository;
 import mw.gov.health.lmis.migration.tool.openlmis.requisition.util.RequsitionUtil;
@@ -83,9 +82,6 @@ public class AppConfiguration {
 
   @Autowired
   private OlmisOrderableDisplayCategoryRepository olmisOrderableDisplayCategoryRepository;
-
-  @Autowired
-  private OlmisFacilityTypeApprovedProductRepository olmisFacilityTypeApprovedProductRepository;
 
   @Autowired
   private OlmisProgramOrderableRepository olmisProgramOrderableRepository;

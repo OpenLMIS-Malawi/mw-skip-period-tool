@@ -1,9 +1,10 @@
-package mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.custom;
+package mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository;
 
-import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.OrderableDisplayCategory;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.query.Param;
+
+import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.OrderableDisplayCategory;
 
 import java.util.UUID;
 
