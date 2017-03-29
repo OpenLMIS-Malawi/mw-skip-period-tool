@@ -7,6 +7,7 @@ import static org.openlmis.migration.tool.openlmis.requisition.domain.LineItemFi
 import com.google.common.collect.Lists;
 
 import org.apache.commons.lang3.RandomStringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.openlmis.migration.tool.openlmis.fulfillment.domain.Order;
 import org.openlmis.migration.tool.openlmis.fulfillment.domain.OrderStatus;
 import org.openlmis.migration.tool.openlmis.fulfillment.domain.ProofOfDelivery;
@@ -58,7 +59,6 @@ import java.util.stream.Collectors;
 @Component
 public class MainProcessor implements ItemProcessor<Main, List<Requisition>> {
   private static final String USERNAME = "supply chain manager";
-  private static final String SEPARATOR = "; ";
 
   @Autowired
   private ItemRepository itemRepository;
@@ -325,14 +325,23 @@ public class MainProcessor implements ItemProcessor<Main, List<Requisition>> {
   }
 
   private void saveStatusMessage(Requisition requisition, Main main, Collection<Item> items) {
-    String message = main.getNotes() + SEPARATOR + items
-        .stream()
-        .map(item -> item.getNote() + SEPARATOR + item
-            .getNotes()
-            .stream()
-            .map(comment -> comment.getType().getName() + ": " + comment.getComment())
-            .collect(Collectors.joining(SEPARATOR)))
-        .collect(Collectors.joining(SEPARATOR));
+    List<String> notes = Lists.newArrayList();
+    notes.add(main.getNotes());
+
+    items
+        .forEach(item -> {
+          notes.add(item.getNote());
+
+          item
+              .getNotes()
+              .forEach(comment -> notes.add(
+                  comment.getType().getName() + ": " + comment.getComment()
+              ));
+        });
+
+    notes.removeIf(StringUtils::isBlank);
+
+    String message = notes.stream().collect(Collectors.joining("; "));
 
     if (isNotBlank(message)) {
       User user = olmisUserRepository.findByUsername(USERNAME);
@@ -343,7 +352,7 @@ public class MainProcessor implements ItemProcessor<Main, List<Requisition>> {
           user.getFirstName(),
           user.getLastName(),
           message);
-      
+
       olmisStatusMessageRepository.save(newStatusMessage);
     }
   }
