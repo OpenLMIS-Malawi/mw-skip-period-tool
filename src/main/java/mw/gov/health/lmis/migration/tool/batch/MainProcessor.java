@@ -5,6 +5,7 @@ import static mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.Line
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -165,12 +166,7 @@ public class MainProcessor implements ItemProcessor<Main, List<Requisition>> {
     requisition.initiate(template, approvedProducts, previousRequisitions,
         numberOfPreviousPeriodsToAverage, null, user.getId());
 
-    // TODO: should we handle non full supply products?
-    // requisition.setAvailableNonFullSupplyProducts(approvedProductReferenceDataService
-    //     .getApprovedProducts(facility.getId(), program.getId(), false)
-    //     .stream()
-    //     .map(ap -> ap.getProgramOrderable().getOrderableId())
-    //     .collect(Collectors.toSet()));
+    requisition.setAvailableNonFullSupplyProducts(Sets.newHashSet());
 
     requisition.setCreatedDate(safeNull(main.getCreatedDate()));
     requisition.setModifiedDate(safeNull(main.getModifiedDate()));
