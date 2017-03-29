@@ -47,13 +47,13 @@ import mw.gov.health.lmis.migration.tool.scm.util.Grouping;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.TimeZone;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -243,10 +243,9 @@ public class MainProcessor implements ItemProcessor<Main, List<Requisition>> {
   }
 
   private ZonedDateTime safeNull(LocalDateTime dateTime) {
-    // TODO: what shoule be zone used? UTC? SAST (UTC+2)?
     return null == dateTime
         ? null
-        : dateTime.atZone(ZoneId.of("UTC"));
+        : dateTime.atZone(TimeZone.getTimeZone("CAT").toZoneId());
   }
 
   private void convertToOrder(Requisition requisition, User user) {
