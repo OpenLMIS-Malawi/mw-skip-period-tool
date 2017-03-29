@@ -49,6 +49,12 @@ public class RequsitionUtil {
 
   private final Integer numberOfPeriodsToAverage;
 
+  /**
+   * Creates new instance of this class.
+   *
+   * @param systemDefaultRepository repository that will receive system configuration settings
+   *                                from Supply Chain Manager.
+   */
   @Autowired
   public RequsitionUtil(SystemDefaultRepository systemDefaultRepository) {
     Short currentNumberOfPeriodsToAverage = systemDefaultRepository
