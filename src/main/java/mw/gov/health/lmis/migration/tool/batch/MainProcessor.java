@@ -177,14 +177,13 @@ public class MainProcessor implements ItemProcessor<Main, List<Requisition>> {
 
     List<Orderable> products = Lists.newArrayList(olmisOrderableRepository.findAll());
 
-    // TODO: who submit, authorize, approve and convert to order?
-    requisition.submit(products, null);
-    requisition.authorize(products, null);
+    requisition.submit(products, user.getId());
+    requisition.authorize(products, user.getId());
     saveStatusMessage(requisition, main, items, user);
 
-    requisition.approve(null, products, null);
+    requisition.approve(null, products, user.getId());
 
-    convertToOrder(requisition);
+    convertToOrder(requisition, user);
 
     return requisition;
   }
@@ -252,10 +251,10 @@ public class MainProcessor implements ItemProcessor<Main, List<Requisition>> {
         : dateTime.atZone(ZoneId.of("UTC"));
   }
 
-  private void convertToOrder(Requisition requisition) {
+  private void convertToOrder(Requisition requisition, User user) {
     // TODO: change that (or validate this is correct)
     requisition.setSupplyingFacilityId(requisition.getFacilityId());
-    requisition.setStatus(RequisitionStatus.RELEASED);
+    requisition.release(user.getId());
 
     Order order = Order.newOrder(requisition);
     order.setStatus(OrderStatus.RECEIVED);
