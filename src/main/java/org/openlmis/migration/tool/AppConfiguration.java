@@ -17,6 +17,7 @@ import org.openlmis.migration.tool.openlmis.referencedata.repository.OlmisProces
 import org.openlmis.migration.tool.openlmis.referencedata.repository.OlmisProgramOrderableRepository;
 import org.openlmis.migration.tool.openlmis.referencedata.repository.OlmisProgramRepository;
 import org.openlmis.migration.tool.openlmis.referencedata.repository.OlmisStockAdjustmentReasonRepository;
+import org.openlmis.migration.tool.openlmis.referencedata.repository.OlmisUserRepository;
 import org.openlmis.migration.tool.openlmis.referencedata.repository.custom.OlmisOrderableDisplayCategoryRepository;
 import org.openlmis.migration.tool.openlmis.referencedata.util.ReferenceDataUtil;
 import org.openlmis.migration.tool.openlmis.requisition.repository.OlmisRequisitionTemplateRepository;
@@ -103,6 +104,9 @@ public class AppConfiguration {
   @Autowired
   private CategoryProductJoinRepository categoryProductJoinRepository;
 
+  @Autowired
+  private OlmisUserRepository olmisUserRepository;
+
   /**
    * Here the application starts with spring context.
    */
@@ -118,6 +122,10 @@ public class AppConfiguration {
   }
 
   private void createDemoData() {
+    olmisUserRepository.save(
+        referenceDataUtil.create("supply_chain_manager", "supply chain", "manager")
+    );
+
     FacilityType facilityType = olmisFacilityTypeRepository.save(referenceDataUtil.create());
 
     olmisFacilityRepository.save(StreamSupport

@@ -17,6 +17,7 @@ import org.openlmis.migration.tool.openlmis.referencedata.domain.Program;
 import org.openlmis.migration.tool.openlmis.referencedata.domain.ProgramOrderable;
 import org.openlmis.migration.tool.openlmis.referencedata.domain.StockAdjustmentReason;
 import org.openlmis.migration.tool.openlmis.referencedata.domain.TradeItem;
+import org.openlmis.migration.tool.openlmis.referencedata.domain.User;
 import org.openlmis.migration.tool.scm.domain.AdjustmentType;
 import org.openlmis.migration.tool.scm.domain.Product;
 import org.openlmis.migration.tool.scm.domain.SystemDefault;
@@ -66,6 +67,23 @@ public class ReferenceDataUtil {
     orderable.setName(product.getName());
 
     return orderable;
+  }
+
+  /**
+   * Creates new user.
+   */
+  public User create(String username, String firstName, String lastName) {
+    User user = new User();
+    user.setUsername(username);
+    user.setFirstName(firstName);
+    user.setLastName(lastName);
+    user.setEmail(username + "@migrationtool.com");
+    user.setVerified(true);
+    user.setActive(true);
+    user.setLoginRestricted(false);
+    user.setAllowNotify(false);
+
+    return user;
   }
 
   /**

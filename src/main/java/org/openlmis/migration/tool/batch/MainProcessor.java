@@ -1,6 +1,7 @@
 package org.openlmis.migration.tool.batch;
 
 import static java.time.temporal.TemporalAdjusters.firstDayOfMonth;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.openlmis.migration.tool.openlmis.requisition.domain.LineItemFieldsCalculator.calculateTotalLossesAndAdjustments;
 
 import com.google.common.collect.Lists;
@@ -17,19 +18,23 @@ import org.openlmis.migration.tool.openlmis.referencedata.domain.Orderable;
 import org.openlmis.migration.tool.openlmis.referencedata.domain.ProcessingPeriod;
 import org.openlmis.migration.tool.openlmis.referencedata.domain.Program;
 import org.openlmis.migration.tool.openlmis.referencedata.domain.StockAdjustmentReason;
+import org.openlmis.migration.tool.openlmis.referencedata.domain.User;
 import org.openlmis.migration.tool.openlmis.referencedata.repository.OlmisFacilityRepository;
 import org.openlmis.migration.tool.openlmis.referencedata.repository.OlmisFacilityTypeApprovedProductRepository;
 import org.openlmis.migration.tool.openlmis.referencedata.repository.OlmisOrderableRepository;
 import org.openlmis.migration.tool.openlmis.referencedata.repository.OlmisProcessingPeriodRepository;
 import org.openlmis.migration.tool.openlmis.referencedata.repository.OlmisProgramRepository;
 import org.openlmis.migration.tool.openlmis.referencedata.repository.OlmisStockAdjustmentReasonRepository;
+import org.openlmis.migration.tool.openlmis.referencedata.repository.OlmisUserRepository;
 import org.openlmis.migration.tool.openlmis.requisition.domain.Requisition;
 import org.openlmis.migration.tool.openlmis.requisition.domain.RequisitionLineItem;
 import org.openlmis.migration.tool.openlmis.requisition.domain.RequisitionStatus;
 import org.openlmis.migration.tool.openlmis.requisition.domain.RequisitionTemplate;
+import org.openlmis.migration.tool.openlmis.requisition.domain.StatusMessage;
 import org.openlmis.migration.tool.openlmis.requisition.domain.StockAdjustment;
 import org.openlmis.migration.tool.openlmis.requisition.repository.OlmisRequisitionRepository;
 import org.openlmis.migration.tool.openlmis.requisition.repository.OlmisRequisitionTemplateRepository;
+import org.openlmis.migration.tool.openlmis.requisition.repository.OlmisStatusMessageRepository;
 import org.openlmis.migration.tool.scm.domain.Adjustment;
 import org.openlmis.migration.tool.scm.domain.Item;
 import org.openlmis.migration.tool.scm.domain.Main;
@@ -52,6 +57,8 @@ import java.util.stream.Collectors;
 
 @Component
 public class MainProcessor implements ItemProcessor<Main, List<Requisition>> {
+  private static final String USERNAME = "supply chain manager";
+  private static final String SEPARATOR = "; ";
 
   @Autowired
   private ItemRepository itemRepository;
@@ -85,6 +92,12 @@ public class MainProcessor implements ItemProcessor<Main, List<Requisition>> {
 
   @Autowired
   private OlmisFacilityTypeApprovedProductRepository olmisFacilityTypeApprovedProductRepository;
+
+  @Autowired
+  private OlmisUserRepository olmisUserRepository;
+
+  @Autowired
+  private OlmisStatusMessageRepository olmisStatusMessageRepository;
 
   /**
    * Converts the given {@link Main} object into {@link Requisition} object.
@@ -161,8 +174,6 @@ public class MainProcessor implements ItemProcessor<Main, List<Requisition>> {
 
     requisition.setCreatedDate(safeNull(main.getCreatedDate()));
     requisition.setModifiedDate(safeNull(main.getModifiedDate()));
-    // TODO: howo to handle notes?
-    requisition.setDraftStatusMessage(main.getNotes());
 
     requisition
         .getRequisitionLineItems()
@@ -173,6 +184,8 @@ public class MainProcessor implements ItemProcessor<Main, List<Requisition>> {
     // TODO: who create, submit, authorize, approve and convert to order?
     requisition.submit(products, null);
     requisition.authorize(products, null);
+    saveStatusMessage(requisition, main, items);
+
     requisition.approve(null, products);
 
     convertToOrder(requisition);
@@ -310,5 +323,30 @@ public class MainProcessor implements ItemProcessor<Main, List<Requisition>> {
         requisition.getFacilityId(), requisition.getProgramId(), period.getId()
     );
   }
+
+  private void saveStatusMessage(Requisition requisition, Main main, Collection<Item> items) {
+    String message = main.getNotes() + SEPARATOR + items
+        .stream()
+        .map(item -> item.getNote() + SEPARATOR + item
+            .getNotes()
+            .stream()
+            .map(comment -> comment.getType().getName() + ": " + comment.getComment())
+            .collect(Collectors.joining(SEPARATOR)))
+        .collect(Collectors.joining(SEPARATOR));
+
+    if (isNotBlank(message)) {
+      User user = olmisUserRepository.findByUsername(USERNAME);
+
+      StatusMessage newStatusMessage = StatusMessage.newStatusMessage(
+          requisition,
+          user.getId(),
+          user.getFirstName(),
+          user.getLastName(),
+          message);
+      
+      olmisStatusMessageRepository.save(newStatusMessage);
+    }
+  }
+
 
 }
