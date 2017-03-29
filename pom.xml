@@ -4,8 +4,8 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>org.openlmis</groupId>
-    <artifactId>scm-migration-tool</artifactId>
+    <groupId>mw.gov.health.lmis</groupId>
+    <artifactId>migration-tool</artifactId>
     <version>1.0-SNAPSHOT</version>
 
     <parent>
@@ -15,7 +15,7 @@
     </parent>
 
     <properties>
-        <main.class>org.openlmis.migration.tool.App</main.class>
+        <main.class>mw.gov.health.lmis.migration.tool.App</main.class>
 
         <jdk.version>1.8</jdk.version>
 
