@@ -32,7 +32,6 @@ import com.google.common.collect.ImmutableMap;
 import org.openlmis.migration.tool.openlmis.requisition.domain.RequisitionTemplate;
 import org.openlmis.migration.tool.openlmis.requisition.domain.RequisitionTemplateColumn;
 import org.openlmis.migration.tool.openlmis.requisition.domain.SourceType;
-import org.openlmis.migration.tool.scm.domain.SystemDefault;
 import org.openlmis.migration.tool.scm.repository.SystemDefaultRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,14 +40,28 @@ import org.springframework.stereotype.Component;
 
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 @Component
 public class RequsitionUtil {
   private static final Logger LOGGER = LoggerFactory.getLogger(RequsitionUtil.class);
 
+  private final Integer numberOfPeriodsToAverage;
+
   @Autowired
-  private SystemDefaultRepository systemDefaultRepository;
+  public RequsitionUtil(SystemDefaultRepository systemDefaultRepository) {
+    Short currentNumberOfPeriodsToAverage = systemDefaultRepository
+        .findAll()
+        .iterator()
+        .next()
+        .getNumberOfPeriodsToAverage();
+
+    this.numberOfPeriodsToAverage = Optional
+        .ofNullable(currentNumberOfPeriodsToAverage)
+        .orElse((short) 2)
+        .intValue();
+  }
 
   /**
    * Creates new template for the givne program.
@@ -56,15 +69,9 @@ public class RequsitionUtil {
   public RequisitionTemplate createTemplate(UUID programId) {
     LOGGER.info("Create requisition template for program: {}", programId);
 
-    SystemDefault systemDefault = systemDefaultRepository
-        .findAll()
-        .iterator()
-        .next();
-
-    // TODO: how we should handle requisition template?
     RequisitionTemplate template = new RequisitionTemplate();
     template.setProgramId(programId);
-    template.setNumberOfPeriodsToAverage(systemDefault.getNumberOfPeriodsToAverage().intValue());
+    template.setNumberOfPeriodsToAverage(numberOfPeriodsToAverage);
     template.setColumnsMap(getRequisitionTemplateColumnMap());
 
     return template;
@@ -73,7 +80,7 @@ public class RequsitionUtil {
   private Map<String, RequisitionTemplateColumn> getRequisitionTemplateColumnMap() {
     return ImmutableMap
         .<String, RequisitionTemplateColumn>builder()
-        .put(SKIPPED_COLUMN, create(SKIPPED_COLUMN, USER_INPUT, true))
+        .put(SKIPPED_COLUMN, create(SKIPPED_COLUMN, USER_INPUT, false))
         .put(PRODUCT_CODE, create(PRODUCT_CODE, REFERENCE_DATA, true))
         .put(PRODUCT, create(PRODUCT, REFERENCE_DATA, true))
         .put(BEGINNING_BALANCE, create(BEGINNING_BALANCE, USER_INPUT, false))
@@ -92,8 +99,8 @@ public class RequsitionUtil {
             create(REQUESTED_QUANTITY_EXPLANATION, USER_INPUT, true)
         )
         .put(APPROVED_QUANTITY, create(APPROVED_QUANTITY, USER_INPUT, true))
-        .put(REMARKS_COLUMN, create(REMARKS_COLUMN, USER_INPUT, true))
-        .put(TOTAL_COLUMN, create(TOTAL_COLUMN, CALCULATED, true))
+        .put(REMARKS_COLUMN, create(REMARKS_COLUMN, USER_INPUT, false))
+        .put(TOTAL_COLUMN, create(TOTAL_COLUMN, CALCULATED, false))
         .put(PACKS_TO_SHIP, create(PACKS_TO_SHIP, CALCULATED, false))
         .put(NUMBER_OF_NEW_PATIENTS_ADDED, create(NUMBER_OF_NEW_PATIENTS_ADDED, USER_INPUT, false))
         .put(TOTAL_COST, create(TOTAL_COST, CALCULATED, false))

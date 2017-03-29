@@ -1,6 +1,7 @@
 package org.openlmis.migration.tool.batch;
 
 import static java.time.temporal.TemporalAdjusters.firstDayOfMonth;
+import static org.openlmis.migration.tool.openlmis.requisition.domain.LineItemFieldsCalculator.calculateTotalLossesAndAdjustments;
 
 import com.google.common.collect.Lists;
 
@@ -209,18 +210,18 @@ public class MainProcessor implements ItemProcessor<Main, List<Requisition>> {
       }
 
       requisitionLineItem.setStockAdjustments(stockAdjustments);
+      requisitionLineItem.setTotalLossesAndAdjustments(
+          calculateTotalLossesAndAdjustments(
+              requisitionLineItem,
+              Lists.newArrayList(olmisStockAdjustmentReasonRepository.findAll())
+          )
+      );
       requisitionLineItem.setTotalStockoutDays(item.getStockedOutDays().intValue());
       requisitionLineItem.setStockOnHand(item.getClosingBalance());
       requisitionLineItem.setCalculatedOrderQuantity(item.getCalculatedRequiredQuantity());
       requisitionLineItem.setRequestedQuantity(item.getRequiredQuantity());
       requisitionLineItem.setRequestedQuantityExplanation("migrated from SCM");
       requisitionLineItem.setAdjustedConsumption(item.getAdjustedDispensedQuantity());
-
-      requisitionLineItem.calculateAndSetFields(
-          requisition.getTemplate(),
-          Lists.newArrayList(olmisStockAdjustmentReasonRepository.findAll()),
-          requisition.getNumberOfMonthsInPeriod()
-      );
     }
 
     line.updateFrom(requisitionLineItem);
