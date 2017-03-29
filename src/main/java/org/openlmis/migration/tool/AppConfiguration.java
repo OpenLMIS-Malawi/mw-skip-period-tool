@@ -123,7 +123,7 @@ public class AppConfiguration {
 
   private void createDemoData() {
     olmisUserRepository.save(
-        referenceDataUtil.create("supply_chain_manager", "supply chain", "manager")
+        referenceDataUtil.create("supply chain manager", "supply chain", "manager")
     );
 
     FacilityType facilityType = olmisFacilityTypeRepository.save(referenceDataUtil.create());
