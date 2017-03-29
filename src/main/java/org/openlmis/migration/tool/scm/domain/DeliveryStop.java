@@ -40,10 +40,6 @@ public class DeliveryStop implements Serializable {
   @Column(name = "dst_intStopOrder")
   private Integer stopOrder;
 
-  // TODO: handle '?' sign in HQL
-  //@Column(name = "dst_fInventory?")
-  //private Boolean inventory;
-
   @Column(name = "dst_sngDistance")
   private Double distance;
 
