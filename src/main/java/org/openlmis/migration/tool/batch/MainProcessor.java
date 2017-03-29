@@ -118,6 +118,8 @@ public class MainProcessor implements ItemProcessor<Main, List<Requisition>> {
   }
 
   private Requisition createRequisition(String programCode, Collection<Item> items, Main main) {
+    User user = olmisUserRepository.findByUsername(USERNAME);
+
     org.openlmis.migration.tool.scm.domain.Facility mainFacility = main.getId().getFacility();
     Facility facility = olmisFacilityRepository.findByCode(mainFacility.getCode());
 
@@ -163,7 +165,7 @@ public class MainProcessor implements ItemProcessor<Main, List<Requisition>> {
     //    ProofOfDeliveryDto pod = getProofOfDeliveryDto(emergency, requisition);
 
     requisition.initiate(template, approvedProducts, previousRequisitions,
-        numberOfPreviousPeriodsToAverage, null, null);
+        numberOfPreviousPeriodsToAverage, null, user.getId());
 
     // TODO: should we handle non full supply products?
     // requisition.setAvailableNonFullSupplyProducts(approvedProductReferenceDataService
@@ -181,10 +183,10 @@ public class MainProcessor implements ItemProcessor<Main, List<Requisition>> {
 
     List<Orderable> products = Lists.newArrayList(olmisOrderableRepository.findAll());
 
-    // TODO: who create, submit, authorize, approve and convert to order?
+    // TODO: who submit, authorize, approve and convert to order?
     requisition.submit(products, null);
     requisition.authorize(products, null);
-    saveStatusMessage(requisition, main, items);
+    saveStatusMessage(requisition, main, items, user);
 
     requisition.approve(null, products, null);
 
@@ -324,7 +326,8 @@ public class MainProcessor implements ItemProcessor<Main, List<Requisition>> {
     );
   }
 
-  private void saveStatusMessage(Requisition requisition, Main main, Collection<Item> items) {
+  private void saveStatusMessage(Requisition requisition, Main main, Collection<Item> items,
+                                 User user) {
     List<String> notes = Lists.newArrayList();
     notes.add(main.getNotes());
 
@@ -344,8 +347,6 @@ public class MainProcessor implements ItemProcessor<Main, List<Requisition>> {
     String message = notes.stream().collect(Collectors.joining("; "));
 
     if (isNotBlank(message)) {
-      User user = olmisUserRepository.findByUsername(USERNAME);
-
       StatusMessage newStatusMessage = StatusMessage.newStatusMessage(
           requisition,
           user.getId(),
