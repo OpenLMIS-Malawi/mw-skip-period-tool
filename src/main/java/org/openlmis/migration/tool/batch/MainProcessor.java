@@ -163,7 +163,7 @@ public class MainProcessor implements ItemProcessor<Main, List<Requisition>> {
     //    ProofOfDeliveryDto pod = getProofOfDeliveryDto(emergency, requisition);
 
     requisition.initiate(template, approvedProducts, previousRequisitions,
-        numberOfPreviousPeriodsToAverage, null);
+        numberOfPreviousPeriodsToAverage, null, null);
 
     // TODO: should we handle non full supply products?
     // requisition.setAvailableNonFullSupplyProducts(approvedProductReferenceDataService
@@ -186,7 +186,7 @@ public class MainProcessor implements ItemProcessor<Main, List<Requisition>> {
     requisition.authorize(products, null);
     saveStatusMessage(requisition, main, items);
 
-    requisition.approve(null, products);
+    requisition.approve(null, products, null);
 
     convertToOrder(requisition);
 

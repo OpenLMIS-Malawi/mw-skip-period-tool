@@ -47,7 +47,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -68,7 +67,6 @@ import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
-import javax.persistence.Transient;
 
 @SuppressWarnings({"PMD.TooManyMethods", "PMD.AvoidDuplicateLiterals"})
 @Entity
@@ -135,15 +133,12 @@ public class Requisition extends BaseTimestampedEntity {
   @Setter
   private RequisitionStatus status;
 
-  /*
-   * Used to convey a small subset of the requisition-related data collected via JaVers' audit-log.
-   * This is primarily used to allow users the ability to see when the RequisitionStatus changed.
-   * A more holistic approach to audit logging is forthcoming.
-   */
-  @Transient
+  @OneToMany(
+      mappedBy = "requisition",
+      cascade = CascadeType.ALL)
   @Getter
   @Setter
-  private Map<String, StatusLogEntry> statusChanges;
+  private List<StatusChange> statusChanges = new ArrayList<>();
 
   @Column(nullable = false)
   @Getter
@@ -177,6 +172,7 @@ public class Requisition extends BaseTimestampedEntity {
       joinColumns = @JoinColumn(name = "requisitionId"))
   @Getter
   @Setter
+  @Type(type = UUID_TYPE)
   private Set<UUID> availableNonFullSupplyProducts;
 
   /**
@@ -212,7 +208,8 @@ public class Requisition extends BaseTimestampedEntity {
                        Collection<FacilityTypeApprovedProduct> products,
                        List<Requisition> previousRequisitions,
                        int numberOfPreviousPeriodsToAverage,
-                       ProofOfDelivery proofOfDelivery) {
+                       ProofOfDelivery proofOfDelivery,
+                       UUID initiator) {
     this.template = template;
     this.previousRequisitions = previousRequisitions;
 
@@ -258,6 +255,10 @@ public class Requisition extends BaseTimestampedEntity {
     }
 
     setPreviousAdjustedConsumptions(numberOfPreviousPeriodsToAverage);
+
+    status = INITIATED;
+
+    statusChanges.add(StatusChange.newStatusChange(this, initiator));
   }
 
   /**
@@ -278,6 +279,8 @@ public class Requisition extends BaseTimestampedEntity {
     updateConsumptionsAndTotalCost(products);
 
     status = RequisitionStatus.SUBMITTED;
+
+    statusChanges.add(StatusChange.newStatusChange(this, submitter));
   }
 
   /**
@@ -295,6 +298,8 @@ public class Requisition extends BaseTimestampedEntity {
 
     status = RequisitionStatus.AUTHORIZED;
     RequisitionHelper.forEachLine(getSkippedRequisitionLineItems(), RequisitionLineItem::resetData);
+
+    statusChanges.add(StatusChange.newStatusChange(this, authorizer));
   }
 
   /**
@@ -312,7 +317,7 @@ public class Requisition extends BaseTimestampedEntity {
    * @param products     orderable products that will be used by line items to update packs to
    *                     ship.
    */
-  public void approve(UUID parentNodeId, Collection<Orderable> products) {
+  public void approve(UUID parentNodeId, Collection<Orderable> products, UUID approver) {
     if (parentNodeId == null) {
       status = RequisitionStatus.APPROVED;
     } else {
@@ -321,14 +326,26 @@ public class Requisition extends BaseTimestampedEntity {
     }
 
     updateConsumptionsAndTotalCost(products);
+
+    statusChanges.add(StatusChange.newStatusChange(this, approver));
   }
 
   /**
    * Rejects given requisition.
    */
-  public void reject(Collection<Orderable> products) {
-    status = RequisitionStatus.INITIATED;
+  public void reject(Collection<Orderable> products, UUID rejector) {
+    status = INITIATED;
     updateConsumptionsAndTotalCost(products);
+
+    statusChanges.add(StatusChange.newStatusChange(this, rejector));
+  }
+
+  /**
+   * Release the requisition.
+   */
+  public void release(UUID releaser) {
+    status = RequisitionStatus.RELEASED;
+    statusChanges.add(StatusChange.newStatusChange(this, releaser));
   }
 
   /**
@@ -445,7 +462,7 @@ public class Requisition extends BaseTimestampedEntity {
    * Sets appropriate value for Previous Adjusted Consumptions field in
    * each {@link RequisitionLineItem}.
    */
-  private void setPreviousAdjustedConsumptions(int numberOfPreviousPeriodsToAverage) {
+  void setPreviousAdjustedConsumptions(int numberOfPreviousPeriodsToAverage) {
     List<RequisitionLineItem> previousRequisitionLineItems = RequisitionHelper
         .getNonSkippedLineItems(previousRequisitions.subList(0, numberOfPreviousPeriodsToAverage));
 
