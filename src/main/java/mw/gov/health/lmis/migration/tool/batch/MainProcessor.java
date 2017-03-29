@@ -215,8 +215,16 @@ public class MainProcessor implements ItemProcessor<Main, List<Requisition>> {
       Program program = olmisProgramRepository.findOne(requisition.getProgramId());
       List<StockAdjustment> stockAdjustments = Lists.newArrayList();
       for (Adjustment adjustment : item.getAdjustments()) {
+        String name = adjustment.getType().getName();
+
+        if ("de credit".equalsIgnoreCase(name)) {
+          name = "transfer in";
+        } else if ("de debit".equalsIgnoreCase(name)) {
+          name = "transfer out";
+        }
+
         StockAdjustmentReason stockAdjustmentReasonDto = olmisStockAdjustmentReasonRepository
-            .findByProgramAndName(program, adjustment.getType().getCode());
+            .findByProgramAndName(program, name);
 
         StockAdjustment stockAdjustment = new StockAdjustment();
         stockAdjustment.setReasonId(stockAdjustmentReasonDto.getId());
@@ -236,8 +244,9 @@ public class MainProcessor implements ItemProcessor<Main, List<Requisition>> {
       requisitionLineItem.setStockOnHand(item.getClosingBalance());
       requisitionLineItem.setCalculatedOrderQuantity(item.getCalculatedRequiredQuantity());
       requisitionLineItem.setRequestedQuantity(item.getRequiredQuantity());
-      requisitionLineItem.setRequestedQuantityExplanation("migrated from SCM");
+      requisitionLineItem.setRequestedQuantityExplanation("transferred from supply manager");
       requisitionLineItem.setAdjustedConsumption(item.getAdjustedDispensedQuantity());
+      requisitionLineItem.setNonFullSupply(false);
     }
 
     line.updateFrom(requisitionLineItem);

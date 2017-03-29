@@ -135,7 +135,7 @@ public class ReferenceDataUtil {
     StockAdjustmentReason reason = new StockAdjustmentReason();
     reason.setId(UUID.randomUUID());
     reason.setProgram(program);
-    reason.setName(adjustmentType.getCode());
+    reason.setName(adjustmentType.getName());
     reason.setDescription(adjustmentType.getName());
     reason.setAdditive(!adjustmentType.getNegative());
 
