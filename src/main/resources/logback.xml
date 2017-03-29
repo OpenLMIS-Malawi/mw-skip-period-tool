@@ -25,7 +25,7 @@
         </triggeringPolicy>
     </appender>
 
-    <logger name="org.openlmis.migration.tool" level="INFO" additivity="true">
+    <logger name="mw.gov.health.lmis.migration.tool" level="INFO" additivity="true">
         <appender-ref ref="STDOUT"/>
     </logger>
 

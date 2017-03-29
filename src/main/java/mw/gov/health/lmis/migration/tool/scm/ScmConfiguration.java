@@ -7,7 +7,6 @@ import static org.hibernate.cfg.AvailableSettings.SHOW_SQL;
 import net.ucanaccess.jdbc.UcanaccessDriver;
 
 import org.hibernate.dialect.H2Dialect;
-import mw.gov.health.lmis.migration.tool.Arguments;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
@@ -18,12 +17,14 @@ import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
 import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
 import org.springframework.transaction.PlatformTransactionManager;
 
+import mw.gov.health.lmis.migration.tool.Arguments;
+
 import java.util.Properties;
 
 import javax.sql.DataSource;
 
 @Configuration
-@EnableJpaRepositories(basePackages = "org.openlmis.migration.tool.scm",
+@EnableJpaRepositories(basePackages = "mw.gov.health.lmis.migration.tool.scm",
     entityManagerFactoryRef = "scmEntityManagerFactory",
     transactionManagerRef = "scmTransactionManager")
 public class ScmConfiguration {
@@ -47,7 +48,7 @@ public class ScmConfiguration {
         new LocalContainerEntityManagerFactoryBean();
 
     entityManagerFactory.setDataSource(scmDataSource(arguments));
-    entityManagerFactory.setPackagesToScan("org.openlmis.migration.tool.scm.domain");
+    entityManagerFactory.setPackagesToScan("mw.gov.health.lmis.migration.tool.scm.domain");
 
     HibernateJpaVendorAdapter vendorAdapter = new HibernateJpaVendorAdapter();
     entityManagerFactory.setJpaVendorAdapter(vendorAdapter);
