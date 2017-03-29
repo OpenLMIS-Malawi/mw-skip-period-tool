@@ -5,6 +5,11 @@ import static java.time.temporal.TemporalAdjusters.lastDayOfMonth;
 
 import org.joda.money.CurrencyUnit;
 import org.joda.money.Money;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.Code;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.Facility;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.FacilityType;
@@ -22,10 +27,6 @@ import mw.gov.health.lmis.migration.tool.scm.domain.AdjustmentType;
 import mw.gov.health.lmis.migration.tool.scm.domain.Product;
 import mw.gov.health.lmis.migration.tool.scm.domain.SystemDefault;
 import mw.gov.health.lmis.migration.tool.scm.repository.SystemDefaultRepository;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -156,11 +157,11 @@ public class ReferenceDataUtil {
   /**
    * Creates new orderable display category.
    */
-  public OrderableDisplayCategory create(mw.gov.health.lmis.migration.tool.scm.domain.Program program) {
-    LOGGER.info("Create orderable display category: {}", program.getName());
+  public OrderableDisplayCategory create(mw.gov.health.lmis.migration.tool.scm.domain.Program pro) {
+    LOGGER.info("Create orderable display category: {}", pro.getName());
 
-    String displayName = program.getName();
-    Integer displayOrder = program.getOrder();
+    String displayName = pro.getName();
+    Integer displayOrder = pro.getOrder();
 
     OrderableDisplayCategory category = new OrderableDisplayCategory();
     category.setCode(new Code(displayName.replace(' ', '_')));

@@ -118,10 +118,10 @@ public class MainProcessor implements ItemProcessor<Main, List<Requisition>> {
   }
 
   private Requisition createRequisition(String programCode, Collection<Item> items, Main main) {
-    User user = olmisUserRepository.findByUsername(USERNAME);
 
     mw.gov.health.lmis.migration.tool.scm.domain.Facility mainFacility = main.getId().getFacility();
-    mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.Facility facility = olmisFacilityRepository.findByCode(mainFacility.getCode());
+    mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.Facility facility =
+        olmisFacilityRepository.findByCode(mainFacility.getCode());
 
     Program program = olmisProgramRepository.findByName(programCode);
 
@@ -163,6 +163,7 @@ public class MainProcessor implements ItemProcessor<Main, List<Requisition>> {
     }
 
     //    ProofOfDeliveryDto pod = getProofOfDeliveryDto(emergency, requisition);
+    User user = olmisUserRepository.findByUsername(USERNAME);
 
     requisition.initiate(template, approvedProducts, previousRequisitions,
         numberOfPreviousPeriodsToAverage, null, user.getId());

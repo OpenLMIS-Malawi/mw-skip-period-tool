@@ -15,21 +15,30 @@
 
 package mw.gov.health.lmis.migration.tool.openlmis.requisition.domain;
 
+import static mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.LineItemFieldsCalculator.calculateAdjustedConsumption;
+import static mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.LineItemFieldsCalculator.calculateAverageConsumption;
+import static mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.LineItemFieldsCalculator.calculateCalculatedOrderQuantity;
+import static mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.LineItemFieldsCalculator.calculateMaximumStockQuantity;
+import static mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.LineItemFieldsCalculator.calculateStockOnHand;
+import static mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.LineItemFieldsCalculator.calculateTotal;
+import static mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.LineItemFieldsCalculator.calculateTotalConsumedQuantity;
+import static mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.LineItemFieldsCalculator.calculateTotalLossesAndAdjustments;
+
 import org.hibernate.annotations.Parameter;
 import org.hibernate.annotations.Type;
 import org.joda.money.CurrencyUnit;
 import org.joda.money.Money;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import lombok.Getter;
+import lombok.Setter;
 import mw.gov.health.lmis.migration.tool.openlmis.BaseEntity;
 import mw.gov.health.lmis.migration.tool.openlmis.CurrencyConfig;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.FacilityTypeApprovedProduct;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.Orderable;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.ProgramOrderable;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.StockAdjustmentReason;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import lombok.Getter;
-import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -385,7 +394,7 @@ public class RequisitionLineItem extends BaseEntity {
   void calculateAndSetAverageConsumption() {
     List<Integer> previous = new ArrayList<>(getPreviousAdjustedConsumptions());
     previous.add(getAdjustedConsumption());
-    Integer calculated = LineItemFieldsCalculator.calculateAverageConsumption(previous);
+    Integer calculated = calculateAverageConsumption(previous);
     setAverageConsumption(calculated);
   }
 
@@ -410,7 +419,7 @@ public class RequisitionLineItem extends BaseEntity {
   private void calculateAndSetTotalConsumedQuantity(RequisitionTemplate template) {
     if (template.isColumnDisplayed(TOTAL_CONSUMED_QUANTITY)) {
       if (template.isColumnCalculated(TOTAL_CONSUMED_QUANTITY)) {
-        setTotalConsumedQuantity(LineItemFieldsCalculator.calculateTotalConsumedQuantity(this));
+        setTotalConsumedQuantity(calculateTotalConsumedQuantity(this));
       }
     } else {
       setTotalConsumedQuantity(null);
@@ -422,7 +431,7 @@ public class RequisitionLineItem extends BaseEntity {
    */
   private void calculateAndSetTotal(RequisitionTemplate template) {
     if (template.isColumnDisplayed(TOTAL_COLUMN)) {
-      setTotal(LineItemFieldsCalculator.calculateTotal(this));
+      setTotal(calculateTotal(this));
     }
   }
 
@@ -432,7 +441,7 @@ public class RequisitionLineItem extends BaseEntity {
   private void calculateAndSetStockOnHand(RequisitionTemplate template) {
     if (template.isColumnDisplayed(STOCK_ON_HAND)) {
       if (template.isColumnCalculated(STOCK_ON_HAND)) {
-        setStockOnHand(LineItemFieldsCalculator.calculateStockOnHand(this));
+        setStockOnHand(calculateStockOnHand(this));
       }
     } else {
       setStockOnHand(null);
@@ -444,7 +453,7 @@ public class RequisitionLineItem extends BaseEntity {
    */
   private void calculateAndSetTotalLossesAndAdjustments(
       Collection<StockAdjustmentReason> reasons) {
-    setTotalLossesAndAdjustments(LineItemFieldsCalculator.calculateTotalLossesAndAdjustments(this, reasons));
+    setTotalLossesAndAdjustments(calculateTotalLossesAndAdjustments(this, reasons));
   }
 
   /**
@@ -453,7 +462,7 @@ public class RequisitionLineItem extends BaseEntity {
   private void calculateAndSetAdjustedConsumption(RequisitionTemplate template,
                                                   Integer monthsInThePeriod) {
     if (template.isColumnInTemplate(ADJUSTED_CONSUMPTION)) {
-      int calculated = LineItemFieldsCalculator.calculateAdjustedConsumption(this, monthsInThePeriod);
+      int calculated = calculateAdjustedConsumption(this, monthsInThePeriod);
 
       if (!Objects.equals(calculated, getAdjustedConsumption())) {
         LOGGER.warn("Passed Adjusted Consumption does not match calculated one.");
@@ -468,7 +477,7 @@ public class RequisitionLineItem extends BaseEntity {
    */
   private void calculateAndSetMaximumStockQuantity(RequisitionTemplate template) {
     if (template.isColumnDisplayed(MAXIMUM_STOCK_QUANTITY)) {
-      setMaximumStockQuantity(LineItemFieldsCalculator.calculateMaximumStockQuantity(this, template));
+      setMaximumStockQuantity(calculateMaximumStockQuantity(this, template));
     }
   }
 
@@ -477,7 +486,7 @@ public class RequisitionLineItem extends BaseEntity {
    */
   private void calculateAndSetCalculatedOrderQuantity(RequisitionTemplate template) {
     if (template.isColumnDisplayed(CALCULATED_ORDER_QUANTITY)) {
-      setCalculatedOrderQuantity(LineItemFieldsCalculator.calculateCalculatedOrderQuantity(this, template));
+      setCalculatedOrderQuantity(calculateCalculatedOrderQuantity(this, template));
     }
   }
 
