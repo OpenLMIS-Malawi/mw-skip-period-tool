@@ -15,6 +15,7 @@
 
 package mw.gov.health.lmis.migration.tool.openlmis.requisition.domain;
 
+import static mw.gov.health.lmis.migration.tool.openlmis.CurrencyConfig.CURRENCY_CODE;
 import static mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.LineItemFieldsCalculator.calculateAdjustedConsumption;
 import static mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.LineItemFieldsCalculator.calculateAverageConsumption;
 import static mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.LineItemFieldsCalculator.calculateCalculatedOrderQuantity;
@@ -33,11 +34,9 @@ import org.slf4j.LoggerFactory;
 
 import lombok.Getter;
 import lombok.Setter;
+import mw.gov.health.lmis.migration.tool.Pair;
 import mw.gov.health.lmis.migration.tool.openlmis.BaseEntity;
-import mw.gov.health.lmis.migration.tool.openlmis.CurrencyConfig;
-import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.FacilityTypeApprovedProduct;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.Orderable;
-import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.ProgramOrderable;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.StockAdjustmentReason;
 
 import java.math.BigDecimal;
@@ -155,13 +154,13 @@ public class RequisitionLineItem extends BaseEntity {
   @Getter
   @Setter
   @Type(type = "org.jadira.usertype.moneyandcurrency.joda.PersistentMoneyAmount",
-      parameters = {@Parameter(name = "currencyCode", value = CurrencyConfig.CURRENCY_CODE)})
+      parameters = {@Parameter(name = "currencyCode", value = CURRENCY_CODE)})
   private Money pricePerPack;
 
   @Getter
   @Setter
   @Type(type = "org.jadira.usertype.moneyandcurrency.joda.PersistentMoneyAmount",
-      parameters = {@Parameter(name = "currencyCode", value = CurrencyConfig.CURRENCY_CODE)})
+      parameters = {@Parameter(name = "currencyCode", value = CURRENCY_CODE)})
   private Money totalCost;
 
   @Setter
@@ -224,21 +223,15 @@ public class RequisitionLineItem extends BaseEntity {
   /**
    * Initiates a requisition line item with specified requisition and product.
    *
-   * @param requisition     requisition to apply
-   * @param approvedProduct facilityTypeApprovedProduct to apply
+   * @param requisition requisition to apply
+   * @param pair   orderable product and max periods of stock value
    */
-  public RequisitionLineItem(Requisition requisition, FacilityTypeApprovedProduct approvedProduct) {
+  public RequisitionLineItem(Requisition requisition, Pair<Orderable, Double> pair) {
     this();
     this.requisition = requisition;
-    this.maxPeriodsOfStock = BigDecimal.valueOf(approvedProduct.getMaxPeriodsOfStock());
-
-    ProgramOrderable product = approvedProduct.getProgramOrderable();
-    this.orderableId = product.getProduct().getId();
-
-    Money priceFromProduct = product.getPricePerPack();
-    this.pricePerPack = priceFromProduct == null
-        ? Money.of(CurrencyUnit.of(CurrencyConfig.CURRENCY_CODE), PRICE_PER_PACK_IF_NULL)
-        : priceFromProduct;
+    this.maxPeriodsOfStock = BigDecimal.valueOf(pair.getRight());
+    this.orderableId = pair.getLeft().getId();
+    this.pricePerPack = Money.of(CurrencyUnit.of(CURRENCY_CODE), PRICE_PER_PACK_IF_NULL);
   }
 
   /**

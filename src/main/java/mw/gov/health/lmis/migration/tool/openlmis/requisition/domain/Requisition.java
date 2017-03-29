@@ -26,18 +26,18 @@ import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.Type;
 import org.joda.money.CurrencyUnit;
 import org.joda.money.Money;
-import mw.gov.health.lmis.migration.tool.openlmis.BaseEntity;
-import mw.gov.health.lmis.migration.tool.openlmis.CurrencyConfig;
-import mw.gov.health.lmis.migration.tool.openlmis.fulfillment.domain.ProofOfDelivery;
-import mw.gov.health.lmis.migration.tool.openlmis.fulfillment.domain.ProofOfDeliveryLineItem;
-import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.FacilityTypeApprovedProduct;
-import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.Orderable;
-import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.StockAdjustmentReason;
-import mw.gov.health.lmis.migration.tool.openlmis.requisition.RequisitionHelper;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import mw.gov.health.lmis.migration.tool.Pair;
+import mw.gov.health.lmis.migration.tool.openlmis.BaseEntity;
+import mw.gov.health.lmis.migration.tool.openlmis.CurrencyConfig;
+import mw.gov.health.lmis.migration.tool.openlmis.fulfillment.domain.ProofOfDelivery;
+import mw.gov.health.lmis.migration.tool.openlmis.fulfillment.domain.ProofOfDeliveryLineItem;
+import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.Orderable;
+import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.StockAdjustmentReason;
+import mw.gov.health.lmis.migration.tool.openlmis.requisition.RequisitionHelper;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -194,14 +194,14 @@ public class Requisition extends BaseTimestampedEntity {
    *
    * @param template             the requisition template for this requisition to use (based on
    *                             program)
-   * @param products             the full supply products for this requisitions facility to build
+   * @param pairs                the full supply products for this requisitions facility to build
    *                             requisition lines for
    * @param previousRequisitions the previous requisitions for this program/facility. Used for field
    *                             calculations and set previous adjusted consumptions. Pass empty
    *                             list if there are no previous requisitions.
    */
   public void initiate(RequisitionTemplate template,
-                       Collection<FacilityTypeApprovedProduct> products,
+                       Collection<Pair<Orderable, Double>> pairs,
                        List<Requisition> previousRequisitions,
                        int numberOfPreviousPeriodsToAverage,
                        ProofOfDelivery proofOfDelivery,
@@ -210,9 +210,9 @@ public class Requisition extends BaseTimestampedEntity {
     this.previousRequisitions = previousRequisitions;
 
     setRequisitionLineItems(
-        products
+        pairs
             .stream()
-            .map(ftap -> new RequisitionLineItem(this, ftap))
+            .map(pair -> new RequisitionLineItem(this, pair))
             .collect(Collectors.toList())
     );
 

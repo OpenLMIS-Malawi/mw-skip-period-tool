@@ -13,7 +13,6 @@ import org.springframework.stereotype.Component;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.Code;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.Facility;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.FacilityType;
-import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.FacilityTypeApprovedProduct;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.Orderable;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.OrderableDisplayCategory;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.OrderedDisplayValue;
@@ -188,21 +187,6 @@ public class ReferenceDataUtil {
     programOrderable.setPricePerPack(Money.of(CurrencyUnit.USD, pricePerPack));
 
     return programOrderable;
-  }
-
-  /**
-   * Creates new facility type approved product.
-   */
-  public FacilityTypeApprovedProduct create(FacilityType facilityType,
-                                            ProgramOrderable programOrderable) {
-    LOGGER.info("Create facility type approved product");
-
-    FacilityTypeApprovedProduct approvedProduct = new FacilityTypeApprovedProduct();
-    approvedProduct.setFacilityType(facilityType);
-    approvedProduct.setProgramOrderable(programOrderable);
-    approvedProduct.setMaxPeriodsOfStock(3.0);
-
-    return approvedProduct;
   }
 
 }

@@ -1,13 +1,19 @@
 package mw.gov.health.lmis.migration.tool;
 
-import com.beust.jcommander.internal.Lists;
+import org.springframework.batch.core.Job;
+import org.springframework.batch.core.JobParameters;
+import org.springframework.batch.core.launch.JobLauncher;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.annotation.Bean;
 
 import mw.gov.health.lmis.migration.tool.openlmis.BaseEntity;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.Code;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.FacilityType;
-import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.FacilityTypeApprovedProduct;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.Orderable;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.OrderableDisplayCategory;
+import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.Program;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.ProgramOrderable;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.OlmisFacilityRepository;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.OlmisFacilityTypeApprovedProductRepository;
@@ -30,21 +36,9 @@ import mw.gov.health.lmis.migration.tool.scm.repository.MainRepository;
 import mw.gov.health.lmis.migration.tool.scm.repository.ProductRepository;
 import mw.gov.health.lmis.migration.tool.scm.repository.ProgramRepository;
 import mw.gov.health.lmis.migration.tool.scm.util.Grouping;
-import org.springframework.batch.core.Job;
-import org.springframework.batch.core.JobParameters;
-import org.springframework.batch.core.launch.JobLauncher;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.CommandLineRunner;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.context.annotation.Bean;
-
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.Program;
 
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
@@ -166,7 +160,6 @@ public class AppConfiguration {
         .collect(Collectors.toList())
     );
 
-    List<FacilityTypeApprovedProduct> approvedProducts = Lists.newArrayList();
     Grouping
         .groupByCategoryName(
             categoryProductJoinRepository.findAll(), cat -> cat.getProgram().getName()
@@ -189,26 +182,14 @@ public class AppConfiguration {
                     .findByProgramAndProductAndCategory(program, orderable, displayCategory);
 
                 if (null == programOrderable) {
-                  programOrderable = olmisProgramOrderableRepository.save(
+                  olmisProgramOrderableRepository.save(
                       referenceDataUtil.create(
                           program, orderable, displayCategory, category.getOrder(), 5
                       )
                   );
                 }
-
-                FacilityTypeApprovedProduct approvedProduct =
-                    olmisFacilityTypeApprovedProductRepository
-                        .findByFacilityTypeAndProgramOrderable(facilityType, programOrderable);
-
-                if (null == approvedProduct) {
-                  approvedProducts.add(
-                      referenceDataUtil.create(facilityType, programOrderable)
-                  );
-                }
               });
         });
-
-    olmisFacilityTypeApprovedProductRepository.save(approvedProducts);
 
     olmisStockAdjustmentReasonRepository.save(StreamSupport
         .stream(adjustmentTypeRepository.findAll().spliterator(), false)
@@ -229,13 +210,6 @@ public class AppConfiguration {
         .map(requsitionUtil::createTemplate)
         .collect(Collectors.toList())
     );
-  }
-
-  @AllArgsConstructor
-  @Getter
-  private static class Pair<L, R> {
-    private final L left;
-    private final R right;
   }
 
 }

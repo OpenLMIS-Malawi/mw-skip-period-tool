@@ -13,12 +13,12 @@ import org.springframework.batch.item.ItemProcessor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import mw.gov.health.lmis.migration.tool.Pair;
 import mw.gov.health.lmis.migration.tool.openlmis.fulfillment.domain.Order;
 import mw.gov.health.lmis.migration.tool.openlmis.fulfillment.domain.OrderStatus;
 import mw.gov.health.lmis.migration.tool.openlmis.fulfillment.domain.ProofOfDelivery;
 import mw.gov.health.lmis.migration.tool.openlmis.fulfillment.repository.OrderRepository;
 import mw.gov.health.lmis.migration.tool.openlmis.fulfillment.repository.ProofOfDeliveryRepository;
-import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.FacilityTypeApprovedProduct;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.Orderable;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.ProcessingPeriod;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.Program;
@@ -46,6 +46,7 @@ import mw.gov.health.lmis.migration.tool.scm.domain.Main;
 import mw.gov.health.lmis.migration.tool.scm.repository.ItemRepository;
 import mw.gov.health.lmis.migration.tool.scm.util.Grouping;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -138,9 +139,12 @@ public class MainProcessor implements ItemProcessor<Main, List<Requisition>> {
     requisition.setProcessingPeriodId(period.getId());
     requisition.setNumberOfMonthsInPeriod(period.getDurationInMonths());
 
-    Collection<FacilityTypeApprovedProduct> approvedProducts =
-        olmisFacilityTypeApprovedProductRepository.searchProducts(
-            facility.getId(), program.getId(), true);
+    List<Pair<Orderable, Double>> pairs = items
+        .stream()
+        .map(item -> new Pair<>(
+            olmisOrderableRepository.findFirstByName(item.getProduct().getName()),
+            getMonthsOfStock(item))
+        ).collect(Collectors.toList());
 
     RequisitionTemplate template = olmisRequisitionTemplateRepository
         .findByProgramId(program.getId());
@@ -163,7 +167,7 @@ public class MainProcessor implements ItemProcessor<Main, List<Requisition>> {
     //    ProofOfDeliveryDto pod = getProofOfDeliveryDto(emergency, requisition);
     User user = olmisUserRepository.findByUsername(USERNAME);
 
-    requisition.initiate(template, approvedProducts, previousRequisitions,
+    requisition.initiate(template, pairs, previousRequisitions,
         numberOfPreviousPeriodsToAverage, null, user.getId());
 
     requisition.setAvailableNonFullSupplyProducts(Sets.newHashSet());
@@ -195,51 +199,49 @@ public class MainProcessor implements ItemProcessor<Main, List<Requisition>> {
         .stream()
         .filter(elem -> elem.getProduct().getName().equals(orderable.getName()))
         .findFirst()
-        .orElse(null);
+        .orElseThrow(() -> new IllegalStateException("can't find correct item element from list"));
 
     RequisitionLineItem requisitionLineItem = new RequisitionLineItem();
-    requisitionLineItem.setSkipped(null == item);
+    requisitionLineItem.setSkipped(false);
 
-    if (null != item) {
-      requisitionLineItem.setTotalReceivedQuantity(item.getReceipts());
-      requisitionLineItem.setTotalConsumedQuantity(item.getDispensedQuantity());
+    requisitionLineItem.setTotalReceivedQuantity(item.getReceipts());
+    requisitionLineItem.setTotalConsumedQuantity(item.getDispensedQuantity());
 
-      Program program = olmisProgramRepository.findOne(requisition.getProgramId());
-      List<StockAdjustment> stockAdjustments = Lists.newArrayList();
-      for (Adjustment adjustment : item.getAdjustments()) {
-        String name = adjustment.getType().getName();
+    Program program = olmisProgramRepository.findOne(requisition.getProgramId());
+    List<StockAdjustment> stockAdjustments = Lists.newArrayList();
+    for (Adjustment adjustment : item.getAdjustments()) {
+      String name = adjustment.getType().getName();
 
-        if ("de credit".equalsIgnoreCase(name)) {
-          name = "transfer in";
-        } else if ("de debit".equalsIgnoreCase(name)) {
-          name = "transfer out";
-        }
-
-        StockAdjustmentReason stockAdjustmentReasonDto = olmisStockAdjustmentReasonRepository
-            .findByProgramAndName(program, name);
-
-        StockAdjustment stockAdjustment = new StockAdjustment();
-        stockAdjustment.setReasonId(stockAdjustmentReasonDto.getId());
-        stockAdjustment.setQuantity(adjustment.getQuantity());
-
-        stockAdjustments.add(stockAdjustment);
+      if ("de credit".equalsIgnoreCase(name)) {
+        name = "transfer in";
+      } else if ("de debit".equalsIgnoreCase(name)) {
+        name = "transfer out";
       }
 
-      requisitionLineItem.setStockAdjustments(stockAdjustments);
-      requisitionLineItem.setTotalLossesAndAdjustments(
-          calculateTotalLossesAndAdjustments(
-              requisitionLineItem,
-              Lists.newArrayList(olmisStockAdjustmentReasonRepository.findAll())
-          )
-      );
-      requisitionLineItem.setTotalStockoutDays(item.getStockedOutDays().intValue());
-      requisitionLineItem.setStockOnHand(item.getClosingBalance());
-      requisitionLineItem.setCalculatedOrderQuantity(item.getCalculatedRequiredQuantity());
-      requisitionLineItem.setRequestedQuantity(item.getRequiredQuantity());
-      requisitionLineItem.setRequestedQuantityExplanation("transferred from supply manager");
-      requisitionLineItem.setAdjustedConsumption(item.getAdjustedDispensedQuantity());
-      requisitionLineItem.setNonFullSupply(false);
+      StockAdjustmentReason stockAdjustmentReasonDto = olmisStockAdjustmentReasonRepository
+          .findByProgramAndName(program, name);
+
+      StockAdjustment stockAdjustment = new StockAdjustment();
+      stockAdjustment.setReasonId(stockAdjustmentReasonDto.getId());
+      stockAdjustment.setQuantity(adjustment.getQuantity());
+
+      stockAdjustments.add(stockAdjustment);
     }
+
+    requisitionLineItem.setStockAdjustments(stockAdjustments);
+    requisitionLineItem.setTotalLossesAndAdjustments(
+        calculateTotalLossesAndAdjustments(
+            requisitionLineItem,
+            Lists.newArrayList(olmisStockAdjustmentReasonRepository.findAll())
+        )
+    );
+    requisitionLineItem.setTotalStockoutDays(item.getStockedOutDays().intValue());
+    requisitionLineItem.setStockOnHand(item.getClosingBalance());
+    requisitionLineItem.setCalculatedOrderQuantity(item.getCalculatedRequiredQuantity());
+    requisitionLineItem.setRequestedQuantity(item.getRequiredQuantity());
+    requisitionLineItem.setRequestedQuantityExplanation("transferred from supply manager");
+    requisitionLineItem.setAdjustedConsumption(item.getAdjustedDispensedQuantity());
+    requisitionLineItem.setNonFullSupply(false);
 
     line.updateFrom(requisitionLineItem);
   }
@@ -360,5 +362,18 @@ public class MainProcessor implements ItemProcessor<Main, List<Requisition>> {
     }
   }
 
+  private Double getMonthsOfStock(Item item) {
+    if (0 == item.getAdjustedDispensedQuantity()) {
+      return BigDecimal.ZERO.doubleValue();
+    }
+
+    return BigDecimal.valueOf(item.getClosingBalance())
+        .divide(
+            BigDecimal.valueOf(item.getAdjustedDispensedQuantity()),
+            1,
+            BigDecimal.ROUND_HALF_UP
+        )
+        .doubleValue();
+  }
 
 }
