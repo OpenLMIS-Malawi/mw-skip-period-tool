@@ -128,9 +128,6 @@ public class MainProcessor implements ItemProcessor<Main, List<Requisition>> {
     Requisition requisition = new Requisition();
     requisition.setFacilityId(facility.getId());
     requisition.setProgramId(program.getId());
-    // TODO: each product tracking form should be treated as a standard requsition?
-    // if there are emergency requisitions how to handle them?
-    // where is the difference?
     requisition.setEmergency(false);
     requisition.setStatus(RequisitionStatus.INITIATED);
 
