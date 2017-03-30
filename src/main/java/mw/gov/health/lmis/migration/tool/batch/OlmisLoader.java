@@ -33,7 +33,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Component
-public class RequisitionWriter implements ItemWriter<List<Pair<Requisition, Order>>> {
+public class OlmisLoader implements ItemWriter<List<Pair<Requisition, Order>>> {
 
   @Autowired
   private OlmisFacilityRepository olmisFacilityRepository;

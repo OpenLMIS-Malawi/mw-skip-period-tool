@@ -56,7 +56,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Component
-public class MainProcessor implements ItemProcessor<Main, List<Pair<Requisition, Order>>> {
+public class Transformer implements ItemProcessor<Main, List<Pair<Requisition, Order>>> {
   private static final String USERNAME = "supply chain manager";
 
   @Autowired

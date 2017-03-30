@@ -11,9 +11,9 @@ import mw.gov.health.lmis.migration.tool.scm.domain.Main;
 
 import java.util.List;
 
-public class MainProcessListener
+public class TransformListener
     implements ItemProcessListener<Main, List<Pair<Requisition, Order>>> {
-  private static final Logger LOGGER = LoggerFactory.getLogger(MainProcessListener.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(TransformListener.class);
 
   @Override
   public void beforeProcess(Main item) {

@@ -11,9 +11,9 @@ import mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.Requisition
 import java.util.Collection;
 import java.util.List;
 
-public class RequisitionWriteListener
+public class OlmisLoadListener
     implements ItemWriteListener<List<Pair<Requisition, Order>>> {
-  private static final Logger LOGGER = LoggerFactory.getLogger(RequisitionWriteListener.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(OlmisLoadListener.class);
 
   @Override
   public void beforeWrite(List<? extends List<Pair<Requisition, Order>>> items) {

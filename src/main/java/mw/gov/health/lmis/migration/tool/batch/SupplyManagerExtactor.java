@@ -14,8 +14,8 @@ import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 @Component
-public class MainReader extends AbstractPagingItemReader<Main> {
-  private static final Logger LOG = LoggerFactory.getLogger(MainReader.class);
+public class SupplyManagerExtactor extends AbstractPagingItemReader<Main> {
+  private static final Logger LOG = LoggerFactory.getLogger(SupplyManagerExtactor.class);
 
   @Autowired
   private MainRepository mainRepository;
@@ -23,7 +23,7 @@ public class MainReader extends AbstractPagingItemReader<Main> {
   @Autowired
   private Arguments arguments;
 
-  public MainReader() {
+  public SupplyManagerExtactor() {
     setPageSize(10);
   }
 

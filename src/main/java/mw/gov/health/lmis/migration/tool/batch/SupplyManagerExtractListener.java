@@ -5,8 +5,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.ItemReadListener;
 
-public class MainReadListener implements ItemReadListener<Main> {
-  private static final Logger LOGGER = LoggerFactory.getLogger(MainReadListener.class);
+public class SupplyManagerExtractListener implements ItemReadListener<Main> {
+  private static final Logger LOGGER = LoggerFactory.getLogger(SupplyManagerExtractListener.class);
 
   @Override
   public void beforeRead() {

@@ -41,8 +41,8 @@ public class BatchConfiguration {
    */
   @Bean
   public Step migrationStep(StepBuilderFactory stepBuilderFactory,
-                            MainReader reader, RequisitionWriter writer,
-                            MainProcessor processor) {
+                            SupplyManagerExtactor reader, OlmisLoader writer,
+                            Transformer processor) {
     return stepBuilderFactory
         .get("migrationStep")
         .<Main, List<Pair<Requisition, Order>>>chunk(10)
@@ -51,9 +51,9 @@ public class BatchConfiguration {
         .writer(writer)
         .faultTolerant()
         .skipPolicy(new AlwaysSkipItemSkipPolicy())
-        .listener(new MainReadListener())
-        .listener(new MainProcessListener())
-        .listener(new RequisitionWriteListener())
+        .listener(new SupplyManagerExtractListener())
+        .listener(new TransformListener())
+        .listener(new OlmisLoadListener())
         .build();
   }
 
