@@ -1,7 +1,5 @@
 package mw.gov.health.lmis.migration.tool.batch;
 
-import mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.Requisition;
-import mw.gov.health.lmis.migration.tool.scm.domain.Main;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing;
@@ -14,6 +12,11 @@ import org.springframework.boot.autoconfigure.batch.BatchProperties;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
+import mw.gov.health.lmis.migration.tool.Pair;
+import mw.gov.health.lmis.migration.tool.openlmis.fulfillment.domain.Order;
+import mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.Requisition;
+import mw.gov.health.lmis.migration.tool.scm.domain.Main;
 
 import java.util.List;
 
@@ -42,7 +45,7 @@ public class BatchConfiguration {
                                 MainProcessor processor) {
     return stepBuilderFactory
         .get("mainTransformStep")
-        .<Main, List<Requisition>>chunk(10)
+        .<Main, List<Pair<Requisition, Order>>>chunk(10)
         .reader(reader)
         .processor(processor)
         .writer(writer)

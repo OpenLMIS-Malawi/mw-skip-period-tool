@@ -8,7 +8,6 @@ import static org.apache.commons.lang3.StringUtils.startsWithIgnoreCase;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
-import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,7 +17,6 @@ import mw.gov.health.lmis.migration.tool.Pair;
 import mw.gov.health.lmis.migration.tool.openlmis.fulfillment.domain.Order;
 import mw.gov.health.lmis.migration.tool.openlmis.fulfillment.domain.OrderStatus;
 import mw.gov.health.lmis.migration.tool.openlmis.fulfillment.domain.ProofOfDelivery;
-import mw.gov.health.lmis.migration.tool.openlmis.fulfillment.repository.OrderRepository;
 import mw.gov.health.lmis.migration.tool.openlmis.fulfillment.repository.ProofOfDeliveryRepository;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.Facility;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.GeographicZone;
@@ -61,7 +59,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Component
-public class MainProcessor implements ItemProcessor<Main, List<Requisition>> {
+public class MainProcessor implements ItemProcessor<Main, List<Pair<Requisition, Order>>> {
   private static final String USERNAME = "supply chain manager";
 
   @Autowired
@@ -86,9 +84,6 @@ public class MainProcessor implements ItemProcessor<Main, List<Requisition>> {
   private OlmisOrderableRepository olmisOrderableRepository;
 
   @Autowired
-  private OrderRepository orderRepository;
-
-  @Autowired
   private ProofOfDeliveryRepository proofOfDeliveryRepository;
 
   @Autowired
@@ -104,7 +99,7 @@ public class MainProcessor implements ItemProcessor<Main, List<Requisition>> {
    * Converts the given {@link Main} object into {@link Requisition} object.
    */
   @Override
-  public List<Requisition> process(Main main) {
+  public List<Pair<Requisition, Order>> process(Main main) {
     List<Item> items = itemRepository.findByProcessingDateAndFacility(
         main.getId().getProcessingDate(), main.getId().getFacility()
     );
@@ -118,7 +113,8 @@ public class MainProcessor implements ItemProcessor<Main, List<Requisition>> {
         .collect(Collectors.toList());
   }
 
-  private Requisition createRequisition(String programCode, Collection<Item> items, Main main) {
+  private Pair<Requisition, Order> createRequisition(String programCode, Collection<Item> items,
+                                                     Main main) {
 
     mw.gov.health.lmis.migration.tool.scm.domain.Facility mainFacility = main.getId().getFacility();
     mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.Facility facility =
@@ -186,9 +182,9 @@ public class MainProcessor implements ItemProcessor<Main, List<Requisition>> {
 
     requisition.approve(null, products, user.getId());
 
-    convertToOrder(requisition, user, program, facility);
+    Order order = convertToOrder(requisition, user, program, facility);
 
-    return requisition;
+    return new Pair<>(requisition, order);
   }
 
   private void updateLine(RequisitionLineItem line, Requisition requisition,
@@ -255,7 +251,7 @@ public class MainProcessor implements ItemProcessor<Main, List<Requisition>> {
         : dateTime.atZone(TimeZone.getTimeZone("CAT").toZoneId());
   }
 
-  private void convertToOrder(Requisition requisition, User user, Program program,
+  private Order convertToOrder(Requisition requisition, User user, Program program,
                               Facility facility) {
     Facility warehouse = null;
 
@@ -298,8 +294,6 @@ public class MainProcessor implements ItemProcessor<Main, List<Requisition>> {
 
     Order order = Order.newOrder(requisition);
     order.setStatus(OrderStatus.RECEIVED);
-    // TODO: how to set order code without requisition ID
-    order.setOrderCode("O" + requisition.getId() + "R" + RandomStringUtils.random(10));
 
     // TODO: determine proper values for those properties
     ProofOfDelivery proofOfDelivery = new ProofOfDelivery(order);
@@ -311,8 +305,9 @@ public class MainProcessor implements ItemProcessor<Main, List<Requisition>> {
         .getProofOfDeliveryLineItems()
         .forEach(line -> line.setQuantityReceived(null));
 
-    orderRepository.save(order);
     proofOfDeliveryRepository.save(proofOfDelivery);
+
+    return order;
   }
 
   private List<Requisition> getRecentRequisitions(Requisition requisition, int amount) {

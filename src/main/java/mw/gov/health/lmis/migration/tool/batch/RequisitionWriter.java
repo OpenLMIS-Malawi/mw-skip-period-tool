@@ -4,6 +4,9 @@ import org.springframework.batch.item.ItemWriter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import mw.gov.health.lmis.migration.tool.Pair;
+import mw.gov.health.lmis.migration.tool.openlmis.fulfillment.domain.Order;
+import mw.gov.health.lmis.migration.tool.openlmis.fulfillment.repository.OrderRepository;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.Facility;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.Orderable;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.ProcessingPeriod;
@@ -29,7 +32,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Component
-public class RequisitionWriter implements ItemWriter<List<Requisition>> {
+public class RequisitionWriter implements ItemWriter<List<Pair<Requisition, Order>>> {
 
   @Autowired
   private OlmisFacilityRepository olmisFacilityRepository;
@@ -49,16 +52,26 @@ public class RequisitionWriter implements ItemWriter<List<Requisition>> {
   @Autowired
   private OlmisStatusMessageRepository olmisStatusMessageRepository;
 
+  @Autowired
+  private OrderRepository orderRepository;
+
   /**
    * Writes Requisitions into OpenLMIS database.
    */
   @Override
-  public void write(List<? extends List<Requisition>> items) throws Exception {
+  public void write(List<? extends List<Pair<Requisition, Order>>> items) throws Exception {
     items
         .stream()
         .flatMap(Collection::stream)
-        .forEach(requisition -> {
+        .forEach(pair -> {
+          Requisition requisition = pair.getLeft();
           olmisRequisitionRepository.save(requisition);
+
+          Order order = pair.getRight();
+          order.setOrderCode("O" + requisition.getId() + "R");
+
+          orderRepository.save(order);
+
           print(requisition);
         });
   }
