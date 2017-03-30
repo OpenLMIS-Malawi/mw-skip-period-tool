@@ -3,6 +3,7 @@ package mw.gov.health.lmis.migration.tool.batch;
 import static java.time.temporal.TemporalAdjusters.firstDayOfMonth;
 import static mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.LineItemFieldsCalculator.calculateTotalLossesAndAdjustments;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.apache.commons.lang3.StringUtils.startsWithIgnoreCase;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -19,6 +20,8 @@ import mw.gov.health.lmis.migration.tool.openlmis.fulfillment.domain.OrderStatus
 import mw.gov.health.lmis.migration.tool.openlmis.fulfillment.domain.ProofOfDelivery;
 import mw.gov.health.lmis.migration.tool.openlmis.fulfillment.repository.OrderRepository;
 import mw.gov.health.lmis.migration.tool.openlmis.fulfillment.repository.ProofOfDeliveryRepository;
+import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.Facility;
+import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.GeographicZone;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.Orderable;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.ProcessingPeriod;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.Program;
@@ -183,7 +186,7 @@ public class MainProcessor implements ItemProcessor<Main, List<Requisition>> {
 
     requisition.approve(null, products, user.getId());
 
-    convertToOrder(requisition, user);
+    convertToOrder(requisition, user, program, facility);
 
     return requisition;
   }
@@ -206,6 +209,10 @@ public class MainProcessor implements ItemProcessor<Main, List<Requisition>> {
     Program program = olmisProgramRepository.findOne(requisition.getProgramId());
     List<StockAdjustment> stockAdjustments = Lists.newArrayList();
     for (Adjustment adjustment : item.getAdjustments()) {
+      if (null == adjustment.getQuantity()) {
+        continue;
+      }
+
       String name = adjustment.getType().getName();
 
       if ("de credit".equalsIgnoreCase(name)) {
@@ -248,9 +255,46 @@ public class MainProcessor implements ItemProcessor<Main, List<Requisition>> {
         : dateTime.atZone(TimeZone.getTimeZone("CAT").toZoneId());
   }
 
-  private void convertToOrder(Requisition requisition, User user) {
-    // TODO: change that (or validate this is correct)
-    requisition.setSupplyingFacilityId(requisition.getFacilityId());
+  private void convertToOrder(Requisition requisition, User user, Program program,
+                              Facility facility) {
+    Facility warehouse = null;
+
+    if ("em".equalsIgnoreCase(program.getCode().toString())) {
+      GeographicZone zone;
+
+      do {
+        zone = facility.getGeographicZone();
+        String zoneName = zone.getName();
+
+        if (startsWithIgnoreCase(zoneName, "central")) {
+          warehouse = olmisFacilityRepository.findByName("CMST - Central");
+        } else if (startsWithIgnoreCase(zoneName, "south")) {
+          warehouse = olmisFacilityRepository.findByName("CMST - South");
+        } else if (startsWithIgnoreCase(zoneName, "northern")) {
+          warehouse = olmisFacilityRepository.findByName("CMST - North");
+        }
+
+        if (null == warehouse) {
+          zone = zone.getParent();
+        } else {
+          break;
+        }
+      } while (null != zone);
+    } else {
+      warehouse = olmisFacilityRepository.findByName("Program");
+    }
+
+    if (null != warehouse) {
+      requisition.setSupplyingFacilityId(warehouse.getId());
+    } else {
+      throw new IllegalStateException(
+          "can't find supplying facility for program: "
+              + program.getName()
+              + " and facility: "
+              + facility.getName()
+      );
+    }
+
     requisition.release(user.getId());
 
     Order order = Order.newOrder(requisition);
@@ -358,7 +402,7 @@ public class MainProcessor implements ItemProcessor<Main, List<Requisition>> {
   }
 
   private Double getMonthsOfStock(Item item) {
-    if (0 == item.getAdjustedDispensedQuantity()) {
+    if (0 == item.getClosingBalance() || 0 == item.getAdjustedDispensedQuantity()) {
       return BigDecimal.ZERO.doubleValue();
     }
 

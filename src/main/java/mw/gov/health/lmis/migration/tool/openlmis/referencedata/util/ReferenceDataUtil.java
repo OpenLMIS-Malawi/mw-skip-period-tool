@@ -13,6 +13,8 @@ import org.springframework.stereotype.Component;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.Code;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.Facility;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.FacilityType;
+import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.GeographicLevel;
+import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.GeographicZone;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.Orderable;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.OrderableDisplayCategory;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.OrderedDisplayValue;
@@ -41,7 +43,7 @@ public class ReferenceDataUtil {
   /**
    * Creates a new instance of OpenLMIS facility.
    */
-  public Facility create(String name, String code, FacilityType facilityType) {
+  public Facility create(String name, String code, FacilityType facilityType, GeographicZone zone) {
     LOGGER.info("Create facility: {}", code);
 
     Facility facility = new Facility();
@@ -51,6 +53,7 @@ public class ReferenceDataUtil {
     facility.setActive(true);
     facility.setEnabled(true);
     facility.setType(facilityType);
+    facility.setGeographicZone(zone);
 
     return facility;
   }
@@ -123,6 +126,30 @@ public class ReferenceDataUtil {
     program.setPeriodsSkippable(true);
 
     return program;
+  }
+
+  /**
+   * Creates new geographic level.
+   */
+  public GeographicLevel create(String code, Integer levelNumber) {
+    GeographicLevel level = new GeographicLevel();
+    level.setCode(code);
+    level.setLevelNumber(levelNumber);
+    level.setName(code);
+
+    return level;
+  }
+
+  /**
+   * Creates new geographic zone.
+   */
+  public GeographicZone create(String code, GeographicLevel level) {
+    GeographicZone zone = new GeographicZone();
+    zone.setName(code);
+    zone.setCode(code);
+    zone.setLevel(level);
+
+    return zone;
   }
 
   /**

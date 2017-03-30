@@ -1,5 +1,7 @@
 package mw.gov.health.lmis.migration.tool;
 
+import com.google.common.collect.Lists;
+
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.launch.JobLauncher;
@@ -11,12 +13,16 @@ import org.springframework.context.annotation.Bean;
 import mw.gov.health.lmis.migration.tool.openlmis.BaseEntity;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.Code;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.FacilityType;
+import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.GeographicLevel;
+import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.GeographicZone;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.Orderable;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.OrderableDisplayCategory;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.Program;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.ProgramOrderable;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.OlmisFacilityRepository;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.OlmisFacilityTypeRepository;
+import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.OlmisGeographicLevelRepository;
+import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.OlmisGeographicZoneRepository;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.OlmisOrderableDisplayCategoryRepository;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.OlmisOrderableRepository;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.OlmisProcessingPeriodRepository;
@@ -38,6 +44,8 @@ import mw.gov.health.lmis.migration.tool.scm.util.Grouping;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
+import java.util.Random;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
@@ -98,6 +106,12 @@ public class AppConfiguration {
   @Autowired
   private OlmisUserRepository olmisUserRepository;
 
+  @Autowired
+  private OlmisGeographicLevelRepository olmisGeographicLevelRepository;
+
+  @Autowired
+  private OlmisGeographicZoneRepository olmisGeographicZoneRepository;
+
   /**
    * Here the application starts with spring context.
    */
@@ -119,13 +133,46 @@ public class AppConfiguration {
 
     FacilityType facilityType = olmisFacilityTypeRepository.save(referenceDataUtil.create());
 
+    GeographicLevel zoneLevel = olmisGeographicLevelRepository
+        .save(referenceDataUtil.create("zone", 2));
+
+    GeographicZone centralEastZone = olmisGeographicZoneRepository
+        .save(referenceDataUtil.create("central east", zoneLevel));
+    GeographicZone centralSouthZone = olmisGeographicZoneRepository
+        .save(referenceDataUtil.create("central west", zoneLevel));
+    GeographicZone southEastZone = olmisGeographicZoneRepository
+        .save(referenceDataUtil.create("south east", zoneLevel));
+    GeographicZone southWestZone = olmisGeographicZoneRepository
+        .save(referenceDataUtil.create("south west", zoneLevel));
+    GeographicZone northernZone = olmisGeographicZoneRepository
+        .save(referenceDataUtil.create("northern", zoneLevel));
+
+    List<GeographicZone> zones = Lists.newArrayList(
+        centralEastZone, centralSouthZone, southEastZone, southWestZone, northernZone
+    );
+
+    Random random = new Random();
+
     olmisFacilityRepository.save(StreamSupport
         .stream(facilityRepository.findAll().spliterator(), false)
-        .map(facility -> referenceDataUtil.create(
-            facility.getName(), facility.getCode(), facilityType
-        ))
+        .map(facility -> {
+          GeographicZone zone = zones.get(random.nextInt(zones.size()));
+          return referenceDataUtil.create(
+              facility.getName(), facility.getCode(), facilityType, zone
+          );
+        })
         .collect(Collectors.toList())
     );
+
+    olmisFacilityRepository.save(referenceDataUtil.create(
+        "Program", "Program", facilityType, zones.get(random.nextInt(zones.size()))
+    ));
+    olmisFacilityRepository.save(referenceDataUtil.create(
+        "CMST - Central", "cmstc", facilityType, centralEastZone));
+    olmisFacilityRepository.save(referenceDataUtil.create(
+        "CMST - South", "cmsts", facilityType, southWestZone));
+    olmisFacilityRepository.save(referenceDataUtil.create(
+        "CMST - North", "cmstn", facilityType, northernZone));
 
     Iterable<Main> mains = mainRepository.findAll();
 
