@@ -7,11 +7,15 @@ import org.springframework.stereotype.Component;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.Facility;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.Orderable;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.ProcessingPeriod;
+import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.User;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.OlmisFacilityRepository;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.OlmisOrderableRepository;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.OlmisProcessingPeriodRepository;
+import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.OlmisUserRepository;
 import mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.Requisition;
 import mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.RequisitionLineItem;
+import mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.RequisitionStatus;
+import mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.StatusChange;
 import mw.gov.health.lmis.migration.tool.openlmis.requisition.repository.OlmisRequisitionRepository;
 import mw.gov.health.lmis.migration.tool.scm.domain.Main;
 import mw.gov.health.lmis.migration.tool.scm.repository.FacilityRepository;
@@ -49,6 +53,9 @@ public class RequisitionWriter implements ItemWriter<List<Requisition>> {
 
   @Autowired
   private FacilityRepository facilityRepository;
+
+  @Autowired
+  private OlmisUserRepository olmisUserRepository;
 
   /**
    * Writes Requisitions into OpenLMIS database.
@@ -109,15 +116,22 @@ public class RequisitionWriter implements ItemWriter<List<Requisition>> {
       );
     }
 
-    // TODO: how to handle how create/modified the requisition
+    StatusChange statusChange = requisition
+        .getStatusChanges()
+        .stream()
+        .filter(change -> change.getStatus() == RequisitionStatus.INITIATED)
+        .findFirst()
+        .orElse(null);
+    User user = olmisUserRepository.findOne(statusChange.getAuthorId());
+
     System.err.println();
     System.err.printf(
         "First input (date):  %-10s (%-10s)%n",
-        main.getCreatedBy(), printDate(requisition.getCreatedDate())
+        user.getUsername(), printDate(requisition.getCreatedDate())
     );
     System.err.printf(
         "Last changed (date): %-10s (%-10s)%n",
-        main.getModifiedBy(), printDate(requisition.getModifiedDate())
+        user.getUsername(), printDate(requisition.getModifiedDate())
     );
     // TODO: how to handle general comment and notes for each product/column
     System.err.printf(
