@@ -13,11 +13,11 @@
  * http://www.gnu.org/licenses.  For additional information contact info@OpenLMIS.org. 
  */
 
-package mw.gov.health.lmis.migration.tool.openlmis.requisition.domain;
+package mw.gov.health.lmis.migration.tool.openlmis;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
-public enum RequisitionStatus {
+public enum ExternalStatus {
   INITIATED(1),
   SUBMITTED(2),
   AUTHORIZED(3),
@@ -28,7 +28,7 @@ public enum RequisitionStatus {
 
   private int value;
 
-  RequisitionStatus(int value) {
+  ExternalStatus(int value) {
     this.value = value;
   }
 

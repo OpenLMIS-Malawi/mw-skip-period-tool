@@ -1,10 +1,13 @@
 package mw.gov.health.lmis.migration.tool.batch;
 
+import static org.springframework.util.CollectionUtils.isEmpty;
+
 import org.springframework.batch.item.ItemWriter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import mw.gov.health.lmis.migration.tool.Pair;
+import mw.gov.health.lmis.migration.tool.openlmis.ExternalStatus;
 import mw.gov.health.lmis.migration.tool.openlmis.fulfillment.domain.Order;
 import mw.gov.health.lmis.migration.tool.openlmis.fulfillment.repository.OrderRepository;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.Facility;
@@ -17,11 +20,9 @@ import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.Olmis
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.OlmisUserRepository;
 import mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.Requisition;
 import mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.RequisitionLineItem;
-import mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.RequisitionStatus;
 import mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.StatusChange;
 import mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.StatusMessage;
 import mw.gov.health.lmis.migration.tool.openlmis.requisition.repository.OlmisRequisitionRepository;
-import mw.gov.health.lmis.migration.tool.openlmis.requisition.repository.OlmisStatusMessageRepository;
 
 import java.time.chrono.ChronoZonedDateTime;
 import java.time.format.TextStyle;
@@ -48,9 +49,6 @@ public class RequisitionWriter implements ItemWriter<List<Pair<Requisition, Orde
 
   @Autowired
   private OlmisUserRepository olmisUserRepository;
-
-  @Autowired
-  private OlmisStatusMessageRepository olmisStatusMessageRepository;
 
   @Autowired
   private OrderRepository orderRepository;
@@ -93,7 +91,7 @@ public class RequisitionWriter implements ItemWriter<List<Pair<Requisition, Orde
         "Stocked Out Days", "Adjusted Consumption", "Months of Stock", "Calculated Quantity",
         "Reorder Quantity", "Receipts"
     );
-    
+
     for (RequisitionLineItem line : requisition.getRequisitionLineItems()) {
       Orderable orderable = olmisOrderableRepository.findOne(line.getOrderableId());
 
@@ -116,7 +114,7 @@ public class RequisitionWriter implements ItemWriter<List<Pair<Requisition, Orde
     StatusChange statusChange = requisition
         .getStatusChanges()
         .stream()
-        .filter(change -> change.getStatus() == RequisitionStatus.INITIATED)
+        .filter(change -> change.getStatus() == ExternalStatus.INITIATED)
         .findFirst()
         .orElse(null);
     User user = olmisUserRepository.findOne(statusChange.getAuthorId());
@@ -131,9 +129,9 @@ public class RequisitionWriter implements ItemWriter<List<Pair<Requisition, Orde
         user.getUsername(), printDate(requisition.getModifiedDate())
     );
 
-    List<StatusMessage> statusMessages = olmisStatusMessageRepository
-        .findByRequisition(requisition);
-    String comment = statusMessages
+    List<StatusMessage> statusMessages = requisition
+        .getStatusMessages();
+    String comment = isEmpty(statusMessages) ? null : statusMessages
         .stream()
         .map(StatusMessage::getBody)
         .collect(Collectors.joining("; "));

@@ -33,6 +33,7 @@ import lombok.Setter;
 import mw.gov.health.lmis.migration.tool.Pair;
 import mw.gov.health.lmis.migration.tool.openlmis.BaseEntity;
 import mw.gov.health.lmis.migration.tool.openlmis.CurrencyConfig;
+import mw.gov.health.lmis.migration.tool.openlmis.ExternalStatus;
 import mw.gov.health.lmis.migration.tool.openlmis.fulfillment.domain.ProofOfDelivery;
 import mw.gov.health.lmis.migration.tool.openlmis.fulfillment.domain.ProofOfDeliveryLineItem;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.Orderable;
@@ -127,7 +128,7 @@ public class Requisition extends BaseTimestampedEntity {
   @Enumerated(EnumType.STRING)
   @Getter
   @Setter
-  private RequisitionStatus status;
+  private ExternalStatus status;
 
   @OneToMany(
       mappedBy = "requisition",
@@ -171,6 +172,16 @@ public class Requisition extends BaseTimestampedEntity {
   @Type(type = UUID_TYPE)
   private Set<UUID> availableNonFullSupplyProducts;
 
+  @OneToMany(
+      mappedBy = "requisition",
+      cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.REMOVE},
+      fetch = FetchType.EAGER,
+      orphanRemoval = true)
+  @Fetch(FetchMode.SELECT)
+  @Getter
+  @Setter
+  private List<StatusMessage> statusMessages;
+
   /**
    * Constructor.
    *
@@ -181,7 +192,7 @@ public class Requisition extends BaseTimestampedEntity {
    * @param emergency          whether this Requisition is emergency
    */
   public Requisition(UUID facilityId, UUID programId, UUID processingPeriodId,
-                     RequisitionStatus status, Boolean emergency) {
+                     ExternalStatus status, Boolean emergency) {
     this.facilityId = facilityId;
     this.programId = programId;
     this.processingPeriodId = processingPeriodId;
@@ -252,7 +263,7 @@ public class Requisition extends BaseTimestampedEntity {
 
     setPreviousAdjustedConsumptions(numberOfPreviousPeriodsToAverage);
 
-    status = RequisitionStatus.INITIATED;
+    status = ExternalStatus.INITIATED;
 
     statusChanges.add(StatusChange.newStatusChange(this, initiator));
   }
@@ -263,7 +274,7 @@ public class Requisition extends BaseTimestampedEntity {
    * @param products orderable products that will be used by line items to update packs to ship.
    */
   public void submit(Collection<Orderable> products, UUID submitter) {
-    if (!RequisitionStatus.INITIATED.equals(status)) {
+    if (!ExternalStatus.INITIATED.equals(status)) {
       throw new IllegalStateException();
     }
 
@@ -274,7 +285,7 @@ public class Requisition extends BaseTimestampedEntity {
 
     updateConsumptionsAndTotalCost(products);
 
-    status = RequisitionStatus.SUBMITTED;
+    status = ExternalStatus.SUBMITTED;
 
     statusChanges.add(StatusChange.newStatusChange(this, submitter));
   }
@@ -285,14 +296,14 @@ public class Requisition extends BaseTimestampedEntity {
    * @param products orderable products that will be used by line items to update packs to ship.
    */
   public void authorize(Collection<Orderable> products, UUID authorizer) {
-    if (!RequisitionStatus.SUBMITTED.equals(status)) {
+    if (!ExternalStatus.SUBMITTED.equals(status)) {
       throw new IllegalStateException();
     }
 
     updateConsumptionsAndTotalCost(products);
     populateApprovedQuantity();
 
-    status = RequisitionStatus.AUTHORIZED;
+    status = ExternalStatus.AUTHORIZED;
     RequisitionHelper.forEachLine(getSkippedRequisitionLineItems(), RequisitionLineItem::resetData);
 
     statusChanges.add(StatusChange.newStatusChange(this, authorizer));
@@ -315,9 +326,9 @@ public class Requisition extends BaseTimestampedEntity {
    */
   public void approve(UUID parentNodeId, Collection<Orderable> products, UUID approver) {
     if (parentNodeId == null) {
-      status = RequisitionStatus.APPROVED;
+      status = ExternalStatus.APPROVED;
     } else {
-      status = RequisitionStatus.IN_APPROVAL;
+      status = ExternalStatus.IN_APPROVAL;
       supervisoryNodeId = parentNodeId;
     }
 
@@ -330,7 +341,7 @@ public class Requisition extends BaseTimestampedEntity {
    * Rejects given requisition.
    */
   public void reject(Collection<Orderable> products, UUID rejector) {
-    status = RequisitionStatus.INITIATED;
+    status = ExternalStatus.INITIATED;
     updateConsumptionsAndTotalCost(products);
 
     statusChanges.add(StatusChange.newStatusChange(this, rejector));
@@ -340,7 +351,7 @@ public class Requisition extends BaseTimestampedEntity {
    * Release the requisition.
    */
   public void release(UUID releaser) {
-    status = RequisitionStatus.RELEASED;
+    status = ExternalStatus.RELEASED;
     statusChanges.add(StatusChange.newStatusChange(this, releaser));
   }
 

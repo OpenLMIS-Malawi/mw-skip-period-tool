@@ -224,7 +224,7 @@ public class RequisitionLineItem extends BaseEntity {
    * Initiates a requisition line item with specified requisition and product.
    *
    * @param requisition requisition to apply
-   * @param pair   orderable product and max periods of stock value
+   * @param pair        orderable product and max periods of stock value
    */
   public RequisitionLineItem(Requisition requisition, Pair<Orderable, Double> pair) {
     this();
@@ -354,9 +354,9 @@ public class RequisitionLineItem extends BaseEntity {
   /**
    * Calculate and set all calculated fields in this requisition line item.
    */
-  public void calculateAndSetFields(RequisitionTemplate template,
-                                    Collection<StockAdjustmentReason> stockAdjustmentReasons,
-                                    Integer numberOfMonthsInPeriod) {
+  void calculateAndSetFields(RequisitionTemplate template,
+                                     Collection<StockAdjustmentReason> stockAdjustmentReasons,
+                                     Integer numberOfMonthsInPeriod) {
     calculateAndSetTotalLossesAndAdjustments(stockAdjustmentReasons);
     calculateAndSetStockOnHand(template);
     calculateAndSetTotalConsumedQuantity(template);

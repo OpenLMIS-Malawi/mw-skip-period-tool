@@ -16,8 +16,6 @@ import org.springframework.stereotype.Component;
 import mw.gov.health.lmis.migration.tool.Pair;
 import mw.gov.health.lmis.migration.tool.openlmis.fulfillment.domain.Order;
 import mw.gov.health.lmis.migration.tool.openlmis.fulfillment.domain.OrderStatus;
-import mw.gov.health.lmis.migration.tool.openlmis.fulfillment.domain.ProofOfDelivery;
-import mw.gov.health.lmis.migration.tool.openlmis.fulfillment.repository.ProofOfDeliveryRepository;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.Facility;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.GeographicZone;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.Orderable;
@@ -33,13 +31,12 @@ import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.Olmis
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.OlmisUserRepository;
 import mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.Requisition;
 import mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.RequisitionLineItem;
-import mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.RequisitionStatus;
+import mw.gov.health.lmis.migration.tool.openlmis.ExternalStatus;
 import mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.RequisitionTemplate;
 import mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.StatusMessage;
 import mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.StockAdjustment;
 import mw.gov.health.lmis.migration.tool.openlmis.requisition.repository.OlmisRequisitionRepository;
 import mw.gov.health.lmis.migration.tool.openlmis.requisition.repository.OlmisRequisitionTemplateRepository;
-import mw.gov.health.lmis.migration.tool.openlmis.requisition.repository.OlmisStatusMessageRepository;
 import mw.gov.health.lmis.migration.tool.scm.domain.Adjustment;
 import mw.gov.health.lmis.migration.tool.scm.domain.Item;
 import mw.gov.health.lmis.migration.tool.scm.domain.Main;
@@ -84,16 +81,10 @@ public class MainProcessor implements ItemProcessor<Main, List<Pair<Requisition,
   private OlmisOrderableRepository olmisOrderableRepository;
 
   @Autowired
-  private ProofOfDeliveryRepository proofOfDeliveryRepository;
-
-  @Autowired
   private OlmisRequisitionRepository olmisRequisitionRepository;
 
   @Autowired
   private OlmisUserRepository olmisUserRepository;
-
-  @Autowired
-  private OlmisStatusMessageRepository olmisStatusMessageRepository;
 
   /**
    * Converts the given {@link Main} object into {@link Requisition} object.
@@ -126,7 +117,7 @@ public class MainProcessor implements ItemProcessor<Main, List<Pair<Requisition,
     requisition.setFacilityId(facility.getId());
     requisition.setProgramId(program.getId());
     requisition.setEmergency(false);
-    requisition.setStatus(RequisitionStatus.INITIATED);
+    requisition.setStatus(ExternalStatus.INITIATED);
 
     ProcessingPeriod period = olmisProcessingPeriodRepository
         .findByStartDate(main.getId().getProcessingDate().toLocalDate().with(firstDayOfMonth()));
@@ -159,7 +150,6 @@ public class MainProcessor implements ItemProcessor<Main, List<Pair<Requisition,
       numberOfPreviousPeriodsToAverage = previousRequisitions.size();
     }
 
-    //    ProofOfDeliveryDto pod = getProofOfDeliveryDto(emergency, requisition);
     User user = olmisUserRepository.findByUsername(USERNAME);
 
     requisition.initiate(template, pairs, previousRequisitions,
@@ -178,7 +168,7 @@ public class MainProcessor implements ItemProcessor<Main, List<Pair<Requisition,
 
     requisition.submit(products, user.getId());
     requisition.authorize(products, user.getId());
-    saveStatusMessage(requisition, main, items, user);
+    addStatusMessage(requisition, main, items, user);
 
     requisition.approve(null, products, user.getId());
 
@@ -252,7 +242,7 @@ public class MainProcessor implements ItemProcessor<Main, List<Pair<Requisition,
   }
 
   private Order convertToOrder(Requisition requisition, User user, Program program,
-                              Facility facility) {
+                               Facility facility) {
     Facility warehouse = null;
 
     if ("em".equalsIgnoreCase(program.getCode().toString())) {
@@ -292,20 +282,8 @@ public class MainProcessor implements ItemProcessor<Main, List<Pair<Requisition,
 
     requisition.release(user.getId());
 
-    Order order = Order.newOrder(requisition);
+    Order order = Order.newOrder(requisition, user);
     order.setStatus(OrderStatus.RECEIVED);
-
-    // TODO: determine proper values for those properties
-    ProofOfDelivery proofOfDelivery = new ProofOfDelivery(order);
-    proofOfDelivery.setDeliveredBy(null);
-    proofOfDelivery.setReceivedBy(null);
-    proofOfDelivery.setReceivedDate(null);
-
-    proofOfDelivery
-        .getProofOfDeliveryLineItems()
-        .forEach(line -> line.setQuantityReceived(null));
-
-    proofOfDeliveryRepository.save(proofOfDelivery);
 
     return order;
   }
@@ -363,8 +341,8 @@ public class MainProcessor implements ItemProcessor<Main, List<Pair<Requisition,
     );
   }
 
-  private void saveStatusMessage(Requisition requisition, Main main, Collection<Item> items,
-                                 User user) {
+  private void addStatusMessage(Requisition requisition, Main main,
+                                Collection<Item> items, User user) {
     List<String> notes = Lists.newArrayList();
     notes.add(main.getNotes());
 
@@ -384,14 +362,9 @@ public class MainProcessor implements ItemProcessor<Main, List<Pair<Requisition,
     String message = notes.stream().collect(Collectors.joining("; "));
 
     if (isNotBlank(message)) {
-      StatusMessage newStatusMessage = StatusMessage.newStatusMessage(
-          requisition,
-          user.getId(),
-          user.getFirstName(),
-          user.getLastName(),
-          message);
-
-      olmisStatusMessageRepository.save(newStatusMessage);
+      requisition.setStatusMessages(Lists.newArrayList(StatusMessage.newStatusMessage(
+          requisition, user.getId(), user.getFirstName(), user.getLastName(), message
+      )));
     }
   }
 

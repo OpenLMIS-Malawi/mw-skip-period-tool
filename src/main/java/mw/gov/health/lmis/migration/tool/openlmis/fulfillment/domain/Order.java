@@ -18,15 +18,17 @@ package mw.gov.health.lmis.migration.tool.openlmis.fulfillment.domain;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.Type;
-import mw.gov.health.lmis.migration.tool.openlmis.BaseEntity;
-import mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.Requisition;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import mw.gov.health.lmis.migration.tool.openlmis.BaseEntity;
+import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.User;
+import mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.Requisition;
 
 import java.math.BigDecimal;
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -147,6 +149,13 @@ public class Order extends BaseEntity {
   @Setter
   private List<StatusMessage> statusMessages;
 
+  @OneToMany(
+      mappedBy = "order",
+      cascade = CascadeType.ALL)
+  @Getter
+  @Setter
+  private List<StatusChange> statusChanges = new ArrayList<>();
+
   @PrePersist
   private void prePersist() {
     this.createdDate = ZonedDateTime.now();
@@ -193,7 +202,11 @@ public class Order extends BaseEntity {
   /**
    * Creates new order instance based on requisition.
    */
-  public static Order newOrder(Requisition requisition) {
+  public static Order newOrder(Requisition requisition, User user) {
+    if (null == requisition) {
+      return null;
+    }
+
     Order order = new Order();
     order.setExternalId(requisition.getId());
     order.setEmergency(requisition.getEmergency());
@@ -207,6 +220,14 @@ public class Order extends BaseEntity {
     order.setSupplyingFacilityId(requisition.getSupplyingFacilityId());
     order.setProgramId(requisition.getProgramId());
 
+    order.setStatusMessages(
+        requisition
+            .getStatusMessages()
+            .stream()
+            .map(msg -> new StatusMessage(msg.getAuthorId(), msg.getStatus(), msg.getBody()))
+            .collect(Collectors.toList())
+    );
+
     order.setOrderLineItems(
         requisition
             .getRequisitionLineItems()
@@ -215,6 +236,16 @@ public class Order extends BaseEntity {
             .map(OrderLineItem::newOrderLineItem)
             .collect(Collectors.toList())
     );
+
+    order.setStatusChanges(
+        requisition
+            .getStatusChanges()
+        .stream()
+        .map(sc -> new StatusChange(sc.getStatus(), sc.getAuthorId(), sc.getCreatedDate()))
+        .collect(Collectors.toList())
+    );
+
+    order.setCreatedById(user.getId());
 
     return order;
   }

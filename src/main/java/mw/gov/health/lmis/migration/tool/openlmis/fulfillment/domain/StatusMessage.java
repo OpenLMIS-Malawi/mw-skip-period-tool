@@ -16,11 +16,12 @@
 package mw.gov.health.lmis.migration.tool.openlmis.fulfillment.domain;
 
 import org.hibernate.annotations.Type;
-import mw.gov.health.lmis.migration.tool.openlmis.BaseEntity;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import mw.gov.health.lmis.migration.tool.openlmis.BaseEntity;
+import mw.gov.health.lmis.migration.tool.openlmis.ExternalStatus;
 
 import java.util.UUID;
 
@@ -59,6 +60,15 @@ public class StatusMessage extends BaseEntity {
   @Getter
   @Setter
   private String body;
+
+  /**
+   * Creates new status message.
+   */
+  public StatusMessage(UUID authorId, ExternalStatus status, String body) {
+    this.authorId = authorId;
+    this.status = status;
+    this.body = body;
+  }
 
   /**
    * Create new instance of StatusMessage based on given {@link Importer}

@@ -20,6 +20,7 @@ import org.hibernate.annotations.Type;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import mw.gov.health.lmis.migration.tool.openlmis.ExternalStatus;
 
 import java.time.ZonedDateTime;
 import java.util.Objects;
@@ -62,7 +63,7 @@ public class StatusMessage extends BaseTimestampedEntity {
   @Enumerated(EnumType.STRING)
   @Getter
   @Setter
-  private RequisitionStatus status;
+  private ExternalStatus status;
 
   @Column(nullable = false)
   @Getter
@@ -115,7 +116,7 @@ public class StatusMessage extends BaseTimestampedEntity {
 
     void setBody(String body);
 
-    void setStatus(RequisitionStatus status);
+    void setStatus(ExternalStatus status);
 
     void setCreatedDate(ZonedDateTime createdDate);
   }
