@@ -13,22 +13,18 @@ import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.Olmis
 import mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.Requisition;
 import mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.RequisitionLineItem;
 import mw.gov.health.lmis.migration.tool.openlmis.requisition.repository.OlmisRequisitionRepository;
-import mw.gov.health.lmis.migration.tool.scm.domain.Comment;
-import mw.gov.health.lmis.migration.tool.scm.domain.Item;
 import mw.gov.health.lmis.migration.tool.scm.domain.Main;
 import mw.gov.health.lmis.migration.tool.scm.repository.FacilityRepository;
 import mw.gov.health.lmis.migration.tool.scm.repository.ItemRepository;
 import mw.gov.health.lmis.migration.tool.scm.repository.MainRepository;
 
 import java.time.LocalDateTime;
-import java.time.chrono.ChronoLocalDateTime;
 import java.time.chrono.ChronoZonedDateTime;
 import java.time.format.TextStyle;
 import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Component
 public class RequisitionWriter implements ItemWriter<List<Requisition>> {
@@ -74,7 +70,7 @@ public class RequisitionWriter implements ItemWriter<List<Requisition>> {
         .findOne(requisition.getProcessingPeriodId());
 
     String format =
-        "%-8s|%-57s|%-14s|%-18s|%-16s|%-18s|%-17s|%-21s|%-18s|%-20s|%-17s|%-9s|%-13s|%-5s%n";
+        "%-8s|%-57s|%-14s|%-18s|%-18s|%-17s|%-21s|%-18s|%-20s|%-17s|%-9s%n";
 
     System.err.printf(
         "Facility (code): %s (%s)%n", olmisFacility.getName(), olmisFacility.getCode()
@@ -90,36 +86,26 @@ public class RequisitionWriter implements ItemWriter<List<Requisition>> {
     System.err.printf(
         format,
         "Product", "Product Description", "Stock on Hand",
-        "Adjustment Amount", "Adjustment Type", "Quantity Consumed",
+        "Adjustment Amount", "Quantity Consumed",
         "Stocked Out Days", "Adjusted Consumption", "Months of Stock", "Calculated Quantity",
-        "Reorder Quantity", "Receipts", "Stocked Out?", "Notes"
+        "Reorder Quantity", "Receipts"
     );
     for (RequisitionLineItem line : requisition.getRequisitionLineItems()) {
       Orderable orderable = olmisOrderableRepository.findOne(line.getOrderableId());
-      Item item = itemRepository.findByProcessingDateAndFacilityAndProductName(
-          main.getId().getProcessingDate(), main.getId().getFacility(), orderable.getName()
-      );
 
-      // TODO: how to handle properties from item instance?
-      // example there is no such column like  adjustment type, purpose of use, month of stock,
-      // stocked out?
-      // Notes are also differently treated in the OpenLMIS
       System.err.printf(
           format,
           orderable.getProductCode(),
           orderable.getName(),
           line.getStockOnHand(),
           line.getTotalLossesAndAdjustments(),
-          null == item ? "" : item.getAdjustmentType(),
           line.getTotalConsumedQuantity(),
           line.getTotalStockoutDays(),
           line.getAdjustedConsumption(),
           line.getMaxPeriodsOfStock(),
           line.getCalculatedOrderQuantity(),
           line.getRequestedQuantity(),
-          line.getTotalReceivedQuantity(),
-          null == item ? "" : item.getProductStockedOut(),
-          null == item ? "" : printNotes(item.getNotes())
+          line.getTotalReceivedQuantity()
       );
     }
 
@@ -138,21 +124,6 @@ public class RequisitionWriter implements ItemWriter<List<Requisition>> {
         "Comment: %s%n",
         Optional.ofNullable(requisition.getDraftStatusMessage()).orElse("")
     );
-  }
-
-  private String printNotes(List<Comment> comments) {
-    if (null == comments || comments.isEmpty()) {
-      return "";
-    }
-
-    return comments
-        .stream()
-        .map(note -> note.getType().getName() + ": " + note.getComment())
-        .collect(Collectors.joining(", "));
-  }
-
-  private String printDate(ChronoLocalDateTime dateTime) {
-    return null == dateTime ? "" : dateTime.toLocalDate().toString();
   }
 
   private String printDate(ChronoZonedDateTime dateTime) {
