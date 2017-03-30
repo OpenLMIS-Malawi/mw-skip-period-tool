@@ -260,10 +260,9 @@ public class MainProcessor implements ItemProcessor<Main, List<Requisition>> {
     Facility warehouse = null;
 
     if ("em".equalsIgnoreCase(program.getCode().toString())) {
-      GeographicZone zone;
+      GeographicZone zone = facility.getGeographicZone();
 
-      do {
-        zone = facility.getGeographicZone();
+      while (null != zone) {
         String zoneName = zone.getName();
 
         if (startsWithIgnoreCase(zoneName, "central")) {
@@ -279,7 +278,7 @@ public class MainProcessor implements ItemProcessor<Main, List<Requisition>> {
         } else {
           break;
         }
-      } while (null != zone);
+      }
     } else {
       warehouse = olmisFacilityRepository.findByName("Program");
     }

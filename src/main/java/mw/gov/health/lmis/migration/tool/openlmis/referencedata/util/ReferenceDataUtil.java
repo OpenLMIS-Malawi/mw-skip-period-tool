@@ -33,6 +33,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+@SuppressWarnings("PMD.TooManyMethods")
 @Component
 public class ReferenceDataUtil {
   private static final Logger LOGGER = LoggerFactory.getLogger(ReferenceDataUtil.class);

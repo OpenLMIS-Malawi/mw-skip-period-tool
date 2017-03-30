@@ -19,12 +19,7 @@ import mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.StatusChang
 import mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.StatusMessage;
 import mw.gov.health.lmis.migration.tool.openlmis.requisition.repository.OlmisRequisitionRepository;
 import mw.gov.health.lmis.migration.tool.openlmis.requisition.repository.OlmisStatusMessageRepository;
-import mw.gov.health.lmis.migration.tool.scm.domain.Main;
-import mw.gov.health.lmis.migration.tool.scm.repository.FacilityRepository;
-import mw.gov.health.lmis.migration.tool.scm.repository.ItemRepository;
-import mw.gov.health.lmis.migration.tool.scm.repository.MainRepository;
 
-import java.time.LocalDateTime;
 import java.time.chrono.ChronoZonedDateTime;
 import java.time.format.TextStyle;
 import java.util.Collection;
@@ -37,12 +32,6 @@ import java.util.stream.Collectors;
 public class RequisitionWriter implements ItemWriter<List<Requisition>> {
 
   @Autowired
-  private MainRepository mainRepository;
-
-  @Autowired
-  private ItemRepository itemRepository;
-
-  @Autowired
   private OlmisFacilityRepository olmisFacilityRepository;
 
   @Autowired
@@ -53,9 +42,6 @@ public class RequisitionWriter implements ItemWriter<List<Requisition>> {
 
   @Autowired
   private OlmisRequisitionRepository olmisRequisitionRepository;
-
-  @Autowired
-  private FacilityRepository facilityRepository;
 
   @Autowired
   private OlmisUserRepository olmisUserRepository;
@@ -78,23 +64,14 @@ public class RequisitionWriter implements ItemWriter<List<Requisition>> {
   }
 
   private void print(Requisition requisition) {
-    Facility olmisFacility = olmisFacilityRepository.findOne(requisition.getFacilityId());
+    Facility facility = olmisFacilityRepository.findOne(requisition.getFacilityId());
     ProcessingPeriod period = olmisProcessingPeriodRepository
         .findOne(requisition.getProcessingPeriodId());
 
-    String format =
-        "%-8s|%-57s|%-14s|%-18s|%-18s|%-17s|%-21s|%-18s|%-20s|%-17s|%-9s%n";
+    String format = "%-8s|%-57s|%-14s|%-18s|%-18s|%-17s|%-21s|%-18s|%-20s|%-17s|%-9s%n";
 
-    System.err.printf(
-        "Facility (code): %s (%s)%n", olmisFacility.getName(), olmisFacility.getCode()
-    );
+    System.err.printf("Facility (code): %s (%s)%n", facility.getName(), facility.getCode());
     System.err.printf("Period: %s%n", printPeriod(period));
-
-    mw.gov.health.lmis.migration.tool.scm.domain.Facility scmFacility = facilityRepository
-        .findByCode(olmisFacility.getCode());
-    LocalDateTime processingDate = period.getStartDate().atStartOfDay();
-
-    Main main = mainRepository.findOne(new Main.ComplexId(scmFacility, processingDate));
 
     System.err.printf(
         format,
@@ -103,6 +80,7 @@ public class RequisitionWriter implements ItemWriter<List<Requisition>> {
         "Stocked Out Days", "Adjusted Consumption", "Months of Stock", "Calculated Quantity",
         "Reorder Quantity", "Receipts"
     );
+    
     for (RequisitionLineItem line : requisition.getRequisitionLineItems()) {
       Orderable orderable = olmisOrderableRepository.findOne(line.getOrderableId());
 
@@ -147,10 +125,7 @@ public class RequisitionWriter implements ItemWriter<List<Requisition>> {
         .map(StatusMessage::getBody)
         .collect(Collectors.joining("; "));
 
-    System.err.printf(
-        "Comment: %s%n",
-        Optional.ofNullable(comment).orElse("")
-    );
+    System.err.printf("Comment: %s%n", Optional.ofNullable(comment).orElse(""));
   }
 
   private String printDate(ChronoZonedDateTime dateTime) {
