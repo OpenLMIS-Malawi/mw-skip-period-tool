@@ -15,6 +15,8 @@
 
 package mw.gov.health.lmis.migration.tool.openlmis.fulfillment.domain;
 
+import static org.springframework.util.CollectionUtils.isEmpty;
+
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.Type;
@@ -220,13 +222,15 @@ public class Order extends BaseEntity {
     order.setSupplyingFacilityId(requisition.getSupplyingFacilityId());
     order.setProgramId(requisition.getProgramId());
 
-    order.setStatusMessages(
-        requisition
-            .getStatusMessages()
-            .stream()
-            .map(msg -> new StatusMessage(msg.getAuthorId(), msg.getStatus(), msg.getBody()))
-            .collect(Collectors.toList())
-    );
+    if (!isEmpty(requisition.getStatusMessages())) {
+      order.setStatusMessages(
+          requisition
+              .getStatusMessages()
+              .stream()
+              .map(msg -> new StatusMessage(msg.getAuthorId(), msg.getStatus(), msg.getBody()))
+              .collect(Collectors.toList())
+      );
+    }
 
     order.setOrderLineItems(
         requisition
@@ -237,13 +241,15 @@ public class Order extends BaseEntity {
             .collect(Collectors.toList())
     );
 
-    order.setStatusChanges(
-        requisition
-            .getStatusChanges()
-        .stream()
-        .map(sc -> new StatusChange(sc.getStatus(), sc.getAuthorId(), sc.getCreatedDate()))
-        .collect(Collectors.toList())
-    );
+    if (!isEmpty(requisition.getStatusChanges())) {
+      order.setStatusChanges(
+          requisition
+              .getStatusChanges()
+              .stream()
+              .map(sc -> new StatusChange(sc.getStatus(), sc.getAuthorId(), sc.getCreatedDate()))
+              .collect(Collectors.toList())
+      );
+    }
 
     order.setCreatedById(user.getId());
 

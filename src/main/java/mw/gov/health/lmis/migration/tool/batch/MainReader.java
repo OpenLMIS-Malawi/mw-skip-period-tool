@@ -1,14 +1,14 @@
 package mw.gov.health.lmis.migration.tool.batch;
 
-import mw.gov.health.lmis.migration.tool.scm.domain.Main;
-import mw.gov.health.lmis.migration.tool.scm.repository.MainRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.batch.item.database.AbstractPagingItemReader;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Component;
+
+import mw.gov.health.lmis.migration.tool.Arguments;
+import mw.gov.health.lmis.migration.tool.scm.domain.Main;
+import mw.gov.health.lmis.migration.tool.scm.repository.MainRepository;
 
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -20,6 +20,9 @@ public class MainReader extends AbstractPagingItemReader<Main> {
   @Autowired
   private MainRepository mainRepository;
 
+  @Autowired
+  private Arguments arguments;
+
   public MainReader() {
     setPageSize(10);
   }
@@ -28,8 +31,9 @@ public class MainReader extends AbstractPagingItemReader<Main> {
   protected void doReadPage() {
     LOG.debug("Reading mains. Page: {}, page size: {}", getPage(), getPageSize());
 
-    Page<Main> mains = mainRepository.findAll(new PageRequest(getPage(), getPageSize()));
-    List<Main> content = mains.getContent();
+    List<Main> content = mainRepository.searchInPeriod(
+        arguments.getPeriod(), getPage(), getPageSize()
+    );
 
     LOG.info("{} main have been retrieved.", content.size());
 

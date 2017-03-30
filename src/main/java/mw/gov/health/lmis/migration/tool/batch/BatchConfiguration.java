@@ -40,11 +40,11 @@ public class BatchConfiguration {
    * {@link Requisition} object and save it into OpenLMIS database.
    */
   @Bean
-  public Step mainTransformStep(StepBuilderFactory stepBuilderFactory,
-                                MainReader reader, RequisitionWriter writer,
-                                MainProcessor processor) {
+  public Step migrationStep(StepBuilderFactory stepBuilderFactory,
+                            MainReader reader, RequisitionWriter writer,
+                            MainProcessor processor) {
     return stepBuilderFactory
-        .get("mainTransformStep")
+        .get("migrationStep")
         .<Main, List<Pair<Requisition, Order>>>chunk(10)
         .reader(reader)
         .processor(processor)
@@ -61,11 +61,11 @@ public class BatchConfiguration {
    * Configure Spring Batch Job that will transform {@link Main} object into {@link Requisition}.
    */
   @Bean
-  public Job mainTransformJob(JobBuilderFactory jobBuilderFactory, Step mainTransformStep) {
+  public Job migrationJob(JobBuilderFactory jobBuilderFactory, Step migrationStep) {
     return jobBuilderFactory
-        .get("mainTransformJob")
+        .get("migrationJob")
         .incrementer(new RunIdIncrementer())
-        .flow(mainTransformStep)
+        .flow(migrationStep)
         .end()
         .build();
   }

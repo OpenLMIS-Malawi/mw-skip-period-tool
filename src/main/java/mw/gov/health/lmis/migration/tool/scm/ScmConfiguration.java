@@ -21,6 +21,8 @@ import mw.gov.health.lmis.migration.tool.Arguments;
 
 import java.util.Properties;
 
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
 import javax.sql.DataSource;
 
 @Configuration
@@ -35,7 +37,17 @@ public class ScmConfiguration {
   @Bean
   @Primary
   PlatformTransactionManager scmTransactionManager(Arguments arguments) {
-    return new JpaTransactionManager(scmEntityManagerFactory(arguments).getObject());
+    return new JpaTransactionManager(scmEntityManagerFactory(arguments));
+  }
+
+  @Bean
+  EntityManager scmEntityManager(Arguments arguments) {
+    return scmEntityManagerFactory(arguments).createEntityManager();
+  }
+
+  @Bean
+  EntityManagerFactory scmEntityManagerFactory(Arguments arguments) {
+    return scmEntityManagerFactoryBean(arguments).getObject();
   }
 
   /**
@@ -43,7 +55,7 @@ public class ScmConfiguration {
    */
   @Bean
   @Primary
-  LocalContainerEntityManagerFactoryBean scmEntityManagerFactory(Arguments arguments) {
+  LocalContainerEntityManagerFactoryBean scmEntityManagerFactoryBean(Arguments arguments) {
     LocalContainerEntityManagerFactoryBean entityManagerFactory =
         new LocalContainerEntityManagerFactoryBean();
 

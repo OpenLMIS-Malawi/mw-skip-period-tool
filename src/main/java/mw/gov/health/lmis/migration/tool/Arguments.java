@@ -51,4 +51,10 @@ public class Arguments {
   )
   private String password;
 
+  @Parameter(
+      names = {"--period", "-p"},
+      description = "Set (in years) how many periods in past should be processed"
+  )
+  private Integer period;
+
 }

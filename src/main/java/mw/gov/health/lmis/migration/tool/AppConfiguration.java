@@ -116,13 +116,13 @@ public class AppConfiguration {
    * Here the application starts with spring context.
    */
   @Bean
-  public CommandLineRunner commandLineRunner(JobLauncher jobLauncher, Job mainTransformJob) {
+  public CommandLineRunner commandLineRunner(JobLauncher jobLauncher, Job migrationJob) {
     return args -> {
       // create demo data (it will be removed in future)
       createDemoData();
 
       // run the transform job
-      jobLauncher.run(mainTransformJob, new JobParameters());
+      jobLauncher.run(migrationJob, new JobParameters());
     };
   }
 
