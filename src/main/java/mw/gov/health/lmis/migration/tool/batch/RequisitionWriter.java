@@ -1,5 +1,9 @@
 package mw.gov.health.lmis.migration.tool.batch;
 
+import org.springframework.batch.item.ItemWriter;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.Facility;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.Orderable;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.ProcessingPeriod;
@@ -15,9 +19,6 @@ import mw.gov.health.lmis.migration.tool.scm.domain.Main;
 import mw.gov.health.lmis.migration.tool.scm.repository.FacilityRepository;
 import mw.gov.health.lmis.migration.tool.scm.repository.ItemRepository;
 import mw.gov.health.lmis.migration.tool.scm.repository.MainRepository;
-import org.springframework.batch.item.ItemWriter;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
 import java.time.chrono.ChronoLocalDateTime;
@@ -86,11 +87,6 @@ public class RequisitionWriter implements ItemWriter<List<Requisition>> {
 
     Main main = mainRepository.findOne(new Main.ComplexId(scmFacility, processingDate));
 
-    // TODO: does this field are necessary? Where they should be in the openlmis system?
-    System.err.printf(
-        "Date Received: %s Date Shipment Received: %s%n%n",
-        printDate(main.getReceivedDate()), printDate(main.getShipmentReceivedData())
-    );
     System.err.printf(
         format,
         "Product", "Product Description", "Stock on Hand",
