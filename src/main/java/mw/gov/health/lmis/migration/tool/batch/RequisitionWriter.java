@@ -16,7 +16,9 @@ import mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.Requisition
 import mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.RequisitionLineItem;
 import mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.RequisitionStatus;
 import mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.StatusChange;
+import mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.StatusMessage;
 import mw.gov.health.lmis.migration.tool.openlmis.requisition.repository.OlmisRequisitionRepository;
+import mw.gov.health.lmis.migration.tool.openlmis.requisition.repository.OlmisStatusMessageRepository;
 import mw.gov.health.lmis.migration.tool.scm.domain.Main;
 import mw.gov.health.lmis.migration.tool.scm.repository.FacilityRepository;
 import mw.gov.health.lmis.migration.tool.scm.repository.ItemRepository;
@@ -29,6 +31,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Component
 public class RequisitionWriter implements ItemWriter<List<Requisition>> {
@@ -56,6 +59,9 @@ public class RequisitionWriter implements ItemWriter<List<Requisition>> {
 
   @Autowired
   private OlmisUserRepository olmisUserRepository;
+
+  @Autowired
+  private OlmisStatusMessageRepository olmisStatusMessageRepository;
 
   /**
    * Writes Requisitions into OpenLMIS database.
@@ -133,10 +139,17 @@ public class RequisitionWriter implements ItemWriter<List<Requisition>> {
         "Last changed (date): %-10s (%-10s)%n",
         user.getUsername(), printDate(requisition.getModifiedDate())
     );
-    // TODO: how to handle general comment and notes for each product/column
+
+    List<StatusMessage> statusMessages = olmisStatusMessageRepository
+        .findByRequisition(requisition);
+    String comment = statusMessages
+        .stream()
+        .map(StatusMessage::getBody)
+        .collect(Collectors.joining("; "));
+
     System.err.printf(
         "Comment: %s%n",
-        Optional.ofNullable(requisition.getDraftStatusMessage()).orElse("")
+        Optional.ofNullable(comment).orElse("")
     );
   }
 
