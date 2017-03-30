@@ -90,7 +90,6 @@ public class OlmisConfiguration {
    */
   @Bean
   DataSource olmisDataSource(Arguments arguments) {
-    // TODO: make it configurable. The question is how much?
     Properties connectionProperties = new Properties();
     connectionProperties.put("stringtype", "unspecified");
 
