@@ -20,7 +20,7 @@ public class TransformListener
     LOGGER.info(
         "Start converting row from CTF_Main table (facility code {} and processing date {})"
             + "to OpenLMIS requisitions",
-        item.getId().getFacility().getCode(), item.getId().getProcessingDate()
+        item.getFacility(), item.getProcessingDate()
     );
   }
 
@@ -29,7 +29,7 @@ public class TransformListener
     LOGGER.info(
         "Converted row from CTF_Main table (facility code {} and processing date {}) "
             + "to OpenLMIS {} requisitions",
-        item.getId().getFacility().getCode(), item.getId().getProcessingDate(), result.size()
+        item.getFacility(), item.getProcessingDate(), result.size()
     );
   }
 
@@ -38,7 +38,7 @@ public class TransformListener
     LOGGER.error(
         "Cannot convert row from CTF_Main table (facility code {} and processing date {}) "
             + "to OpenLMIS requisitions",
-        item.getId().getFacility().getCode(), item.getId().getProcessingDate(), exp
+        item.getFacility(), item.getProcessingDate(), exp
     );
   }
 

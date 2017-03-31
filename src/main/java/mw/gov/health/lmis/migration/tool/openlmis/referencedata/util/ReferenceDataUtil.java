@@ -49,8 +49,8 @@ public class ReferenceDataUtil {
 
     Facility facility = new Facility();
     facility.setId(UUID.randomUUID());
-    facility.setName(name);
-    facility.setCode(code);
+    facility.setName(name.trim());
+    facility.setCode(code.trim());
     facility.setActive(true);
     facility.setEnabled(true);
     facility.setType(facilityType);
@@ -67,8 +67,8 @@ public class ReferenceDataUtil {
 
     Orderable orderable = new TradeItem();
     orderable.setId(UUID.randomUUID());
-    orderable.setProductCode(new Code(product.getProductId()));
-    orderable.setName(product.getName());
+    orderable.setProductCode(new Code(product.getProductId().trim()));
+    orderable.setName(product.getName().trim());
 
     return orderable;
   }
@@ -78,9 +78,9 @@ public class ReferenceDataUtil {
    */
   public User create(String username, String firstName, String lastName) {
     User user = new User();
-    user.setUsername(username);
-    user.setFirstName(firstName);
-    user.setLastName(lastName);
+    user.setUsername(username.trim());
+    user.setFirstName(firstName.trim());
+    user.setLastName(lastName.trim());
     user.setEmail(username + "@migrationtool.com");
     user.setVerified(true);
     user.setActive(true);
@@ -122,8 +122,8 @@ public class ReferenceDataUtil {
     LOGGER.info("Create program: {}", programCode);
 
     Program program = new Program();
-    program.setName(programCode);
-    program.setCode(new Code(programCode));
+    program.setName(programCode.trim());
+    program.setCode(new Code(programCode.trim()));
     program.setPeriodsSkippable(true);
 
     return program;
@@ -162,8 +162,8 @@ public class ReferenceDataUtil {
     StockAdjustmentReason reason = new StockAdjustmentReason();
     reason.setId(UUID.randomUUID());
     reason.setProgram(program);
-    reason.setName(adjustmentType.getName());
-    reason.setDescription(adjustmentType.getName());
+    reason.setName(adjustmentType.getName().trim());
+    reason.setDescription(adjustmentType.getName().trim());
     reason.setAdditive(!adjustmentType.getNegative());
 
     return reason;
@@ -187,7 +187,7 @@ public class ReferenceDataUtil {
   public OrderableDisplayCategory create(mw.gov.health.lmis.migration.tool.scm.domain.Program pro) {
     LOGGER.info("Create orderable display category: {}", pro.getName());
 
-    String displayName = pro.getName();
+    String displayName = pro.getName().trim();
     Integer displayOrder = pro.getOrder();
 
     OrderableDisplayCategory category = new OrderableDisplayCategory();

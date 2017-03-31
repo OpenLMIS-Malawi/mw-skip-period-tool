@@ -1,9 +1,21 @@
 package mw.gov.health.lmis.migration.tool.scm.repository;
 
+import com.healthmarketscience.jackcess.Row;
+
+import org.springframework.stereotype.Repository;
+
 import mw.gov.health.lmis.migration.tool.scm.domain.Facility;
 
-public interface FacilityRepository extends ReadOnlyRepository<Facility, String> {
+@Repository
+public class FacilityRepository extends BaseRepository<Facility> {
 
-  Facility findByCode(String code);
+  @Override
+  String getTableName() {
+    return "Facility";
+  }
 
+  @Override
+  Facility mapRow(Row row) {
+    return RowMapper.facility(row);
+  }
 }

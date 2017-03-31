@@ -44,10 +44,20 @@ import mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.StockAdjust
 import mw.gov.health.lmis.migration.tool.openlmis.requisition.repository.OlmisRequisitionRepository;
 import mw.gov.health.lmis.migration.tool.openlmis.requisition.repository.OlmisRequisitionTemplateRepository;
 import mw.gov.health.lmis.migration.tool.scm.domain.Adjustment;
+import mw.gov.health.lmis.migration.tool.scm.domain.AdjustmentType;
+import mw.gov.health.lmis.migration.tool.scm.domain.CategoryProductJoin;
 import mw.gov.health.lmis.migration.tool.scm.domain.Item;
 import mw.gov.health.lmis.migration.tool.scm.domain.Main;
+import mw.gov.health.lmis.migration.tool.scm.domain.Product;
+import mw.gov.health.lmis.migration.tool.scm.repository.AdjustmentRepository;
+import mw.gov.health.lmis.migration.tool.scm.repository.AdjustmentTypeRepository;
+import mw.gov.health.lmis.migration.tool.scm.repository.CategoryProductJoinRepository;
+import mw.gov.health.lmis.migration.tool.scm.repository.CommentRepository;
 import mw.gov.health.lmis.migration.tool.scm.repository.ItemRepository;
+import mw.gov.health.lmis.migration.tool.scm.repository.ProductRepository;
+import mw.gov.health.lmis.migration.tool.scm.repository.ProgramRepository;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
@@ -56,6 +66,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.TimeZone;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -94,14 +105,30 @@ public class Transformer implements ItemProcessor<Main, List<Pair<Requisition, O
   @Autowired
   private ToolProperties toolProperties;
 
+  @Autowired
+  private AdjustmentRepository adjustmentRepository;
+
+  @Autowired
+  private CommentRepository commentRepository;
+
+  @Autowired
+  private CategoryProductJoinRepository categoryProductJoinRepository;
+
+  @Autowired
+  private ProgramRepository programRepository;
+
+  @Autowired
+  private ProductRepository productRepository;
+
+  @Autowired
+  private AdjustmentTypeRepository adjustmentTypeRepository;
+
   /**
    * Converts the given {@link Main} object into {@link Requisition} object.
    */
   @Override
-  public List<Pair<Requisition, Order>> process(Main main) {
-    List<Item> items = itemRepository.findByProcessingDateAndFacility(
-        main.getId().getProcessingDate(), main.getId().getFacility()
-    );
+  public List<Pair<Requisition, Order>> process(Main main) throws IOException {
+    List<Item> items = itemRepository.search(main.getProcessingDate(), main.getFacility());
 
     Multimap<String, Item> groups = HashMultimap.create();
     for (Item item : items) {
@@ -112,9 +139,13 @@ public class Transformer implements ItemProcessor<Main, List<Pair<Requisition, O
           .filter(cp -> null != cp
               .getCategories()
               .stream()
-              .filter(cat -> equalsIgnoreCase(
-                  cat, item.getCategoryProduct().getProgram().getName())
-              )
+              .filter(cat -> {
+                CategoryProductJoin join = categoryProductJoinRepository
+                    .find("ID", item.getCategoryProduct());
+                mw.gov.health.lmis.migration.tool.scm.domain.Program program =
+                    programRepository.find("Program_ID", join.getProgram());
+                return equalsIgnoreCase(cat, program.getName());
+              })
               .findFirst()
               .orElse(null)
           )
@@ -122,23 +153,20 @@ public class Transformer implements ItemProcessor<Main, List<Pair<Requisition, O
           .forEach(code -> groups.put(code, item));
     }
 
-    return groups
-        .asMap()
-        .entrySet()
-        .stream()
-        .map(entry -> createRequisition(entry.getKey(), entry.getValue(), main))
-        .collect(Collectors.toList());
+    List<Pair<Requisition, Order>> pairs = Lists.newArrayList();
+    for (Map.Entry<String, Collection<Item>> entry : groups.asMap().entrySet()) {
+      pairs.add(createRequisition(entry.getKey(), entry.getValue(), main));
+    }
+
+    return pairs;
   }
 
   private Pair<Requisition, Order> createRequisition(String programCode, Collection<Item> items,
-                                                     Main main) {
-
-    mw.gov.health.lmis.migration.tool.scm.domain.Facility mainFacility = main.getId().getFacility();
-
+                                                     Main main) throws IOException {
     String code = toolProperties
         .getMapping()
         .getFacilities()
-        .getProperty(mainFacility.getCode(), mainFacility.getCode());
+        .getProperty(main.getFacility(), main.getFacility());
     mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.Facility facility =
         olmisFacilityRepository.findByCode(code);
 
@@ -151,7 +179,7 @@ public class Transformer implements ItemProcessor<Main, List<Pair<Requisition, O
     requisition.setStatus(ExternalStatus.INITIATED);
 
     ProcessingPeriod period = olmisProcessingPeriodRepository
-        .findByStartDate(main.getId().getProcessingDate().toLocalDate().with(firstDayOfMonth()));
+        .findByStartDate(main.getProcessingDate().toLocalDate().with(firstDayOfMonth()));
 
     requisition.setProcessingPeriodId(period.getId());
     requisition.setNumberOfMonthsInPeriod(period.getDurationInMonths());
@@ -159,7 +187,8 @@ public class Transformer implements ItemProcessor<Main, List<Pair<Requisition, O
     List<Pair<Orderable, Double>> pairs = items
         .stream()
         .map(item -> {
-          String defaultName = item.getProduct().getName();
+          Product product = productRepository.find("Pr_lngProductID", item.getProduct());
+          String defaultName = product.getName().trim();
           String name = toolProperties
               .getMapping()
               .getProducts()
@@ -199,9 +228,9 @@ public class Transformer implements ItemProcessor<Main, List<Pair<Requisition, O
     requisition.setCreatedDate(safeNull(main.getCreatedDate()));
     requisition.setModifiedDate(safeNull(main.getModifiedDate()));
 
-    requisition
-        .getRequisitionLineItems()
-        .forEach(line -> updateLine(line, requisition, items));
+    for (RequisitionLineItem line : requisition.getRequisitionLineItems()) {
+      updateLine(line, requisition, items);
+    }
 
     List<Orderable> products = Lists.newArrayList(olmisOrderableRepository.findAll());
 
@@ -217,12 +246,13 @@ public class Transformer implements ItemProcessor<Main, List<Pair<Requisition, O
   }
 
   private void updateLine(RequisitionLineItem line, Requisition requisition,
-                          Collection<Item> items) {
+                          Collection<Item> items) throws IOException {
     Orderable orderable = olmisOrderableRepository.findOne(line.getOrderableId());
     Item item = items
         .stream()
         .filter(elem -> {
-          String defaultName = elem.getProduct().getName();
+          Product product = productRepository.find("Pr_lngProductID", elem.getProduct());
+          String defaultName = product.getName().trim();
           String name = toolProperties
               .getMapping()
               .getProducts()
@@ -240,22 +270,23 @@ public class Transformer implements ItemProcessor<Main, List<Pair<Requisition, O
 
     Program program = olmisProgramRepository.findOne(requisition.getProgramId());
     List<StockAdjustment> stockAdjustments = Lists.newArrayList();
-    for (Adjustment adjustment : item.getAdjustments()) {
+    for (Adjustment adjustment : adjustmentRepository.search(item.getId())) {
       if (null == adjustment.getQuantity()) {
         continue;
       }
 
-      String defaultName = adjustment.getType().getName();
+      AdjustmentType type = adjustmentTypeRepository.find("Type_Code", adjustment.getType());
+      String defaultName = type.getName();
       String name = toolProperties
           .getMapping()
           .getStockAdjustmentReasons()
           .getProperty(defaultName, defaultName);
 
-      StockAdjustmentReason stockAdjustmentReasonDto = olmisStockAdjustmentReasonRepository
+      StockAdjustmentReason stockAdjustmentReason = olmisStockAdjustmentReasonRepository
           .findByProgramAndName(program, name);
 
       StockAdjustment stockAdjustment = new StockAdjustment();
-      stockAdjustment.setReasonId(stockAdjustmentReasonDto.getId());
+      stockAdjustment.setReasonId(stockAdjustmentReason.getId());
       stockAdjustment.setQuantity(adjustment.getQuantity());
 
       stockAdjustments.add(stockAdjustment);
@@ -399,20 +430,18 @@ public class Transformer implements ItemProcessor<Main, List<Pair<Requisition, O
   }
 
   private void addStatusMessage(Requisition requisition, Main main,
-                                Collection<Item> items, User user) {
+                                Collection<Item> items, User user) throws IOException {
     List<String> notes = Lists.newArrayList();
     notes.add(main.getNotes());
 
-    items
-        .forEach(item -> {
-          notes.add(item.getNote());
+    for (Item item : items) {
+      notes.add(item.getNote());
 
-          item
-              .getNotes()
-              .forEach(comment -> notes.add(
-                  comment.getType().getName() + ": " + comment.getComment()
-              ));
-        });
+      commentRepository.search(item.getId())
+          .forEach(comment -> notes.add(
+              comment.getType() + ": " + comment.getComment()
+          ));
+    }
 
     notes.removeIf(StringUtils::isBlank);
 

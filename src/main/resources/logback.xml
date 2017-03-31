@@ -25,12 +25,8 @@
         </triggeringPolicy>
     </appender>
 
-    <logger name="mw.gov.health.lmis.migration.tool" level="INFO" additivity="true">
-        <appender-ref ref="STDOUT"/>
-    </logger>
-
     <root level="INFO">
-        <appender-ref ref="FILE"/>
+        <appender-ref ref="STDOUT"/>
     </root>
 
 </configuration>

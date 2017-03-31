@@ -20,14 +20,7 @@ tool:
             includeProgramCode: false
             includeTypeSuffix: false
     configuration:
-        scm:
-            dialect: "org.hibernate.dialect.H2Dialect"
-            showSql: false
-            hbm2ddl: "validate"
-            dataSource:
-                file: "file1.mdb"
-                memory: false
-                driverClass: "net.ucanaccess.jdbc.UcanaccessDriver"
+        accessFile: "database.mdb"
         olmis:
             dialect: "org.hibernate.dialect.PostgreSQL94Dialect"
             showSql: false

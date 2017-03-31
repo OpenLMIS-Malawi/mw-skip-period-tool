@@ -1,9 +1,10 @@
 package mw.gov.health.lmis.migration.tool.batch;
 
-import mw.gov.health.lmis.migration.tool.scm.domain.Main;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.ItemReadListener;
+
+import mw.gov.health.lmis.migration.tool.scm.domain.Main;
 
 public class SupplyManagerExtractListener implements ItemReadListener<Main> {
   private static final Logger LOGGER = LoggerFactory.getLogger(SupplyManagerExtractListener.class);
@@ -17,7 +18,7 @@ public class SupplyManagerExtractListener implements ItemReadListener<Main> {
   public void afterRead(Main item) {
     LOGGER.info(
         "Retrieved row from CTF_Main table with facility code {} and processing date {}",
-        item.getId().getFacility().getCode(), item.getId().getProcessingDate()
+        item.getFacility(), item.getProcessingDate()
     );
   }
 

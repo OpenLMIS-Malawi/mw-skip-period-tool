@@ -1,7 +1,21 @@
 package mw.gov.health.lmis.migration.tool.scm.repository;
 
+import com.healthmarketscience.jackcess.Row;
+
+import org.springframework.stereotype.Repository;
+
 import mw.gov.health.lmis.migration.tool.scm.domain.AdjustmentType;
 
-public interface AdjustmentTypeRepository extends ReadOnlyRepository<AdjustmentType, String> {
+@Repository
+public class AdjustmentTypeRepository extends BaseRepository<AdjustmentType> {
 
+  @Override
+  String getTableName() {
+    return "Adj_Type";
+  }
+
+  @Override
+  AdjustmentType mapRow(Row row) {
+    return RowMapper.adjustmentType(row);
+  }
 }

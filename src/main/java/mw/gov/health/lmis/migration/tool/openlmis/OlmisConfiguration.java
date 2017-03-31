@@ -10,6 +10,7 @@ import static org.hibernate.cfg.AvailableSettings.SHOW_SQL;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.springframework.orm.jpa.JpaTransactionManager;
@@ -23,8 +24,6 @@ import mw.gov.health.lmis.migration.tool.config.ToolProperties;
 
 import java.util.Properties;
 
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
 import javax.sql.DataSource;
 
 @Configuration
@@ -37,25 +36,17 @@ public class OlmisConfiguration {
    * Declare the SCMgr transaction manager.
    */
   @Bean
+  @Primary
   PlatformTransactionManager olmisTransactionManager(ToolProperties properties) {
-    return new JpaTransactionManager(olmisEntityManagerFactory(properties));
-  }
-
-  @Bean
-  EntityManager olmisEntityManager(ToolProperties properties) {
-    return olmisEntityManagerFactory(properties).createEntityManager();
-  }
-
-  @Bean
-  EntityManagerFactory olmisEntityManagerFactory(ToolProperties properties) {
-    return olmisEntityManagerFactoryBean(properties).getObject();
+    return new JpaTransactionManager(olmisEntityManagerFactory(properties).getObject());
   }
 
   /**
    * Declare the SCMgr entity manager factory.
    */
   @Bean
-  LocalContainerEntityManagerFactoryBean olmisEntityManagerFactoryBean(ToolProperties properties) {
+  @Primary
+  LocalContainerEntityManagerFactoryBean olmisEntityManagerFactory(ToolProperties properties) {
     LocalContainerEntityManagerFactoryBean entityManagerFactory =
         new LocalContainerEntityManagerFactoryBean();
 
@@ -94,6 +85,7 @@ public class OlmisConfiguration {
    * Declare the SCMgr data source.
    */
   @Bean
+  @Primary
   DataSource olmisDataSource(ToolProperties properties) {
     ToolOlmisDataSourceConfiguration dataSource = properties
         .getConfiguration()

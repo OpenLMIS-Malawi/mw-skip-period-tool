@@ -1,19 +1,35 @@
 package mw.gov.health.lmis.migration.tool.scm.repository;
 
 
-import mw.gov.health.lmis.migration.tool.scm.domain.Facility;
+import com.healthmarketscience.jackcess.Row;
+
+import org.springframework.stereotype.Repository;
+
 import mw.gov.health.lmis.migration.tool.scm.domain.Item;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
-public interface ItemRepository extends ReadOnlyRepository<Item, Integer> {
+@Repository
+public class ItemRepository extends BaseRepository<Item> {
 
-  List<Item> findByProcessingDateAndFacility(LocalDateTime processingDate, Facility facility);
+  /**
+   * Find items with the given processing date and facility.
+   */
+  public List<Item> search(LocalDateTime processingDate, String facility) {
+    return search(
+        item -> item.getProcessingDate().equals(processingDate)
+            && item.getFacility().equals(facility)
+    );
+  }
 
-  Item findByProcessingDateAndFacilityAndProductName(LocalDateTime processingDate,
-                                                     Facility facility, String productName);
+  @Override
+  String getTableName() {
+    return "CTF_Item";
+  }
 
-  Item findByProductName(String productName);
-
+  @Override
+  Item mapRow(Row row) {
+    return RowMapper.item(row);
+  }
 }

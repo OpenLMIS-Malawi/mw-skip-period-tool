@@ -36,6 +36,7 @@ import mw.gov.health.lmis.migration.tool.openlmis.requisition.repository.OlmisRe
 import mw.gov.health.lmis.migration.tool.openlmis.requisition.util.RequsitionUtil;
 import mw.gov.health.lmis.migration.tool.scm.domain.CategoryProductJoin;
 import mw.gov.health.lmis.migration.tool.scm.domain.Main;
+import mw.gov.health.lmis.migration.tool.scm.domain.Product;
 import mw.gov.health.lmis.migration.tool.scm.repository.AdjustmentTypeRepository;
 import mw.gov.health.lmis.migration.tool.scm.repository.CategoryProductJoinRepository;
 import mw.gov.health.lmis.migration.tool.scm.repository.FacilityRepository;
@@ -43,6 +44,7 @@ import mw.gov.health.lmis.migration.tool.scm.repository.MainRepository;
 import mw.gov.health.lmis.migration.tool.scm.repository.ProductRepository;
 import mw.gov.health.lmis.migration.tool.scm.repository.ProgramRepository;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -119,7 +121,7 @@ public class DemoCreator {
   /**
    * Creates demo data.
    */
-  public void createDemoData() {
+  public void createDemoData() throws IOException {
     olmisUserRepository.save(
         referenceDataUtil.create("supply chain manager", "supply chain", "manager")
     );
@@ -146,8 +148,9 @@ public class DemoCreator {
 
     Random random = new Random();
 
-    olmisFacilityRepository.save(StreamSupport
-        .stream(facilityRepository.findAll().spliterator(), false)
+    olmisFacilityRepository.save(facilityRepository
+        .findAll()
+        .stream()
         .map(facility -> {
           GeographicZone zone = zones.get(random.nextInt(zones.size()));
           return referenceDataUtil.create(
@@ -167,26 +170,27 @@ public class DemoCreator {
     olmisFacilityRepository.save(referenceDataUtil.create(
         "CMST - North", "cmstn", facilityType, northernZone));
 
-    Iterable<Main> mains = mainRepository.findAll();
+    List<Main> mains = mainRepository.findAll();
 
-    olmisProcessingPeriodRepository.save(StreamSupport
-        .stream(mains.spliterator(), false)
-        .map(Main::getId)
-        .map(Main.ComplexId::getProcessingDate)
+    olmisProcessingPeriodRepository.save(mains
+        .stream()
+        .map(Main::getProcessingDate)
         .distinct()
         .sorted()
         .map(referenceDataUtil::create)
         .collect(Collectors.toList())
     );
 
-    olmisOrderableDisplayCategoryRepository.save(StreamSupport
-        .stream(programRepository.findAll().spliterator(), false)
+    olmisOrderableDisplayCategoryRepository.save(programRepository
+        .findAll()
+        .stream()
         .map(referenceDataUtil::create)
         .collect(Collectors.toList())
     );
 
-    olmisOrderableRepository.save(StreamSupport
-        .stream(productRepository.findAll().spliterator(), false)
+    olmisOrderableRepository.save(productRepository
+        .findAll()
+        .stream()
         .map(referenceDataUtil::create)
         .collect(Collectors.toList())
     );
@@ -206,7 +210,11 @@ public class DemoCreator {
           .filter(cp -> null != cp
               .getCategories()
               .stream()
-              .filter(cat -> equalsIgnoreCase(cat, category.getProgram().getName()))
+              .filter(cat -> {
+                mw.gov.health.lmis.migration.tool.scm.domain.Program program = programRepository
+                    .find("Program_ID", category.getProgram());
+                return equalsIgnoreCase(cat, program.getName());
+              })
               .findFirst()
               .orElse(null)
           )
@@ -222,12 +230,15 @@ public class DemoCreator {
 
           categories
               .forEach(category -> {
+                Product product = productRepository
+                    .find("strProductID", category.getProduct());
                 Orderable orderable = olmisOrderableRepository.findFirstByName(
-                    category.getProduct().getName()
+                    product.getName().trim()
                 );
-
+                mw.gov.health.lmis.migration.tool.scm.domain.Program prog = programRepository
+                    .find("Program_ID", category.getProgram());
                 OrderableDisplayCategory displayCategory = olmisOrderableDisplayCategoryRepository
-                    .findByDisplayName(category.getProgram().getName());
+                    .findByDisplayName(prog.getName().trim());
 
                 ProgramOrderable programOrderable = olmisProgramOrderableRepository
                     .findByProgramAndProductAndCategory(program, orderable, displayCategory);
@@ -242,8 +253,9 @@ public class DemoCreator {
               });
         });
 
-    olmisStockAdjustmentReasonRepository.save(StreamSupport
-        .stream(adjustmentTypeRepository.findAll().spliterator(), false)
+    olmisStockAdjustmentReasonRepository.save(adjustmentTypeRepository
+        .findAll()
+        .stream()
         .map(type ->
             StreamSupport
                 .stream(olmisProgramRepository.findAll().spliterator(), false)
