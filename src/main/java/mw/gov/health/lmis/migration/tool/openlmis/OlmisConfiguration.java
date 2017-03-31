@@ -8,8 +8,6 @@ import static org.hibernate.cfg.AvailableSettings.PHYSICAL_NAMING_STRATEGY;
 import static org.hibernate.cfg.AvailableSettings.SHOW_SQL;
 
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl;
-import org.hibernate.dialect.PostgreSQL94Dialect;
-import org.postgresql.Driver;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
@@ -19,7 +17,10 @@ import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
 import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
 import org.springframework.transaction.PlatformTransactionManager;
 
-import mw.gov.health.lmis.migration.tool.Arguments;
+import mw.gov.health.lmis.migration.tool.DemoCreator;
+import mw.gov.health.lmis.migration.tool.config.ToolOlmisConfiguration;
+import mw.gov.health.lmis.migration.tool.config.ToolOlmisDataSourceConfiguration;
+import mw.gov.health.lmis.migration.tool.config.ToolProperties;
 
 import java.util.Properties;
 
@@ -33,33 +34,41 @@ import javax.sql.DataSource;
     transactionManagerRef = "olmisTransactionManager")
 public class OlmisConfiguration {
 
+  @Bean
+  DemoCreator demoCreator() {
+    DemoCreator demoCreator = new DemoCreator();
+    demoCreator.createDemoData();
+
+    return demoCreator;
+  }
+
   /**
    * Declare the SCMgr transaction manager.
    */
   @Bean
-  PlatformTransactionManager olmisTransactionManager(Arguments arguments) {
-    return new JpaTransactionManager(olmisEntityManagerFactory(arguments));
+  PlatformTransactionManager olmisTransactionManager(ToolProperties properties) {
+    return new JpaTransactionManager(olmisEntityManagerFactory(properties));
   }
 
   @Bean
-  EntityManager olmisEntityManager(Arguments arguments) {
-    return olmisEntityManagerFactory(arguments).createEntityManager();
+  EntityManager olmisEntityManager(ToolProperties properties) {
+    return olmisEntityManagerFactory(properties).createEntityManager();
   }
 
   @Bean
-  EntityManagerFactory olmisEntityManagerFactory(Arguments arguments) {
-    return olmisEntityManagerFactoryBean(arguments).getObject();
+  EntityManagerFactory olmisEntityManagerFactory(ToolProperties properties) {
+    return olmisEntityManagerFactoryBean(properties).getObject();
   }
 
   /**
    * Declare the SCMgr entity manager factory.
    */
   @Bean
-  LocalContainerEntityManagerFactoryBean olmisEntityManagerFactoryBean(Arguments arguments) {
+  LocalContainerEntityManagerFactoryBean olmisEntityManagerFactoryBean(ToolProperties properties) {
     LocalContainerEntityManagerFactoryBean entityManagerFactory =
         new LocalContainerEntityManagerFactoryBean();
 
-    entityManagerFactory.setDataSource(olmisDataSource(arguments));
+    entityManagerFactory.setDataSource(olmisDataSource(properties));
     entityManagerFactory.setPackagesToScan(
         "mw.gov.health.lmis.migration.tool.openlmis.fulfillment.domain",
         "mw.gov.health.lmis.migration.tool.openlmis.requisition.domain",
@@ -71,16 +80,19 @@ public class OlmisConfiguration {
 
     entityManagerFactory.setJpaVendorAdapter(vendorAdapter);
 
-    Properties properties = new Properties();
-    properties.setProperty(
+    Properties jpaProperties = new Properties();
+    jpaProperties.setProperty(
         IMPLICIT_NAMING_STRATEGY, ImplicitNamingStrategyJpaCompliantImpl.class.getName()
     );
-    properties.setProperty(PHYSICAL_NAMING_STRATEGY, CustomPhysicalNamingStrategy.class.getName());
-    properties.setProperty(DIALECT, PostgreSQL94Dialect.class.getName());
-    properties.setProperty(SHOW_SQL, "false");
-    properties.setProperty("hibernate.hbm2ddl.auto", "create-drop");
+    jpaProperties.setProperty(PHYSICAL_NAMING_STRATEGY, CustomPhysicalNamingStrategy.class.getName());
 
-    entityManagerFactory.setJpaProperties(properties);
+    ToolOlmisConfiguration olmis = properties.getConfiguration().getOlmis();
+
+    jpaProperties.setProperty(DIALECT, olmis.getDialect().getName());
+    jpaProperties.setProperty(SHOW_SQL, String.valueOf(olmis.isShowSql()));
+    jpaProperties.setProperty("hibernate.hbm2ddl.auto", olmis.getHbm2ddl());
+
+    entityManagerFactory.setJpaProperties(jpaProperties);
 
     return entityManagerFactory;
   }
@@ -89,24 +101,26 @@ public class OlmisConfiguration {
    * Declare the SCMgr data source.
    */
   @Bean
-  DataSource olmisDataSource(Arguments arguments) {
-    Properties connectionProperties = new Properties();
-    connectionProperties.put("stringtype", "unspecified");
+  DataSource olmisDataSource(ToolProperties properties) {
+    ToolOlmisDataSourceConfiguration dataSource = properties
+        .getConfiguration()
+        .getOlmis()
+        .getDataSource();
 
-    DriverManagerDataSource dataSource = new DriverManagerDataSource();
-    dataSource.setDriverClassName(Driver.class.getName());
-    dataSource.setUrl(generateUrl(arguments));
-    dataSource.setUsername(defaultIfBlank(arguments.getUsername(), "postgres"));
-    dataSource.setPassword(defaultIfBlank(arguments.getPassword(), "p@ssw0rd"));
-    dataSource.setConnectionProperties(connectionProperties);
+    DriverManagerDataSource ds = new DriverManagerDataSource();
+    ds.setDriverClassName(dataSource.getDriverClass().getName());
+    ds.setUrl(generateUrl(dataSource));
+    ds.setUsername(defaultIfBlank(dataSource.getUsername(), "postgres"));
+    ds.setPassword(defaultIfBlank(dataSource.getPassword(), "p@ssw0rd"));
+    ds.setConnectionProperties(dataSource.getConnectionProperties());
 
-    return dataSource;
+    return ds;
   }
 
-  private String generateUrl(Arguments arguments) {
-    String host = defaultIfBlank(arguments.getHost(), "localhost");
-    Integer port = defaultIfNull(arguments.getPort(), 5432);
-    String database = defaultIfBlank(arguments.getDatabase(), "open_lmis");
+  private String generateUrl(ToolOlmisDataSourceConfiguration dataSource) {
+    String host = defaultIfBlank(dataSource.getHost(), "localhost");
+    Integer port = defaultIfNull(dataSource.getPort(), 5432);
+    String database = defaultIfBlank(dataSource.getDatabase(), "open_lmis");
 
     return String.format("jdbc:postgresql://%s:%d/%s", host, port, database);
   }

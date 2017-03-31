@@ -4,9 +4,6 @@ import static org.hibernate.cfg.AvailableSettings.DIALECT;
 import static org.hibernate.cfg.AvailableSettings.HBM2DDL_AUTO;
 import static org.hibernate.cfg.AvailableSettings.SHOW_SQL;
 
-import net.ucanaccess.jdbc.UcanaccessDriver;
-
-import org.hibernate.dialect.H2Dialect;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
@@ -17,7 +14,9 @@ import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
 import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
 import org.springframework.transaction.PlatformTransactionManager;
 
-import mw.gov.health.lmis.migration.tool.Arguments;
+import mw.gov.health.lmis.migration.tool.config.ToolProperties;
+import mw.gov.health.lmis.migration.tool.config.ToolScmConfiguration;
+import mw.gov.health.lmis.migration.tool.config.ToolScmDataSourceConfiguration;
 
 import java.util.Properties;
 
@@ -36,18 +35,18 @@ public class ScmConfiguration {
    */
   @Bean
   @Primary
-  PlatformTransactionManager scmTransactionManager(Arguments arguments) {
-    return new JpaTransactionManager(scmEntityManagerFactory(arguments));
+  PlatformTransactionManager scmTransactionManager(ToolProperties properties) {
+    return new JpaTransactionManager(scmEntityManagerFactory(properties));
   }
 
   @Bean
-  EntityManager scmEntityManager(Arguments arguments) {
-    return scmEntityManagerFactory(arguments).createEntityManager();
+  EntityManager scmEntityManager(ToolProperties properties) {
+    return scmEntityManagerFactory(properties).createEntityManager();
   }
 
   @Bean
-  EntityManagerFactory scmEntityManagerFactory(Arguments arguments) {
-    return scmEntityManagerFactoryBean(arguments).getObject();
+  EntityManagerFactory scmEntityManagerFactory(ToolProperties properties) {
+    return scmEntityManagerFactoryBean(properties).getObject();
   }
 
   /**
@@ -55,22 +54,24 @@ public class ScmConfiguration {
    */
   @Bean
   @Primary
-  LocalContainerEntityManagerFactoryBean scmEntityManagerFactoryBean(Arguments arguments) {
+  LocalContainerEntityManagerFactoryBean scmEntityManagerFactoryBean(ToolProperties properties) {
     LocalContainerEntityManagerFactoryBean entityManagerFactory =
         new LocalContainerEntityManagerFactoryBean();
 
-    entityManagerFactory.setDataSource(scmDataSource(arguments));
+    ToolScmConfiguration scm = properties.getConfiguration().getScm();
+
+    entityManagerFactory.setDataSource(scmDataSource(properties));
     entityManagerFactory.setPackagesToScan("mw.gov.health.lmis.migration.tool.scm.domain");
 
     HibernateJpaVendorAdapter vendorAdapter = new HibernateJpaVendorAdapter();
     entityManagerFactory.setJpaVendorAdapter(vendorAdapter);
 
-    Properties properties = new Properties();
-    properties.setProperty(DIALECT, H2Dialect.class.getName());
-    properties.setProperty(SHOW_SQL, "false");
-    properties.setProperty(HBM2DDL_AUTO, "validate");
+    Properties jpaProperties = new Properties();
+    jpaProperties.setProperty(DIALECT, scm.getDialect().getName());
+    jpaProperties.setProperty(SHOW_SQL, String.valueOf(scm.isShowSql()));
+    jpaProperties.setProperty(HBM2DDL_AUTO, scm.getHbm2ddl());
 
-    entityManagerFactory.setJpaProperties(properties);
+    entityManagerFactory.setJpaProperties(jpaProperties);
 
     return entityManagerFactory;
   }
@@ -80,10 +81,17 @@ public class ScmConfiguration {
    */
   @Bean
   @Primary
-  DataSource scmDataSource(Arguments arguments) {
+  DataSource scmDataSource(ToolProperties properties) {
+    ToolScmDataSourceConfiguration configuration = properties
+        .getConfiguration()
+        .getScm()
+        .getDataSource();
+
     DriverManagerDataSource dataSource = new DriverManagerDataSource();
-    dataSource.setDriverClassName(UcanaccessDriver.class.getName());
-    dataSource.setUrl("jdbc:ucanaccess://" + arguments.getFile() + ";memory=false");
+    dataSource.setDriverClassName(configuration.getDriverClass().getName());
+    dataSource.setUrl(
+        "jdbc:ucanaccess://" + configuration.getFile() + ";memory=" + configuration.isMemory()
+    );
 
     return dataSource;
   }

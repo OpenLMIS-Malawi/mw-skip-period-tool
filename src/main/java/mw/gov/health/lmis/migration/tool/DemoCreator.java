@@ -1,15 +1,13 @@
 package mw.gov.health.lmis.migration.tool;
 
+import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Multimap;
 
-import org.springframework.batch.core.Job;
-import org.springframework.batch.core.JobParameters;
-import org.springframework.batch.core.launch.JobLauncher;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.CommandLineRunner;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.context.annotation.Bean;
 
+import mw.gov.health.lmis.migration.tool.config.ToolProgramMapping;
+import mw.gov.health.lmis.migration.tool.config.ToolProperties;
 import mw.gov.health.lmis.migration.tool.openlmis.BaseEntity;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.Code;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.FacilityType;
@@ -33,6 +31,7 @@ import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.Olmis
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.util.ReferenceDataUtil;
 import mw.gov.health.lmis.migration.tool.openlmis.requisition.repository.OlmisRequisitionTemplateRepository;
 import mw.gov.health.lmis.migration.tool.openlmis.requisition.util.RequsitionUtil;
+import mw.gov.health.lmis.migration.tool.scm.domain.CategoryProductJoin;
 import mw.gov.health.lmis.migration.tool.scm.domain.Main;
 import mw.gov.health.lmis.migration.tool.scm.repository.AdjustmentTypeRepository;
 import mw.gov.health.lmis.migration.tool.scm.repository.CategoryProductJoinRepository;
@@ -40,7 +39,6 @@ import mw.gov.health.lmis.migration.tool.scm.repository.FacilityRepository;
 import mw.gov.health.lmis.migration.tool.scm.repository.MainRepository;
 import mw.gov.health.lmis.migration.tool.scm.repository.ProductRepository;
 import mw.gov.health.lmis.migration.tool.scm.repository.ProgramRepository;
-import mw.gov.health.lmis.migration.tool.scm.util.Grouping;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -49,8 +47,7 @@ import java.util.Random;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
-@SpringBootApplication
-public class AppConfiguration {
+public class DemoCreator {
 
   @Autowired
   private ReferenceDataUtil referenceDataUtil;
@@ -112,21 +109,10 @@ public class AppConfiguration {
   @Autowired
   private OlmisGeographicZoneRepository olmisGeographicZoneRepository;
 
-  /**
-   * Here the application starts with spring context.
-   */
-  @Bean
-  public CommandLineRunner commandLineRunner(JobLauncher jobLauncher, Job migrationJob) {
-    return args -> {
-      // create demo data (it will be removed in future)
-      createDemoData();
+  @Autowired
+  private ToolProperties toolProperties;
 
-      // run the transform job
-      jobLauncher.run(migrationJob, new JobParameters());
-    };
-  }
-
-  private void createDemoData() {
+  public void createDemoData() {
     olmisUserRepository.save(
         referenceDataUtil.create("supply chain manager", "supply chain", "manager")
     );
@@ -165,7 +151,7 @@ public class AppConfiguration {
     );
 
     olmisFacilityRepository.save(referenceDataUtil.create(
-        "Program", "Program", facilityType, zones.get(random.nextInt(zones.size()))
+        "Program", "program", facilityType, zones.get(random.nextInt(zones.size()))
     ));
     olmisFacilityRepository.save(referenceDataUtil.create(
         "CMST - Central", "cmstc", facilityType, centralEastZone));
@@ -203,10 +189,24 @@ public class AppConfiguration {
         .collect(Collectors.toList())
     );
 
-    Grouping
-        .groupByCategoryName(
-            categoryProductJoinRepository.findAll(), cat -> cat.getProgram().getName()
-        )
+    Multimap<String, CategoryProductJoin> groups = HashMultimap.create();
+    for (CategoryProductJoin category : categoryProductJoinRepository.findAll()) {
+      String program = toolProperties
+          .getMapping()
+          .getPrograms()
+          .stream()
+          .filter(cp -> cp
+              .getCategories()
+              .contains(category.getProgram().getName())
+          )
+          .map(ToolProgramMapping::getCode)
+          .findFirst()
+          .orElse(null);
+
+      groups.put(program, category);
+    }
+
+    groups
         .asMap()
         .forEach((code, categories) -> {
           Program program =

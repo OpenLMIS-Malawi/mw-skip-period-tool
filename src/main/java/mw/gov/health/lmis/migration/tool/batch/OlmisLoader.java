@@ -7,16 +7,20 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import mw.gov.health.lmis.migration.tool.Pair;
+import mw.gov.health.lmis.migration.tool.config.ToolProperties;
 import mw.gov.health.lmis.migration.tool.openlmis.ExternalStatus;
 import mw.gov.health.lmis.migration.tool.openlmis.fulfillment.domain.Order;
+import mw.gov.health.lmis.migration.tool.openlmis.fulfillment.domain.OrderNumberConfiguration;
 import mw.gov.health.lmis.migration.tool.openlmis.fulfillment.repository.OrderRepository;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.Facility;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.Orderable;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.ProcessingPeriod;
+import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.Program;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.User;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.OlmisFacilityRepository;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.OlmisOrderableRepository;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.OlmisProcessingPeriodRepository;
+import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.OlmisProgramRepository;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.OlmisUserRepository;
 import mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.Requisition;
 import mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.RequisitionLineItem;
@@ -53,6 +57,12 @@ public class OlmisLoader implements ItemWriter<List<Pair<Requisition, Order>>> {
   @Autowired
   private OrderRepository orderRepository;
 
+  @Autowired
+  private OlmisProgramRepository olmisProgramRepository;
+
+  @Autowired
+  private ToolProperties toolProperties;
+
   /**
    * Writes Requisitions into OpenLMIS database.
    */
@@ -65,9 +75,14 @@ public class OlmisLoader implements ItemWriter<List<Pair<Requisition, Order>>> {
           Requisition requisition = pair.getLeft();
           olmisRequisitionRepository.save(requisition);
 
+          OrderNumberConfiguration config = toolProperties
+              .getParameters()
+              .getOrderNumberConfiguration();
+          Program program = olmisProgramRepository.findOne(requisition.getProgramId());
           Order order = pair.getRight();
-          order.setOrderCode("O" + requisition.getId() + "R");
 
+          order.setOrderCode(config.generateOrderNumber(order, program));
+          
           orderRepository.save(order);
 
           print(requisition);

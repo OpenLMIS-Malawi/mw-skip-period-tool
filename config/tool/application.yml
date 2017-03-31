@@ -1,0 +1,100 @@
+spring:
+    main:
+        banner-mode: "log"
+
+tool:
+    name: "SCMgr Migration Tool"
+    parameters:
+        period:
+            days: 0
+            months: 0
+            years: 5
+        creator: "supply chain manager"
+        requestedQuantityExplanation: "transferred from supply manager"
+        timeZone: "CAT"
+        orderNumberConfiguration:
+            orderNumberPrefix: "O"
+            includeOrderNumberPrefix: true
+            includeProgramCode: false
+            includeTypeSuffix: false
+    configuration:
+        scm:
+            dialect: "org.hibernate.dialect.H2Dialect"
+            showSql: false
+            hbm2ddl: "validate"
+            dataSource:
+                file: "file1.mdb"
+                memory: false
+                driverClass: "net.ucanaccess.jdbc.UcanaccessDriver"
+        olmis:
+            dialect: "org.hibernate.dialect.PostgreSQL94Dialect"
+            showSql: false
+            hbm2ddl: "validate"
+            dataSource:
+                connectionProperties:
+                    stringtype: "unspecified"
+                driverClass: "org.postgresql.Driver"
+                host: "localhost"
+                port: 5432
+                database: "open_lmis"
+                username: "postgres"
+                password: "p@ssw0rd"
+        batch:
+            chunk: 10
+            skipPolicy: "org.springframework.batch.core.step.skip.AlwaysSkipItemSkipPolicy"
+    mapping:
+        programs:
+            - code: "em"
+              categories:
+                  - "Tablets/Capsules"
+                  - "Injectables"
+                  - "Vaccines & Toxoids"
+                  - "Galenicals: Syrups/Elixirs/Suspensions"
+                  - "Dispensary Items"
+                  - "Surgical Dressings"
+                  - "Sutures"
+                  - "Surgical & Hospital Equipment"
+                  - "X-Ray Films & Supplies"
+                  - "Dental Items"
+                  - "Class D: Raw Materials"
+                  - "Class M: Laboratory Reagents And Materials (Supplies)"
+                  - "Class Q: Miscellaneous Items"
+                  - "Class R: Hospital Bedings"
+                  - "Class S: Slow Moving Items"
+                  - "Mental Special"
+                  - "Surgical Equipment"
+              warehouses:
+                  - geographicZone: "central"
+                    code: "cmstc"
+                  - geographicZone: "south"
+                    code: "cmsts"
+                  - geographicZone: "northern"
+                    code: "cmstn"
+            - code: "mal"
+              categories:
+                  - "Malaria Program Medicines & Health Supplies"
+              warehouses:
+                  - code: "program"
+            - code: "fp"
+              categories:
+                  - "Reproductive Health Program Medicines"
+              warehouses:
+                  - code: "program"
+            - code: "hiv"
+              categories:
+                  - "HIV/AID Control Program Medicines"
+              warehouses:
+                  - code: "program"
+            - code: "tb"
+              categories:
+                  - "Tuberculosis Program Medicines"
+              warehouses:
+                  - code: "program"
+        facilities:
+            A: "A"
+            B: "B"
+        products:
+            Chlorpromazine 25mg: "Chlorpromazine 25mg"
+        stockAdjustmentReasons:
+            DE Credit: "Transfer In"
+            DE Debit: "Transfer Out"

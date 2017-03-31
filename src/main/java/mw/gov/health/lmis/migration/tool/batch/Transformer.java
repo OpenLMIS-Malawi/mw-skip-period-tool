@@ -2,10 +2,12 @@ package mw.gov.health.lmis.migration.tool.batch;
 
 import static java.time.temporal.TemporalAdjusters.firstDayOfMonth;
 import static mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.LineItemFieldsCalculator.calculateTotalLossesAndAdjustments;
+import static org.apache.commons.lang3.StringUtils.containsIgnoreCase;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static org.apache.commons.lang3.StringUtils.startsWithIgnoreCase;
 
+import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 
 import org.apache.commons.lang3.StringUtils;
@@ -14,6 +16,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import mw.gov.health.lmis.migration.tool.Pair;
+import mw.gov.health.lmis.migration.tool.config.ToolProgramMapping;
+import mw.gov.health.lmis.migration.tool.config.ToolProgramWarehouseMapping;
+import mw.gov.health.lmis.migration.tool.config.ToolProperties;
+import mw.gov.health.lmis.migration.tool.openlmis.ExternalStatus;
 import mw.gov.health.lmis.migration.tool.openlmis.fulfillment.domain.Order;
 import mw.gov.health.lmis.migration.tool.openlmis.fulfillment.domain.OrderStatus;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.Facility;
@@ -31,7 +37,6 @@ import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.Olmis
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.OlmisUserRepository;
 import mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.Requisition;
 import mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.RequisitionLineItem;
-import mw.gov.health.lmis.migration.tool.openlmis.ExternalStatus;
 import mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.RequisitionTemplate;
 import mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.StatusMessage;
 import mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.StockAdjustment;
@@ -41,7 +46,6 @@ import mw.gov.health.lmis.migration.tool.scm.domain.Adjustment;
 import mw.gov.health.lmis.migration.tool.scm.domain.Item;
 import mw.gov.health.lmis.migration.tool.scm.domain.Main;
 import mw.gov.health.lmis.migration.tool.scm.repository.ItemRepository;
-import mw.gov.health.lmis.migration.tool.scm.util.Grouping;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -86,6 +90,9 @@ public class Transformer implements ItemProcessor<Main, List<Pair<Requisition, O
   @Autowired
   private OlmisUserRepository olmisUserRepository;
 
+  @Autowired
+  private ToolProperties toolProperties;
+
   /**
    * Converts the given {@link Main} object into {@link Requisition} object.
    */
@@ -95,8 +102,24 @@ public class Transformer implements ItemProcessor<Main, List<Pair<Requisition, O
         main.getId().getProcessingDate(), main.getId().getFacility()
     );
 
-    return Grouping
-        .groupByCategoryName(items, item -> item.getCategoryProduct().getProgram().getName())
+    Multimap<String, Item> groups = HashMultimap.create();
+    for (Item item : items) {
+      String program = toolProperties
+          .getMapping()
+          .getPrograms()
+          .stream()
+          .filter(cp -> cp
+              .getCategories()
+              .contains(item.getCategoryProduct().getProgram().getName())
+          )
+          .map(ToolProgramMapping::getCode)
+          .findFirst()
+          .orElse(null);
+
+      groups.put(program, item);
+    }
+
+    return groups
         .asMap()
         .entrySet()
         .stream()
@@ -108,8 +131,13 @@ public class Transformer implements ItemProcessor<Main, List<Pair<Requisition, O
                                                      Main main) {
 
     mw.gov.health.lmis.migration.tool.scm.domain.Facility mainFacility = main.getId().getFacility();
+
+    String code = toolProperties
+        .getMapping()
+        .getFacilities()
+        .getProperty(mainFacility.getCode(), mainFacility.getCode());
     mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.Facility facility =
-        olmisFacilityRepository.findByCode(mainFacility.getCode());
+        olmisFacilityRepository.findByCode(code);
 
     Program program = olmisProgramRepository.findByName(programCode);
 
@@ -127,9 +155,17 @@ public class Transformer implements ItemProcessor<Main, List<Pair<Requisition, O
 
     List<Pair<Orderable, Double>> pairs = items
         .stream()
-        .map(item -> new Pair<>(
-            olmisOrderableRepository.findFirstByName(item.getProduct().getName()),
-            getMonthsOfStock(item))
+        .map(item -> {
+              String defaultName = item.getProduct().getName();
+              String name = toolProperties
+                  .getMapping()
+                  .getProducts()
+                  .getProperty(defaultName, defaultName);
+
+              return new Pair<>(
+                  olmisOrderableRepository.findFirstByName(name),
+                  getMonthsOfStock(item));
+            }
         ).collect(Collectors.toList());
 
     RequisitionTemplate template = olmisRequisitionTemplateRepository
@@ -182,7 +218,14 @@ public class Transformer implements ItemProcessor<Main, List<Pair<Requisition, O
     Orderable orderable = olmisOrderableRepository.findOne(line.getOrderableId());
     Item item = items
         .stream()
-        .filter(elem -> elem.getProduct().getName().equals(orderable.getName()))
+        .filter(elem -> {
+          String defaultName = elem.getProduct().getName();
+          String name = toolProperties
+              .getMapping()
+              .getProducts()
+              .getProperty(defaultName, defaultName);
+          return name.equals(orderable.getName());
+        })
         .findFirst()
         .orElseThrow(() -> new IllegalStateException("can't find correct item element from list"));
 
@@ -199,13 +242,11 @@ public class Transformer implements ItemProcessor<Main, List<Pair<Requisition, O
         continue;
       }
 
-      String name = adjustment.getType().getName();
-
-      if ("de credit".equalsIgnoreCase(name)) {
-        name = "transfer in";
-      } else if ("de debit".equalsIgnoreCase(name)) {
-        name = "transfer out";
-      }
+      String defaultName = adjustment.getType().getName();
+      String name = toolProperties
+          .getMapping()
+          .getStockAdjustmentReasons()
+          .getProperty(defaultName, defaultName);
 
       StockAdjustmentReason stockAdjustmentReasonDto = olmisStockAdjustmentReasonRepository
           .findByProgramAndName(program, name);
@@ -228,7 +269,9 @@ public class Transformer implements ItemProcessor<Main, List<Pair<Requisition, O
     requisitionLineItem.setStockOnHand(item.getClosingBalance());
     requisitionLineItem.setCalculatedOrderQuantity(item.getCalculatedRequiredQuantity());
     requisitionLineItem.setRequestedQuantity(item.getRequiredQuantity());
-    requisitionLineItem.setRequestedQuantityExplanation("transferred from supply manager");
+    requisitionLineItem.setRequestedQuantityExplanation(
+        toolProperties.getParameters().getRequestedQuantityExplanation()
+    );
     requisitionLineItem.setAdjustedConsumption(item.getAdjustedDispensedQuantity());
     requisitionLineItem.setNonFullSupply(false);
 
@@ -236,37 +279,48 @@ public class Transformer implements ItemProcessor<Main, List<Pair<Requisition, O
   }
 
   private ZonedDateTime safeNull(LocalDateTime dateTime) {
-    return null == dateTime
-        ? null
-        : dateTime.atZone(TimeZone.getTimeZone("CAT").toZoneId());
+    if (null == dateTime) {
+      return null;
+    }
+
+    String timeZone = toolProperties.getParameters().getTimeZone();
+    return dateTime.atZone(TimeZone.getTimeZone(timeZone).toZoneId());
   }
 
   private Order convertToOrder(Requisition requisition, User user, Program program,
                                Facility facility) {
     Facility warehouse = null;
+    List<ToolProgramWarehouseMapping> warehouses = toolProperties
+        .getMapping()
+        .getPrograms()
+        .stream()
+        .filter(mp -> mp.getCode().equals(program.getCode()))
+        .findFirst()
+        .orElseThrow(
+            () -> new IllegalStateException(
+                "Can't find warehouse mapping for program: " + program.getCode()
+            )
+        )
+        .getWarehouses();
 
-    if ("em".equalsIgnoreCase(program.getCode().toString())) {
-      GeographicZone zone = facility.getGeographicZone();
+    GeographicZone zone = facility.getGeographicZone();
 
-      while (null != zone) {
-        String zoneName = zone.getName();
+    while (null != zone) {
+      String zoneName = zone.getName();
 
-        if (startsWithIgnoreCase(zoneName, "central")) {
-          warehouse = olmisFacilityRepository.findByName("CMST - Central");
-        } else if (startsWithIgnoreCase(zoneName, "south")) {
-          warehouse = olmisFacilityRepository.findByName("CMST - South");
-        } else if (startsWithIgnoreCase(zoneName, "northern")) {
-          warehouse = olmisFacilityRepository.findByName("CMST - North");
-        }
-
-        if (null == warehouse) {
-          zone = zone.getParent();
-        } else {
+      for (ToolProgramWarehouseMapping supplying : warehouses) {
+        if (null == supplying.getGeographicZone()
+            || containsIgnoreCase(zoneName, supplying.getGeographicZone())) {
+          warehouse = olmisFacilityRepository.findByCode(supplying.getCode());
           break;
         }
       }
-    } else {
-      warehouse = olmisFacilityRepository.findByName("Program");
+
+      if (null == warehouse) {
+        zone = zone.getParent();
+      } else {
+        break;
+      }
     }
 
     if (null != warehouse) {

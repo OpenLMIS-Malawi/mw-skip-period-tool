@@ -6,7 +6,7 @@ import org.springframework.batch.item.database.AbstractPagingItemReader;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import mw.gov.health.lmis.migration.tool.Arguments;
+import mw.gov.health.lmis.migration.tool.config.ToolProperties;
 import mw.gov.health.lmis.migration.tool.scm.domain.Main;
 import mw.gov.health.lmis.migration.tool.scm.repository.MainRepository;
 
@@ -21,7 +21,7 @@ public class SupplyManagerExtactor extends AbstractPagingItemReader<Main> {
   private MainRepository mainRepository;
 
   @Autowired
-  private Arguments arguments;
+  private ToolProperties toolProperties;
 
   public SupplyManagerExtactor() {
     setPageSize(10);
@@ -32,7 +32,7 @@ public class SupplyManagerExtactor extends AbstractPagingItemReader<Main> {
     LOG.debug("Reading mains. Page: {}, page size: {}", getPage(), getPageSize());
 
     List<Main> content = mainRepository.searchInPeriod(
-        arguments.getPeriod(), getPage(), getPageSize()
+        toolProperties.getParameters().getPeriod(), getPage(), getPageSize()
     );
 
     LOG.info("{} main have been retrieved.", content.size());

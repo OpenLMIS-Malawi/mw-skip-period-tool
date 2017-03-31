@@ -9,6 +9,7 @@ import mw.gov.health.lmis.migration.tool.scm.repository.custom.MainRepositoryCus
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.Period;
 import java.util.List;
 
 import javax.persistence.EntityManager;
@@ -25,13 +26,13 @@ public class MainRepositoryImpl implements MainRepositoryCustom {
 
 
   @Override
-  public List<Main> searchInPeriod(Integer period, Integer page, Integer pageSize) {
+  public List<Main> searchInPeriod(Period period, Integer page, Integer pageSize) {
     CriteriaBuilder builder = entityManager.getCriteriaBuilder();
     CriteriaQuery<Main> query = builder.createQuery(Main.class);
     Root<Main> root = query.from(Main.class);
 
     LocalDateTime current = LocalDate.now().atStartOfDay();
-    LocalDateTime previous = current.minusYears(period);
+    LocalDateTime previous = current.minus(period);
 
     Path<Facility> facilityField = root.get("id").get("facility");
     Path<LocalDateTime> processingDateField = root.get("id").get("processingDate");
