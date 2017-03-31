@@ -116,6 +116,9 @@ public class DemoCreator {
   @Autowired
   private ToolProperties toolProperties;
 
+  /**
+   * Creates demo data.
+   */
   public void createDemoData() {
     olmisUserRepository.save(
         referenceDataUtil.create("supply chain manager", "supply chain", "manager")

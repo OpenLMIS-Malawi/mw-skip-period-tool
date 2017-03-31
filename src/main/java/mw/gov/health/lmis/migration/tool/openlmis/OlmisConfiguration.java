@@ -75,7 +75,9 @@ public class OlmisConfiguration {
     jpaProperties.setProperty(
         IMPLICIT_NAMING_STRATEGY, ImplicitNamingStrategyJpaCompliantImpl.class.getName()
     );
-    jpaProperties.setProperty(PHYSICAL_NAMING_STRATEGY, CustomPhysicalNamingStrategy.class.getName());
+    jpaProperties.setProperty(
+        PHYSICAL_NAMING_STRATEGY, CustomPhysicalNamingStrategy.class.getName()
+    );
 
     ToolOlmisConfiguration olmis = properties.getConfiguration().getOlmis();
 

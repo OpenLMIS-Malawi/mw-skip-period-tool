@@ -159,17 +159,17 @@ public class Transformer implements ItemProcessor<Main, List<Pair<Requisition, O
     List<Pair<Orderable, Double>> pairs = items
         .stream()
         .map(item -> {
-              String defaultName = item.getProduct().getName();
-              String name = toolProperties
-                  .getMapping()
-                  .getProducts()
-                  .getProperty(defaultName, defaultName);
+          String defaultName = item.getProduct().getName();
+          String name = toolProperties
+              .getMapping()
+              .getProducts()
+              .getProperty(defaultName, defaultName);
 
-              return new Pair<>(
-                  olmisOrderableRepository.findFirstByName(name),
-                  getMonthsOfStock(item));
-            }
-        ).collect(Collectors.toList());
+          return new Pair<>(
+              olmisOrderableRepository.findFirstByName(name),
+              getMonthsOfStock(item));
+        })
+        .collect(Collectors.toList());
 
     RequisitionTemplate template = olmisRequisitionTemplateRepository
         .findByProgramId(program.getId());

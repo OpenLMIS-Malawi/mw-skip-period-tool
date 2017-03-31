@@ -58,14 +58,14 @@ public class ScmConfiguration {
     LocalContainerEntityManagerFactoryBean entityManagerFactory =
         new LocalContainerEntityManagerFactoryBean();
 
-    ToolScmConfiguration scm = properties.getConfiguration().getScm();
-
     entityManagerFactory.setDataSource(scmDataSource(properties));
     entityManagerFactory.setPackagesToScan("mw.gov.health.lmis.migration.tool.scm.domain");
 
     HibernateJpaVendorAdapter vendorAdapter = new HibernateJpaVendorAdapter();
     entityManagerFactory.setJpaVendorAdapter(vendorAdapter);
 
+    ToolScmConfiguration scm = properties.getConfiguration().getScm();
+    
     Properties jpaProperties = new Properties();
     jpaProperties.setProperty(DIALECT, scm.getDialect().getName());
     jpaProperties.setProperty(SHOW_SQL, String.valueOf(scm.isShowSql()));
