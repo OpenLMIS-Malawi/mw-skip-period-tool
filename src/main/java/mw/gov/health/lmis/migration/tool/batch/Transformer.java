@@ -3,6 +3,7 @@ package mw.gov.health.lmis.migration.tool.batch;
 import static java.time.temporal.TemporalAdjusters.firstDayOfMonth;
 import static mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.LineItemFieldsCalculator.calculateTotalLossesAndAdjustments;
 import static org.apache.commons.lang3.StringUtils.containsIgnoreCase;
+import static org.apache.commons.lang3.StringUtils.equalsIgnoreCase;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import com.google.common.collect.HashMultimap;
@@ -104,19 +105,21 @@ public class Transformer implements ItemProcessor<Main, List<Pair<Requisition, O
 
     Multimap<String, Item> groups = HashMultimap.create();
     for (Item item : items) {
-      String program = toolProperties
+      toolProperties
           .getMapping()
           .getPrograms()
           .stream()
-          .filter(cp -> cp
+          .filter(cp -> null != cp
               .getCategories()
-              .contains(item.getCategoryProduct().getProgram().getName())
+              .stream()
+              .filter(cat -> equalsIgnoreCase(
+                  cat, item.getCategoryProduct().getProgram().getName())
+              )
+              .findFirst()
+              .orElse(null)
           )
           .map(ToolProgramMapping::getCode)
-          .findFirst()
-          .orElse(null);
-
-      groups.put(program, item);
+          .forEach(code -> groups.put(code, item));
     }
 
     return groups
@@ -294,7 +297,7 @@ public class Transformer implements ItemProcessor<Main, List<Pair<Requisition, O
         .getMapping()
         .getPrograms()
         .stream()
-        .filter(mp -> mp.getCode().equals(program.getCode()))
+        .filter(mp -> mp.getCode().equals(program.getCode().toString()))
         .findFirst()
         .orElseThrow(
             () -> new IllegalStateException(

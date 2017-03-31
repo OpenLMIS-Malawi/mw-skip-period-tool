@@ -11,7 +11,6 @@ import lombok.Setter;
 @Component
 @ConfigurationProperties(prefix = "tool")
 public class ToolProperties {
-  private String name;
   private ToolParameters parameters = new ToolParameters();
   private ToolConfiguration configuration = new ToolConfiguration();
   private ToolMapping mapping = new ToolMapping();

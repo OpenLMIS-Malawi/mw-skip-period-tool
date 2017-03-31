@@ -1,7 +1,12 @@
 package mw.gov.health.lmis.migration.tool;
 
+import org.springframework.batch.core.Job;
+import org.springframework.batch.core.JobParameters;
+import org.springframework.batch.core.launch.JobLauncher;
+import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.annotation.Bean;
 
 @SpringBootApplication
 public class App {
@@ -14,6 +19,15 @@ public class App {
    */
   public static void main(String[] args) {
     SpringApplication.run(App.class, args);
+  }
+
+  @Bean
+  CommandLineRunner commandLineRunner(JobLauncher jobLauncher, Job migrationJob,
+                                      DemoCreator demoCreator) {
+    return args -> {
+      demoCreator.createDemoData();
+      jobLauncher.run(migrationJob, new JobParameters());
+    };
   }
 
 }

@@ -1,10 +1,13 @@
 package mw.gov.health.lmis.migration.tool;
 
+import static org.apache.commons.lang3.StringUtils.equalsIgnoreCase;
+
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import mw.gov.health.lmis.migration.tool.config.ToolProgramMapping;
 import mw.gov.health.lmis.migration.tool.config.ToolProperties;
@@ -47,6 +50,7 @@ import java.util.Random;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
+@Component
 public class DemoCreator {
 
   @Autowired
@@ -167,6 +171,7 @@ public class DemoCreator {
         .map(Main::getId)
         .map(Main.ComplexId::getProcessingDate)
         .distinct()
+        .sorted()
         .map(referenceDataUtil::create)
         .collect(Collectors.toList())
     );
@@ -191,19 +196,19 @@ public class DemoCreator {
 
     Multimap<String, CategoryProductJoin> groups = HashMultimap.create();
     for (CategoryProductJoin category : categoryProductJoinRepository.findAll()) {
-      String program = toolProperties
+      toolProperties
           .getMapping()
           .getPrograms()
           .stream()
-          .filter(cp -> cp
+          .filter(cp -> null != cp
               .getCategories()
-              .contains(category.getProgram().getName())
+              .stream()
+              .filter(cat -> equalsIgnoreCase(cat, category.getProgram().getName()))
+              .findFirst()
+              .orElse(null)
           )
           .map(ToolProgramMapping::getCode)
-          .findFirst()
-          .orElse(null);
-
-      groups.put(program, category);
+          .forEach(code -> groups.put(code, category));
     }
 
     groups

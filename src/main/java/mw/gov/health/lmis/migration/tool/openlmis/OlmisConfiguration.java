@@ -17,7 +17,6 @@ import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
 import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
 import org.springframework.transaction.PlatformTransactionManager;
 
-import mw.gov.health.lmis.migration.tool.DemoCreator;
 import mw.gov.health.lmis.migration.tool.config.ToolOlmisConfiguration;
 import mw.gov.health.lmis.migration.tool.config.ToolOlmisDataSourceConfiguration;
 import mw.gov.health.lmis.migration.tool.config.ToolProperties;
@@ -33,14 +32,6 @@ import javax.sql.DataSource;
     entityManagerFactoryRef = "olmisEntityManagerFactory",
     transactionManagerRef = "olmisTransactionManager")
 public class OlmisConfiguration {
-
-  @Bean
-  DemoCreator demoCreator() {
-    DemoCreator demoCreator = new DemoCreator();
-    demoCreator.createDemoData();
-
-    return demoCreator;
-  }
 
   /**
    * Declare the SCMgr transaction manager.
