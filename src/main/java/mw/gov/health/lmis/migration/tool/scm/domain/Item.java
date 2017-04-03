@@ -1,50 +1,160 @@
 package mw.gov.health.lmis.migration.tool.scm.domain;
 
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import com.healthmarketscience.jackcess.Row;
 
-import java.time.LocalDateTime;
+import java.util.Date;
 
-@Getter
-@Setter
-@NoArgsConstructor
-public class Item {
-  private Integer id;
-  private String facility;
-  private LocalDateTime processingDate;
-  private String productName;
-  private String productDose;
-  private Integer categoryProduct;
-  private Integer product;
-  private Integer openingBalance;
-  private Integer receipts;
-  private Integer issuedQuantity;
-  private Integer dispensedQuantity;
-  private Integer adjustmentCount;
-  private String adjustmentType;
-  private Integer closingBalance;
-  private Integer sixMoBalance;
-  private Boolean errorOpeningBalance;
-  private Boolean errorClosingBalance;
-  private Short dataEntryStatus;
-  private Integer newVisits;
-  private Integer continuingVisits;
-  private Boolean errorRequiredQuantity;
-  private Boolean errorReceivedQuantity;
-  private Boolean errorAverageMonthlyConsumption;
-  private Integer averageMonthlyConsumption;
-  private Integer requiredQuantity;
-  private Integer receivedQuantity;
-  private String note;
-  private Integer onOrderQuantity;
-  private Boolean errorDispensedQuantityVsPurpose;
-  private Integer onHandQuantity;
-  private Boolean productStockedOut;
-  private Integer calculatedRequiredQuantity;
-  private Short stockedOutDays;
-  private Integer adjustedDispensedQuantity;
-  private Integer supplierIssuedQuantity;
-  private Integer maxStockQuantity;
-  private Boolean errorMaxStockQuantity;
+public class Item extends BaseEntity {
+
+  public Item(Row row) {
+    super(row);
+  }
+
+  public Integer getId() {
+    return getInt("ci_ctrItemID");
+  }
+
+  public String getFacility() {
+    return getString("Fac_Code");
+  }
+
+  public Date getProcessingDate() {
+    return getDate("P_Date");
+  }
+
+  public String getProductName() {
+    return getString("Prod_Name");
+  }
+
+  public String getProductDose() {
+    return getString("Prod_Dose");
+  }
+
+  public Integer getCategoryProduct() {
+    return getInt("lngCatProductID");
+  }
+
+  public Integer getProduct() {
+    return getInt("lngProductID");
+  }
+
+  public Integer getOpeningBalance() {
+    return getInt("Open_Bal");
+  }
+
+  public Integer getReceipts() {
+    return getInt("Receipts");
+  }
+
+  public Integer getIssuedQuantity() {
+    return getInt("Issues");
+  }
+
+  public Integer getDispensedQuantity() {
+    return getInt("Dispensed");
+  }
+
+  public Integer getAdjustmentCount() {
+    return getInt("Adjustments");
+  }
+
+  public String getAdjustmentType() {
+    return getString("Adj_Type");
+  }
+
+  public Integer getClosingBalance() {
+    return getInt("Closing_Bal");
+  }
+
+  public Integer getSixMoBalance() {
+    return getInt("6MO_Balance");
+  }
+
+  public Boolean getErrorOpeningBalance() {
+    return getBoolean("Err_OB");
+  }
+
+  public Boolean getErrorClosingBalance() {
+    return getBoolean("Err_CB");
+  }
+
+  public Short getDataEntryStatus() {
+    return getShort("DE_Stat");
+  }
+
+  public Integer getNewVisits() {
+    return getInt("New_Visits");
+  }
+
+  public Integer getContinuingVisits() {
+    return getInt("Cont_Visits");
+  }
+
+  public Boolean getErrorRequiredQuantity() {
+    return getBoolean("Err_qty_rqrd");
+  }
+
+  public Boolean getErrorReceivedQuantity() {
+    return getBoolean("Err_qty_rcvd");
+  }
+
+  public Boolean getErrorAverageMonthlyConsumption() {
+    return getBoolean("Err_AMC");
+  }
+
+  public Integer getAverageMonthlyConsumption() {
+    return getInt("Avg_mnthly_cons");
+  }
+
+  public Integer getRequiredQuantity() {
+    return getInt("Qty_required");
+  }
+
+  public Integer getReceivedQuantity() {
+    return getInt("Qty_received");
+  }
+
+  public String getNote() {
+    return getString("txtNotes");
+  }
+
+  public Integer getOnOrderQuantity() {
+    return getInt("Qty_OnOrder");
+  }
+
+  public Boolean getErrorDispensedQuantityVsPurpose() {
+    return getBoolean("Err_qty_DispVsPurpose");
+  }
+
+  public Integer getOnHandQuantity() {
+    return getInt("Qty_OnHand");
+  }
+
+  public Boolean getProductStockedOut() {
+    return getBoolean("fStockedOut");
+  }
+
+  public Integer getCalculatedRequiredQuantity() {
+    return getInt("Qty_RequiredCalc");
+  }
+
+  public Short getStockedOutDays() {
+    return getShort("intStockedOutDays");
+  }
+
+  public Integer getAdjustedDispensedQuantity() {
+    return getInt("DispensedAdj");
+  }
+
+  public Integer getSupplierIssuedQuantity() {
+    return getInt("qtySupplierIssued");
+  }
+
+  public Integer getMaxStockQuantity() {
+    return getInt("lngQtyMaxStock");
+  }
+
+  public Boolean getErrorMaxStockQuantity() {
+    return getBoolean("ERR_MaxStock");
+  }
 }

@@ -81,8 +81,9 @@ public class OlmisLoader implements ItemWriter<List<Pair<Requisition, Order>>> {
           Program program = olmisProgramRepository.findOne(requisition.getProgramId());
           Order order = pair.getRight();
 
+          order.setExternalId(requisition.getId());
           order.setOrderCode(config.generateOrderNumber(order, program));
-          
+
           orderRepository.save(order);
 
           print(requisition);

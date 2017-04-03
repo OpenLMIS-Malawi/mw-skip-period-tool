@@ -16,6 +16,10 @@ public class AdjustmentTypeRepository extends BaseRepository<AdjustmentType> {
 
   @Override
   AdjustmentType mapRow(Row row) {
-    return RowMapper.adjustmentType(row);
+    return new AdjustmentType(row);
+  }
+
+  public AdjustmentType findByType(String type) {
+    return find("Type_Code", type);
   }
 }

@@ -1,23 +1,34 @@
 package mw.gov.health.lmis.migration.tool.scm.domain;
 
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import com.healthmarketscience.jackcess.Row;
 
-@Getter
-@Setter
-@NoArgsConstructor
-public class AdjustmentType {
-  private String code;
-  private String name;
-  private Boolean negative;
-  private Boolean userCanEnter;
-  private Boolean active;
-  private String id;
+public class AdjustmentType extends BaseEntity {
 
-  @Override
-  public String toString() {
-    return code;
+  public AdjustmentType(Row row) {
+    super(row);
   }
-  
+
+  public String getCode() {
+    return getString("Type_Code");
+  }
+
+  public String getName() {
+    return getString("Type_Name");
+  }
+
+  public Boolean getNegative() {
+    return getBoolean("Always_Negative");
+  }
+
+  public Boolean getUserCanEnter() {
+    return getBoolean("UserCanEnter");
+  }
+
+  public Boolean getActive() {
+    return getBoolean("Adj_Active");
+  }
+
+  public String getId() {
+    return getString("adj_guidId");
+  }
 }

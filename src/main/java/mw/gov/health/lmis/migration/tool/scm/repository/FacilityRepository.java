@@ -16,6 +16,6 @@ public class FacilityRepository extends BaseRepository<Facility> {
 
   @Override
   Facility mapRow(Row row) {
-    return RowMapper.facility(row);
+    return new Facility(row);
   }
 }

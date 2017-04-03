@@ -16,7 +16,11 @@ public class CategoryProductJoinRepository extends BaseRepository<CategoryProduc
 
   @Override
   CategoryProductJoin mapRow(Row row) {
-    return RowMapper.categoryProductJoin(row);
+    return new CategoryProductJoin(row);
+  }
+
+  public CategoryProductJoin findById(Integer id) {
+    return find("ID", id);
   }
 
 }

@@ -44,7 +44,6 @@ import mw.gov.health.lmis.migration.tool.scm.repository.MainRepository;
 import mw.gov.health.lmis.migration.tool.scm.repository.ProductRepository;
 import mw.gov.health.lmis.migration.tool.scm.repository.ProgramRepository;
 
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -121,7 +120,7 @@ public class DemoCreator {
   /**
    * Creates demo data.
    */
-  public void createDemoData() throws IOException {
+  public void createDemoData() {
     olmisUserRepository.save(
         referenceDataUtil.create("supply chain manager", "supply chain", "manager")
     );
@@ -212,7 +211,7 @@ public class DemoCreator {
               .stream()
               .filter(cat -> {
                 mw.gov.health.lmis.migration.tool.scm.domain.Program program = programRepository
-                    .find("Program_ID", category.getProgram());
+                    .findByProgramId(category.getProgram());
                 return equalsIgnoreCase(cat, program.getName());
               })
               .findFirst()
@@ -231,12 +230,12 @@ public class DemoCreator {
           categories
               .forEach(category -> {
                 Product product = productRepository
-                    .find("strProductID", category.getProduct());
+                    .findByProductId(category.getProduct());
                 Orderable orderable = olmisOrderableRepository.findFirstByName(
                     product.getName().trim()
                 );
                 mw.gov.health.lmis.migration.tool.scm.domain.Program prog = programRepository
-                    .find("Program_ID", category.getProgram());
+                    .findByProgramId(category.getProgram());
                 OrderableDisplayCategory displayCategory = olmisOrderableDisplayCategoryRepository
                     .findByDisplayName(prog.getName().trim());
 

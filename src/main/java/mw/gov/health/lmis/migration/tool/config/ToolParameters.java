@@ -4,8 +4,6 @@ import lombok.Getter;
 import lombok.Setter;
 import mw.gov.health.lmis.migration.tool.openlmis.fulfillment.domain.OrderNumberConfiguration;
 
-import java.time.Period;
-
 @Getter
 @Setter
 public class ToolParameters {
@@ -21,9 +19,5 @@ public class ToolParameters {
     private Integer days;
     private Integer months;
     private Integer years;
-
-    public Period asPeriod() {
-      return Period.of(years, months, days);
-    }
   }
 }

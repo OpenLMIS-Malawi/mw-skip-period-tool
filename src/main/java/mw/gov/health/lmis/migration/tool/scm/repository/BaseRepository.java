@@ -1,16 +1,21 @@
 package mw.gov.health.lmis.migration.tool.scm.repository;
 
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
+
+import com.healthmarketscience.jackcess.Cursor;
+import com.healthmarketscience.jackcess.CursorBuilder;
 import com.healthmarketscience.jackcess.Row;
 import com.healthmarketscience.jackcess.Table;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
-import mw.gov.health.lmis.migration.tool.scm.ScmDatabase;
+import mw.gov.health.lmis.migration.tool.scm.ScmDatabaseHandler;
 
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
-import java.util.function.Predicate;
+import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
@@ -19,41 +24,47 @@ import java.util.stream.StreamSupport;
 public abstract class BaseRepository<T> {
 
   @Autowired
-  private ScmDatabase database;
+  private ScmDatabaseHandler handler;
 
   /**
    * Find all rows from the given table.
    */
   public List<T> findAll() {
     Table table = getTable();
+
     Iterator<Row> iterator = table.iterator();
     Stream<Row> stream = asStream(iterator);
-    
+
     return stream
         .map(this::mapRow)
         .collect(Collectors.toList());
   }
 
-  List<T> search(Predicate<T> predicate) {
-    return findAll()
+  List<T> search(Map<String, Object> rowPattern) {
+    Cursor cursor = getCursor();
+    List<Row> found = Lists.newArrayList();
+
+    try {
+      while (cursor.findNextRow(rowPattern)) {
+        found.add(cursor.getCurrentRow());
+      }
+    } catch (IOException exp) {
+      throw new IllegalStateException(
+          "There was an issue with retriving a row from table: " + getTableName(), exp
+      );
+    }
+
+    return found
         .stream()
-        .filter(predicate)
+        .map(this::mapRow)
         .collect(Collectors.toList());
   }
 
   /**
    * Find a row by field and value.
    */
-  public T find(String field, Object value) {
-    Table table = getTable();
-    Iterator<Row> iterator = table.iterator();
-    Stream<Row> stream = asStream(iterator);
-    Row row = stream
-        .filter(element -> element.get(field).equals(value))
-        .findFirst()
-        .orElse(null);
-
-    return mapRow(row);
+  T find(String field, Object value) {
+    return mapRow(findRow(ImmutableMap.of(field, value)));
   }
 
   abstract String getTableName();
@@ -62,9 +73,25 @@ public abstract class BaseRepository<T> {
 
   private Table getTable() {
     try {
-      return database.getDatabase().getTable(getTableName());
+      return handler.getDatabase().getTable(getTableName());
     } catch (IOException exp) {
       throw new IllegalStateException("Can't get table: " + getTableName(), exp);
+    }
+  }
+
+  Cursor getCursor() {
+    try {
+      return CursorBuilder.createCursor(getTable());
+    } catch (IOException exp) {
+      throw new IllegalStateException("Can't create cursors for table: " + getTableName(), exp);
+    }
+  }
+
+  private Row findRow(Map<String, Object> rowPattern) {
+    try {
+      return CursorBuilder.findRow(getTable(), rowPattern);
+    } catch (IOException exp) {
+      throw new IllegalStateException("Can't find a row in table: " + getTableName(), exp);
     }
   }
 

@@ -1,17 +1,26 @@
 package mw.gov.health.lmis.migration.tool.scm.domain;
 
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.ToString;
+import com.healthmarketscience.jackcess.Row;
 
-@Getter
-@Setter
-@ToString
-@NoArgsConstructor
-public class Program {
-  private String name;
-  private Integer id;
-  private Integer order;
-  private Integer parentId;
+public class Program extends BaseEntity {
+
+  public Program(Row row) {
+    super(row);
+  }
+
+  public String getName() {
+    return getString("Program_Name");
+  }
+
+  public Integer getId() {
+    return getInt("Program_ID");
+  }
+
+  public Integer getOrder() {
+    return getInt("intOrder");
+  }
+
+  public Integer getParentId() {
+    return getInt("ParentId");
+  }
 }

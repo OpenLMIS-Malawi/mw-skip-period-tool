@@ -16,7 +16,15 @@ public class ProductRepository extends BaseRepository<Product> {
 
   @Override
   Product mapRow(Row row) {
-    return RowMapper.product(row);
+    return new Product(row);
+  }
+
+  public Product findByProductId(String productId) {
+    return find("strProductID", productId);
+  }
+
+  public Product findById(Integer id) {
+    return find("Pr_lngProductID", id);
   }
 
 }

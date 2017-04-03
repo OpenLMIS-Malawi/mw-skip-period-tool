@@ -16,7 +16,9 @@ public class SystemDefaultRepository extends BaseRepository<SystemDefault> {
 
   @Override
   SystemDefault mapRow(Row row) {
-    return RowMapper.systemDefault(row);
+
+
+    return new SystemDefault(row);
   }
 
 }

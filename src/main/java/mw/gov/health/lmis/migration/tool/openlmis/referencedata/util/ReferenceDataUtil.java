@@ -1,5 +1,6 @@
 package mw.gov.health.lmis.migration.tool.openlmis.referencedata.util;
 
+import static java.time.ZoneId.systemDefault;
 import static java.time.temporal.TemporalAdjusters.firstDayOfMonth;
 import static java.time.temporal.TemporalAdjusters.lastDayOfMonth;
 
@@ -30,7 +31,7 @@ import mw.gov.health.lmis.migration.tool.scm.domain.SystemDefault;
 import mw.gov.health.lmis.migration.tool.scm.repository.SystemDefaultRepository;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.UUID;
 
 @SuppressWarnings("PMD.TooManyMethods")
@@ -93,7 +94,7 @@ public class ReferenceDataUtil {
   /**
    * Creates processing period.
    */
-  public ProcessingPeriod create(LocalDateTime dateTime) {
+  public ProcessingPeriod create(Date dateTime) {
     LOGGER.info("Create processing period: {}", dateTime);
 
     SystemDefault systemDefault = systemDefaultRepository
@@ -103,7 +104,11 @@ public class ReferenceDataUtil {
 
     long numberOfMonths = systemDefault.getReportingPeriod() - 1L;
 
-    LocalDate startDate = dateTime.toLocalDate().with(firstDayOfMonth());
+    LocalDate startDate = dateTime
+        .toInstant()
+        .atZone(systemDefault())
+        .toLocalDate()
+        .with(firstDayOfMonth());
     LocalDate endDate = startDate.plusMonths(numberOfMonths).with(lastDayOfMonth());
 
     ProcessingPeriod processingPeriod = new ProcessingPeriod();

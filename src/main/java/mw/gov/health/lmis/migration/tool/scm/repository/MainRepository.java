@@ -1,15 +1,24 @@
 package mw.gov.health.lmis.migration.tool.scm.repository;
 
+import static org.apache.commons.lang3.time.DateUtils.addDays;
+import static org.apache.commons.lang3.time.DateUtils.addMonths;
+import static org.apache.commons.lang3.time.DateUtils.addYears;
+import static org.apache.commons.lang3.time.DateUtils.truncate;
+
+import com.healthmarketscience.jackcess.Cursor;
 import com.healthmarketscience.jackcess.Row;
 
 import org.springframework.stereotype.Repository;
 
+import mw.gov.health.lmis.migration.tool.config.ToolParameters;
 import mw.gov.health.lmis.migration.tool.scm.domain.Main;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.Period;
+import java.io.IOException;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
+import java.util.TreeSet;
+import java.util.stream.Collectors;
 
 @Repository
 public class MainRepository extends BaseRepository<Main> {
@@ -17,34 +26,46 @@ public class MainRepository extends BaseRepository<Main> {
   /**
    * Find mains that have processing date in the given period.
    */
-  public List<Main> searchInPeriod(Period period, Integer page, Integer pageSize) {
-    List<Main> list = search(main -> {
-      LocalDateTime processingDate = main.getProcessingDate();
-      return !processingDate.isBefore(LocalDate.now().atStartOfDay().minus(period));
-    });
+  public List<Main> searchInPeriod(ToolParameters.Interval period, long page, long pageSize) {
+    Date nowAtStartOfDay = truncate(
+        addDays(
+            addMonths(
+                addYears(
+                    new Date(),
+                    -1 * period.getYears()
+                ),
+                -1 * period.getMonths()
+            ),
+            -1 * period.getDays()
+        ),
+        Calendar.DATE
+    );
 
-    list.sort((o1, o2) -> {
-      int compare = o1.getFacility().compareTo(o2.getFacility());
+    Cursor cursor = getCursor();
+    TreeSet<Main> set = new TreeSet<>();
 
-      if (0 != compare) {
-        return compare;
+    try {
+      Row row;
+
+      while ((row = cursor.getNextRow()) != null) {
+        Main main = mapRow(row);
+        Date processingDate = main.getProcessingDate();
+
+        if (!processingDate.before(nowAtStartOfDay)) {
+          set.add(main);
+        }
       }
-
-      return o1.getProcessingDate().compareTo(o2.getProcessingDate());
-    });
-
-    int fromIndex = (page + 1) * pageSize;
-    int toIndex = fromIndex + pageSize + 1;
-
-    if (toIndex > list.size()) {
-      toIndex = list.size();
+    } catch (IOException exp) {
+      throw new IllegalStateException(
+          "There was an issue with retriving a row from table: " + getTableName(), exp
+      );
     }
 
-    if (fromIndex > toIndex) {
-      fromIndex = toIndex;
-    }
-
-    return list.subList(fromIndex, toIndex);
+    return set
+        .stream()
+        .skip(page * pageSize)
+        .limit(pageSize)
+        .collect(Collectors.toList());
   }
 
   @Override
@@ -54,6 +75,6 @@ public class MainRepository extends BaseRepository<Main> {
 
   @Override
   Main mapRow(Row row) {
-    return RowMapper.main(row);
+    return new Main(row);
   }
 }

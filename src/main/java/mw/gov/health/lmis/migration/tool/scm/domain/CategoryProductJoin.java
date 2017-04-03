@@ -1,18 +1,30 @@
 package mw.gov.health.lmis.migration.tool.scm.domain;
 
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.ToString;
+import com.healthmarketscience.jackcess.Row;
 
-@Getter
-@Setter
-@ToString
-@NoArgsConstructor
-public class CategoryProductJoin {
-  private Integer id;
-  private Integer program;
-  private String product;
-  private Integer order;
-  private Integer deOrder;
+public class CategoryProductJoin extends BaseEntity {
+
+  public CategoryProductJoin(Row row) {
+    super(row);
+  }
+
+  public Integer getId() {
+    return getInt("ID");
+  }
+
+  public Integer getProgram() {
+    return getInt("lngCategoryID");
+  }
+
+  public String getProduct() {
+    return getString("strProductID");
+  }
+
+  public Integer getOrder() {
+    return getInt("intOrder");
+  }
+
+  public Integer getDeOrder() {
+    return getInt("intDEOrder");
+  }
 }

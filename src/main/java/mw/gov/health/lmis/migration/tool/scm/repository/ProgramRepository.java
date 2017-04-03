@@ -16,7 +16,11 @@ public class ProgramRepository extends BaseRepository<Program> {
 
   @Override
   Program mapRow(Row row) {
-    return RowMapper.program(row);
+    return new Program(row);
+  }
+
+  public Program findByProgramId(Integer productId) {
+    return find("Program_ID", productId);
   }
 
 }

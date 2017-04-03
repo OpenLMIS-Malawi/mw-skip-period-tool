@@ -39,7 +39,6 @@ import mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.Requisition
 import mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.SourceType;
 import mw.gov.health.lmis.migration.tool.scm.repository.SystemDefaultRepository;
 
-import java.io.IOException;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
@@ -54,11 +53,11 @@ public class RequsitionUtil {
   /**
    * Creates new instance of this class.
    *
-   * @param systemDefaultRepository repository that will receive system configuration settings
-   *                                from Supply Chain Manager.
+   * @param systemDefaultRepository repository that will receive system configuration settings from
+   *                                Supply Chain Manager.
    */
   @Autowired
-  public RequsitionUtil(SystemDefaultRepository systemDefaultRepository) throws IOException {
+  public RequsitionUtil(SystemDefaultRepository systemDefaultRepository) {
     Short currentNumberOfPeriodsToAverage = systemDefaultRepository
         .findAll()
         .iterator()

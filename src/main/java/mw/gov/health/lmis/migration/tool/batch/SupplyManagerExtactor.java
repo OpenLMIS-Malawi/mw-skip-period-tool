@@ -32,7 +32,7 @@ public class SupplyManagerExtactor extends AbstractPagingItemReader<Main> {
     LOG.debug("Reading mains. Page: {}, page size: {}", getPage(), getPageSize());
 
     List<Main> content = mainRepository.searchInPeriod(
-        toolProperties.getParameters().getInterval().asPeriod(), getPage(), getPageSize()
+        toolProperties.getParameters().getInterval(), getPage(), getPageSize()
     );
 
     LOG.info("{} main have been retrieved.", content.size());
