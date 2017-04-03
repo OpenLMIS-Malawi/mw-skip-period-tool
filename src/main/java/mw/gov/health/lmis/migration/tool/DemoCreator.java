@@ -231,8 +231,8 @@ public class DemoCreator {
               .forEach(category -> {
                 Product product = productRepository
                     .findByProductId(category.getProduct());
-                Orderable orderable = olmisOrderableRepository.findFirstByName(
-                    product.getName().trim()
+                Orderable orderable = olmisOrderableRepository.findFirstByProductCode(
+                    new Code(product.getProductId().trim())
                 );
                 mw.gov.health.lmis.migration.tool.scm.domain.Program prog = programRepository
                     .findByProgramId(category.getProgram());

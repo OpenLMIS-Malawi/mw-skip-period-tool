@@ -23,10 +23,6 @@ public class SupplyManagerExtactor extends AbstractPagingItemReader<Main> {
   @Autowired
   private ToolProperties toolProperties;
 
-  public SupplyManagerExtactor() {
-    setPageSize(10);
-  }
-
   @Override
   protected void doReadPage() {
     LOG.debug("Reading mains. Page: {}, page size: {}", getPage(), getPageSize());

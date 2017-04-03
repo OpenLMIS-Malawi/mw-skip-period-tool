@@ -89,7 +89,7 @@ tool:
             "A": "A"
             "B": "B"
         products:
-            "Chlorpromazine 25mg": "Chlorpromazine 25mg"
+            "Chlorpromazine 25mg": "A0110"
         stockAdjustmentReasons:
             "DE Credit": "Transfer In"
             "DE Debit": "Transfer Out"

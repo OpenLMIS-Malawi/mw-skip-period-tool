@@ -10,6 +10,4 @@ public interface OlmisFacilityRepository extends CrudRepository<Facility, UUID> 
 
   Facility findByCode(String code);
 
-  Facility findByName(String name);
-  
 }

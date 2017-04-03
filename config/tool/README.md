@@ -43,5 +43,5 @@ The following list presents available mapping:
 
 * programs - define a program code and what categories are related with this program. Also what warehouse should be selected when a requisition is converted into an order. Addictional if there is a value in the ```geographicZone``` field, warehouse will be selected based by the geographic zone value. Otherwise the geographic zone of facility will be ignored.
 * facilities - define a key-value pair for each SCM facility code to find a proper OpenLMIS facility.
-* products - define a key-value pair for each SCM product name to find a proper OpenLMSI product.
+* products - define a key-value pair for each SCM product name to find a proper OpenLMSI product by code.
 * stockAdjustmentReasons - define a key-value pair for each SCM stock adjustment reason to find a proper OpenLMIS stock adjustment reason.
