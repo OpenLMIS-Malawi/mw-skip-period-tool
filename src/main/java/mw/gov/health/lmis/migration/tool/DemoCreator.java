@@ -146,14 +146,12 @@ public class DemoCreator {
         referenceDataCreator.user("supply chain manager", "supply chain", "manager")
     );
 
-    ProcessingSchedule processingSchedule = olmisProcessingScheduleRepository.save(
-        referenceDataCreator.processingSchedule()
+    FacilityType facilityType = olmisFacilityTypeRepository.save(
+        referenceDataCreator.facilityType()
     );
 
-    FacilityType facilityType = olmisFacilityTypeRepository.save(referenceDataCreator.facilityType());
-
     GeographicLevel zoneLevel = olmisGeographicLevelRepository
-        .save(referenceDataCreator.geographicLevel("zone", 2));
+        .save(referenceDataCreator.geographicLevel());
 
     GeographicZone centralEastZone = olmisGeographicZoneRepository
         .save(referenceDataCreator.geographicZone("central east", zoneLevel));
@@ -210,6 +208,10 @@ public class DemoCreator {
         .stream(new String[]{"em", "mal", "fp", "hiv", "tb"})
         .map(referenceDataCreator::program)
         .collect(Collectors.toList())
+    );
+
+    ProcessingSchedule processingSchedule = olmisProcessingScheduleRepository.save(
+        referenceDataCreator.processingSchedule()
     );
 
     olmisRequisitionGroupProgramScheduleRepository.save(StreamSupport

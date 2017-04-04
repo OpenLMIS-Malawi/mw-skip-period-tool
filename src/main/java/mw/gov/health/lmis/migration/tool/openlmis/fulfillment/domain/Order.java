@@ -163,12 +163,14 @@ public class Order extends BaseEntity {
     this.createdDate = ZonedDateTime.now();
     forEachLine(line -> line.setOrder(this));
     forEachStatus(status -> status.setOrder(this));
+    forEachChange(change -> change.setOrder(this));
   }
 
   @PreUpdate
   private void preUpdate() {
     forEachLine(line -> line.setOrder(this));
     forEachStatus(status -> status.setOrder(this));
+    forEachChange(change -> change.setOrder(this));
   }
 
   /**
@@ -200,6 +202,12 @@ public class Order extends BaseEntity {
     Optional.ofNullable(statusMessages)
         .ifPresent(list -> list.forEach(consumer));
   }
+
+  public void forEachChange(Consumer<StatusChange> consumer) {
+    Optional.ofNullable(statusChanges)
+        .ifPresent(list -> list.forEach(consumer));
+  }
+
 
   /**
    * Creates new order instance based on requisition.

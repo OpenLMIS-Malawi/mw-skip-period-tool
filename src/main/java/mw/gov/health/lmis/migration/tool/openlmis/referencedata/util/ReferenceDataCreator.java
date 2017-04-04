@@ -85,6 +85,8 @@ public class ReferenceDataCreator {
    * Creates new user.
    */
   public User user(String username, String firstName, String lastName) {
+    LOGGER.info("Create user: {}", username);
+
     User user = new User();
     user.setUsername(username.trim());
     user.setFirstName(firstName.trim());
@@ -144,11 +146,13 @@ public class ReferenceDataCreator {
   /**
    * Creates new geographic level.
    */
-  public GeographicLevel geographicLevel(String code, Integer levelNumber) {
+  public GeographicLevel geographicLevel() {
+    LOGGER.info("Create geographic level: zone");
+
     GeographicLevel level = new GeographicLevel();
-    level.setCode(code);
-    level.setLevelNumber(levelNumber);
-    level.setName(code);
+    level.setCode("zone");
+    level.setLevelNumber(2);
+    level.setName("zone");
 
     return level;
   }
@@ -157,6 +161,8 @@ public class ReferenceDataCreator {
    * Creates new geographic zone.
    */
   public GeographicZone geographicZone(String code, GeographicLevel level) {
+    LOGGER.info("Create geographic zone: {}", code);
+
     GeographicZone zone = new GeographicZone();
     zone.setName(code);
     zone.setCode(code);
@@ -230,7 +236,12 @@ public class ReferenceDataCreator {
     return programOrderable;
   }
 
+  /**
+   * Creates new processing schedule.
+   */
   public ProcessingSchedule processingSchedule() {
+    LOGGER.info("Create processing schedule");
+
     ProcessingSchedule schedule = new ProcessingSchedule();
     schedule.setCode("processing-schedule-one");
     schedule.setName(schedule.getCode());
@@ -238,7 +249,12 @@ public class ReferenceDataCreator {
     return schedule;
   }
 
+  /**
+   * Creates new supervisory node.
+   */
   public SupervisoryNode supervisoryNode(Facility facility) {
+    LOGGER.info("Create supervisory node for facility: {}", facility.getCode());
+
     SupervisoryNode node = new SupervisoryNode();
     node.setCode("supervisory-node-" + facility.getCode());
     node.setFacility(facility);
@@ -246,7 +262,12 @@ public class ReferenceDataCreator {
     return node;
   }
 
+  /**
+   * Creates new requisition group.
+   */
   public RequisitionGroup requisitionGroup(SupervisoryNode node, Iterable<Facility> facilities) {
+    LOGGER.info("Create requisition group for node: {}", node.getCode());
+
     RequisitionGroup group = new RequisitionGroup();
     group.setCode("requisition-group-one");
     group.setName(group.getCode());
@@ -256,9 +277,14 @@ public class ReferenceDataCreator {
     return group;
   }
 
+  /**
+   * Creates new requisition group program schedule.
+   */
   public RequisitionGroupProgramSchedule requisitionGroupProgramSchedule(RequisitionGroup group,
                                                                          Program program,
                                                                          ProcessingSchedule sche) {
+    LOGGER.info("Create requisition group program schedule");
+
     RequisitionGroupProgramSchedule rgps = new RequisitionGroupProgramSchedule();
     rgps.setRequisitionGroup(group);
     rgps.setProgram(program);
