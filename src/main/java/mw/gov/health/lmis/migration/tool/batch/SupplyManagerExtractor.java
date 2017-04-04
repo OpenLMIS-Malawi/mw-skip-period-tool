@@ -14,8 +14,8 @@ import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 @Component
-public class SupplyManagerExtactor extends AbstractPagingItemReader<Main> {
-  private static final Logger LOG = LoggerFactory.getLogger(SupplyManagerExtactor.class);
+public class SupplyManagerExtractor extends AbstractPagingItemReader<Main> {
+  private static final Logger LOG = LoggerFactory.getLogger(SupplyManagerExtractor.class);
 
   @Autowired
   private MainRepository mainRepository;
@@ -31,7 +31,7 @@ public class SupplyManagerExtactor extends AbstractPagingItemReader<Main> {
         toolProperties.getParameters().getInterval(), getPage(), getPageSize()
     );
 
-    LOG.info("{} main have been retrieved.", content.size());
+    LOG.debug("{} main have been retrieved.", content.size());
 
     // results come from parent - write to them
     if (results == null) {

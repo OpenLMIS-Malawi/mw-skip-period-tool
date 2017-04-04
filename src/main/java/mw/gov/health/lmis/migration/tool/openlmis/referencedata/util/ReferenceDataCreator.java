@@ -1,6 +1,5 @@
 package mw.gov.health.lmis.migration.tool.openlmis.referencedata.util;
 
-import static java.time.ZoneId.systemDefault;
 import static java.time.temporal.TemporalAdjusters.firstDayOfMonth;
 import static java.time.temporal.TemporalAdjusters.lastDayOfMonth;
 
@@ -13,6 +12,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import mw.gov.health.lmis.migration.tool.config.ToolProperties;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.Code;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.Facility;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.FacilityType;
@@ -38,6 +38,7 @@ import mw.gov.health.lmis.migration.tool.scm.repository.SystemDefaultRepository;
 
 import java.time.LocalDate;
 import java.util.Date;
+import java.util.TimeZone;
 import java.util.UUID;
 
 @SuppressWarnings("PMD.TooManyMethods")
@@ -47,6 +48,9 @@ public class ReferenceDataCreator {
 
   @Autowired
   private SystemDefaultRepository systemDefaultRepository;
+
+  @Autowired
+  private ToolProperties toolProperties;
 
   /**
    * Creates a new instance of OpenLMIS facility.
@@ -115,7 +119,7 @@ public class ReferenceDataCreator {
 
     LocalDate startDate = dateTime
         .toInstant()
-        .atZone(systemDefault())
+        .atZone(TimeZone.getTimeZone(toolProperties.getParameters().getTimeZone()).toZoneId())
         .toLocalDate()
         .with(firstDayOfMonth());
     LocalDate endDate = startDate.plusMonths(numberOfMonths).with(lastDayOfMonth());

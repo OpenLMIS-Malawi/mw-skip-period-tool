@@ -90,7 +90,7 @@ public class Transformer implements ItemProcessor<Main, List<Requisition>> {
         .groupByCategory(main.getProcessingDate(), main.getFacility())
         .asMap()
         .entrySet()
-        .stream()
+        .parallelStream()
         .map(entry -> createRequisition(entry.getKey(), entry.getValue(), main))
         .collect(Collectors.toList());
   }
@@ -103,10 +103,12 @@ public class Transformer implements ItemProcessor<Main, List<Requisition>> {
     ProcessingPeriod period = olmisProcessingPeriodRepository
         .findByStartDate(safeNull(main.getProcessingDate()).toLocalDate());
 
-    Requisition requisition = new Requisition(
-        facility.getId(), program.getId(), period.getId(), ExternalStatus.INITIATED, false
-    );
-
+    Requisition requisition = new Requisition();
+    requisition.setFacilityId(facility.getId());
+    requisition.setProgramId(program.getId());
+    requisition.setProcessingPeriodId(period.getId());
+    requisition.setStatus(ExternalStatus.INITIATED);
+    requisition.setEmergency(false);
     requisition.setNumberOfMonthsInPeriod(period.getDurationInMonths());
 
     RequisitionTemplate template = olmisRequisitionTemplateRepository
@@ -131,7 +133,7 @@ public class Transformer implements ItemProcessor<Main, List<Requisition>> {
         .findByUsername(toolProperties.getParameters().getCreator());
 
     List<Pair<Orderable, Double>> pairs = items
-        .stream()
+        .parallelStream()
         .map(item -> {
           String productCode = productService.getProductCode(item.getProduct());
           return new Pair<>(
@@ -148,9 +150,10 @@ public class Transformer implements ItemProcessor<Main, List<Requisition>> {
     requisition.setCreatedDate(safeNull(main.getCreatedDate()));
     requisition.setModifiedDate(safeNull(main.getModifiedDate()));
 
-    for (RequisitionLineItem line : requisition.getRequisitionLineItems()) {
-      updateLine(line, requisition, items);
-    }
+    requisition
+        .getRequisitionLineItems()
+        .parallelStream()
+        .forEach(line -> updateLine(line, requisition, items));
 
     List<Orderable> products = Lists.newArrayList(olmisOrderableRepository.findAll());
 

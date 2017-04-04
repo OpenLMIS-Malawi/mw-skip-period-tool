@@ -40,7 +40,7 @@ public class BatchConfiguration {
    */
   @Bean
   public Step migrationStep(StepBuilderFactory stepBuilderFactory,
-                            SupplyManagerExtactor reader, OlmisLoader writer,
+                            SupplyManagerExtractor reader, OlmisLoader writer,
                             Transformer processor, ToolProperties toolProperties)
       throws ClassNotFoundException, IllegalAccessException, InstantiationException {
     ToolBatchConfiguration batchProperties = toolProperties

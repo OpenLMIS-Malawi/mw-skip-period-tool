@@ -15,7 +15,7 @@ public class OlmisLoadListener
 
   @Override
   public void beforeWrite(List<? extends List<Requisition>> items) {
-    LOGGER.info(
+    LOGGER.debug(
         "Save {} requisitions to database",
         items.stream().mapToLong(Collection::size).sum()
     );

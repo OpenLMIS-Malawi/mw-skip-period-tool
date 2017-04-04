@@ -2,6 +2,7 @@ package mw.gov.health.lmis.migration.tool.scm.repository;
 
 import com.healthmarketscience.jackcess.Row;
 
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Repository;
 
 import mw.gov.health.lmis.migration.tool.scm.domain.AdjustmentType;
@@ -19,6 +20,7 @@ public class AdjustmentTypeRepository extends BaseRepository<AdjustmentType> {
     return new AdjustmentType(row);
   }
 
+  @Cacheable("adjustmentTypes")
   public AdjustmentType findByType(String type) {
     return find("Type_Code", type);
   }
