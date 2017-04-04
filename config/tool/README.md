@@ -38,7 +38,7 @@ Before the tool can migrate data from supply manager into OpenLMIS system, the t
   * chunk - after how much requisitions the Spring Batch should execute the commit command.
   * skipPolicy - set the skip policy. By default if there will be any issue with migrating a single Product Tracking form the appropriate error message will be displayed but the tool will continue the work. The class must implement the ```org.springframework.batch.core.step.skip.SkipPolicy``` interface.
   
-# mapping section
+#### mapping section
 The following list presents available mapping:
 
 * programs - define a program code and what categories are related with this program. Also what warehouse should be selected when a requisition is converted into an order. Addictional if there is a value in the ```geographicZone``` field, warehouse will be selected based by the geographic zone value. Otherwise the geographic zone of facility will be ignored.
