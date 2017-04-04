@@ -159,7 +159,7 @@ public class Transformer implements ItemProcessor<Main, List<Requisition>> {
     requisitionService.addStatusMessage(
         requisition, user, main.getNotes(), itemService.getNotes(items)
     );
-    // TODO add demo data
+
     RequisitionGroupProgramSchedule schedule = olmisRequisitionGroupProgramScheduleRepository
         .findByProgramAndFacility(program.getId(), facility.getId());
     requisition.setSupervisoryNodeId(schedule.getRequisitionGroup().getSupervisoryNode().getId());

@@ -4,6 +4,8 @@ import static java.time.ZoneId.systemDefault;
 import static java.time.temporal.TemporalAdjusters.firstDayOfMonth;
 import static java.time.temporal.TemporalAdjusters.lastDayOfMonth;
 
+import com.google.common.collect.Sets;
+
 import org.joda.money.CurrencyUnit;
 import org.joda.money.Money;
 import org.slf4j.Logger;
@@ -20,9 +22,13 @@ import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.Orderable
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.OrderableDisplayCategory;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.OrderedDisplayValue;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.ProcessingPeriod;
+import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.ProcessingSchedule;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.Program;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.ProgramOrderable;
+import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.RequisitionGroup;
+import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.RequisitionGroupProgramSchedule;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.StockAdjustmentReason;
+import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.SupervisoryNode;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.TradeItem;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.User;
 import mw.gov.health.lmis.migration.tool.scm.domain.AdjustmentType;
@@ -36,8 +42,8 @@ import java.util.UUID;
 
 @SuppressWarnings("PMD.TooManyMethods")
 @Component
-public class ReferenceDataUtil {
-  private static final Logger LOGGER = LoggerFactory.getLogger(ReferenceDataUtil.class);
+public class ReferenceDataCreator {
+  private static final Logger LOGGER = LoggerFactory.getLogger(ReferenceDataCreator.class);
 
   @Autowired
   private SystemDefaultRepository systemDefaultRepository;
@@ -45,7 +51,8 @@ public class ReferenceDataUtil {
   /**
    * Creates a new instance of OpenLMIS facility.
    */
-  public Facility create(String name, String code, FacilityType facilityType, GeographicZone zone) {
+  public Facility facility(String name, String code, FacilityType facilityType,
+                           GeographicZone zone) {
     LOGGER.info("Create facility: {}", code);
 
     Facility facility = new Facility();
@@ -63,7 +70,7 @@ public class ReferenceDataUtil {
   /**
    * Creates new orderable instance.
    */
-  public Orderable create(Product product) {
+  public Orderable orderable(Product product) {
     LOGGER.info("Create orderable: {}", product.getName());
 
     Orderable orderable = new TradeItem();
@@ -77,7 +84,7 @@ public class ReferenceDataUtil {
   /**
    * Creates new user.
    */
-  public User create(String username, String firstName, String lastName) {
+  public User user(String username, String firstName, String lastName) {
     User user = new User();
     user.setUsername(username.trim());
     user.setFirstName(firstName.trim());
@@ -94,7 +101,7 @@ public class ReferenceDataUtil {
   /**
    * Creates processing period.
    */
-  public ProcessingPeriod create(Date dateTime) {
+  public ProcessingPeriod processingPeriod(Date dateTime) {
     LOGGER.info("Create processing period: {}", dateTime);
 
     SystemDefault systemDefault = systemDefaultRepository
@@ -123,7 +130,7 @@ public class ReferenceDataUtil {
   /**
    * Creates new program.
    */
-  public Program create(String programCode) {
+  public Program program(String programCode) {
     LOGGER.info("Create program: {}", programCode);
 
     Program program = new Program();
@@ -137,7 +144,7 @@ public class ReferenceDataUtil {
   /**
    * Creates new geographic level.
    */
-  public GeographicLevel create(String code, Integer levelNumber) {
+  public GeographicLevel geographicLevel(String code, Integer levelNumber) {
     GeographicLevel level = new GeographicLevel();
     level.setCode(code);
     level.setLevelNumber(levelNumber);
@@ -149,7 +156,7 @@ public class ReferenceDataUtil {
   /**
    * Creates new geographic zone.
    */
-  public GeographicZone create(String code, GeographicLevel level) {
+  public GeographicZone geographicZone(String code, GeographicLevel level) {
     GeographicZone zone = new GeographicZone();
     zone.setName(code);
     zone.setCode(code);
@@ -161,15 +168,15 @@ public class ReferenceDataUtil {
   /**
    * Creates new stock adjustment reason.
    */
-  public StockAdjustmentReason create(Program program, AdjustmentType adjustmentType) {
-    LOGGER.info("Create stock adjustment reason: {}", adjustmentType.getCode());
+  public StockAdjustmentReason stockAdjustmentReason(Program program, AdjustmentType type) {
+    LOGGER.info("Create stock adjustment reason: {}", type.getCode());
 
     StockAdjustmentReason reason = new StockAdjustmentReason();
     reason.setId(UUID.randomUUID());
     reason.setProgram(program);
-    reason.setName(adjustmentType.getName().trim());
-    reason.setDescription(adjustmentType.getName().trim());
-    reason.setAdditive(!adjustmentType.getNegative());
+    reason.setName(type.getName().trim());
+    reason.setDescription(type.getName().trim());
+    reason.setAdditive(!type.getNegative());
 
     return reason;
   }
@@ -177,7 +184,7 @@ public class ReferenceDataUtil {
   /**
    * Creates new facility type.
    */
-  public FacilityType create() {
+  public FacilityType facilityType() {
     LOGGER.info("Create facility type");
 
     FacilityType type = new FacilityType();
@@ -189,11 +196,12 @@ public class ReferenceDataUtil {
   /**
    * Creates new orderable display category.
    */
-  public OrderableDisplayCategory create(mw.gov.health.lmis.migration.tool.scm.domain.Program pro) {
-    LOGGER.info("Create orderable display category: {}", pro.getName());
+  public OrderableDisplayCategory orderableDisplayCategory(
+      mw.gov.health.lmis.migration.tool.scm.domain.Program program) {
+    LOGGER.info("Create orderable display category: {}", program.getName());
 
-    String displayName = pro.getName().trim();
-    Integer displayOrder = pro.getOrder();
+    String displayName = program.getName().trim();
+    Integer displayOrder = program.getOrder();
 
     OrderableDisplayCategory category = new OrderableDisplayCategory();
     category.setCode(new Code(displayName.replace(' ', '_')));
@@ -205,9 +213,9 @@ public class ReferenceDataUtil {
   /**
    * Creates new program orderable.
    */
-  public ProgramOrderable create(Program program, Orderable product,
-                                 OrderableDisplayCategory category,
-                                 int displayOrder, double pricePerPack) {
+  public ProgramOrderable programOrderable(Program program, Orderable product,
+                                           OrderableDisplayCategory category,
+                                           int displayOrder, double pricePerPack) {
     LOGGER.info("Create program orderable: {};{}", program.getName(), product.getName());
 
     ProgramOrderable programOrderable = new ProgramOrderable();
@@ -220,6 +228,43 @@ public class ReferenceDataUtil {
     programOrderable.setPricePerPack(Money.of(CurrencyUnit.USD, pricePerPack));
 
     return programOrderable;
+  }
+
+  public ProcessingSchedule processingSchedule() {
+    ProcessingSchedule schedule = new ProcessingSchedule();
+    schedule.setCode("processing-schedule-one");
+    schedule.setName(schedule.getCode());
+
+    return schedule;
+  }
+
+  public SupervisoryNode supervisoryNode(Facility facility) {
+    SupervisoryNode node = new SupervisoryNode();
+    node.setCode("supervisory-node-" + facility.getCode());
+    node.setFacility(facility);
+
+    return node;
+  }
+
+  public RequisitionGroup requisitionGroup(SupervisoryNode node, Iterable<Facility> facilities) {
+    RequisitionGroup group = new RequisitionGroup();
+    group.setCode("requisition-group-one");
+    group.setName(group.getCode());
+    group.setSupervisoryNode(node);
+    group.setMemberFacilities(Sets.newHashSet(facilities));
+
+    return group;
+  }
+
+  public RequisitionGroupProgramSchedule requisitionGroupProgramSchedule(RequisitionGroup group,
+                                                                         Program program,
+                                                                         ProcessingSchedule sche) {
+    RequisitionGroupProgramSchedule rgps = new RequisitionGroupProgramSchedule();
+    rgps.setRequisitionGroup(group);
+    rgps.setProgram(program);
+    rgps.setProcessingSchedule(sche);
+
+    return rgps;
   }
 
 }

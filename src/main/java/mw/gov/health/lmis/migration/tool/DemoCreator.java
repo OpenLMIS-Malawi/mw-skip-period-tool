@@ -13,13 +13,17 @@ import mw.gov.health.lmis.migration.tool.config.ToolProgramMapping;
 import mw.gov.health.lmis.migration.tool.config.ToolProperties;
 import mw.gov.health.lmis.migration.tool.openlmis.BaseEntity;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.Code;
+import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.Facility;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.FacilityType;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.GeographicLevel;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.GeographicZone;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.Orderable;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.OrderableDisplayCategory;
+import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.ProcessingSchedule;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.Program;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.ProgramOrderable;
+import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.RequisitionGroup;
+import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.SupervisoryNode;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.OlmisFacilityRepository;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.OlmisFacilityTypeRepository;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.OlmisGeographicLevelRepository;
@@ -27,11 +31,15 @@ import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.Olmis
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.OlmisOrderableDisplayCategoryRepository;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.OlmisOrderableRepository;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.OlmisProcessingPeriodRepository;
+import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.OlmisProcessingScheduleRepository;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.OlmisProgramOrderableRepository;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.OlmisProgramRepository;
+import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.OlmisRequisitionGroupProgramScheduleRepository;
+import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.OlmisRequisitionGroupRepository;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.OlmisStockAdjustmentReasonRepository;
+import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.OlmisSupervisoryNodeRepository;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.OlmisUserRepository;
-import mw.gov.health.lmis.migration.tool.openlmis.referencedata.util.ReferenceDataUtil;
+import mw.gov.health.lmis.migration.tool.openlmis.referencedata.util.ReferenceDataCreator;
 import mw.gov.health.lmis.migration.tool.openlmis.requisition.repository.OlmisRequisitionTemplateRepository;
 import mw.gov.health.lmis.migration.tool.openlmis.requisition.util.RequsitionUtil;
 import mw.gov.health.lmis.migration.tool.scm.domain.CategoryProductJoin;
@@ -55,7 +63,7 @@ import java.util.stream.StreamSupport;
 public class DemoCreator {
 
   @Autowired
-  private ReferenceDataUtil referenceDataUtil;
+  private ReferenceDataCreator referenceDataCreator;
 
   @Autowired
   private RequsitionUtil requsitionUtil;
@@ -115,6 +123,19 @@ public class DemoCreator {
   private OlmisGeographicZoneRepository olmisGeographicZoneRepository;
 
   @Autowired
+  private OlmisProcessingScheduleRepository olmisProcessingScheduleRepository;
+
+  @Autowired
+  private OlmisSupervisoryNodeRepository olmisSupervisoryNodeRepository;
+
+  @Autowired
+  private OlmisRequisitionGroupRepository olmisRequisitionGroupRepository;
+
+  @Autowired
+  private OlmisRequisitionGroupProgramScheduleRepository
+      olmisRequisitionGroupProgramScheduleRepository;
+
+  @Autowired
   private ToolProperties toolProperties;
 
   /**
@@ -122,24 +143,28 @@ public class DemoCreator {
    */
   public void createDemoData() {
     olmisUserRepository.save(
-        referenceDataUtil.create("supply chain manager", "supply chain", "manager")
+        referenceDataCreator.user("supply chain manager", "supply chain", "manager")
     );
 
-    FacilityType facilityType = olmisFacilityTypeRepository.save(referenceDataUtil.create());
+    ProcessingSchedule processingSchedule = olmisProcessingScheduleRepository.save(
+        referenceDataCreator.processingSchedule()
+    );
+
+    FacilityType facilityType = olmisFacilityTypeRepository.save(referenceDataCreator.facilityType());
 
     GeographicLevel zoneLevel = olmisGeographicLevelRepository
-        .save(referenceDataUtil.create("zone", 2));
+        .save(referenceDataCreator.geographicLevel("zone", 2));
 
     GeographicZone centralEastZone = olmisGeographicZoneRepository
-        .save(referenceDataUtil.create("central east", zoneLevel));
+        .save(referenceDataCreator.geographicZone("central east", zoneLevel));
     GeographicZone centralSouthZone = olmisGeographicZoneRepository
-        .save(referenceDataUtil.create("central west", zoneLevel));
+        .save(referenceDataCreator.geographicZone("central west", zoneLevel));
     GeographicZone southEastZone = olmisGeographicZoneRepository
-        .save(referenceDataUtil.create("south east", zoneLevel));
+        .save(referenceDataCreator.geographicZone("south east", zoneLevel));
     GeographicZone southWestZone = olmisGeographicZoneRepository
-        .save(referenceDataUtil.create("south west", zoneLevel));
+        .save(referenceDataCreator.geographicZone("south west", zoneLevel));
     GeographicZone northernZone = olmisGeographicZoneRepository
-        .save(referenceDataUtil.create("northern", zoneLevel));
+        .save(referenceDataCreator.geographicZone("northern", zoneLevel));
 
     List<GeographicZone> zones = Lists.newArrayList(
         centralEastZone, centralSouthZone, southEastZone, southWestZone, northernZone
@@ -152,22 +177,50 @@ public class DemoCreator {
         .stream()
         .map(facility -> {
           GeographicZone zone = zones.get(random.nextInt(zones.size()));
-          return referenceDataUtil.create(
+          return referenceDataCreator.facility(
               facility.getName(), facility.getCode(), facilityType, zone
           );
         })
         .collect(Collectors.toList())
     );
 
-    olmisFacilityRepository.save(referenceDataUtil.create(
+    List<Facility> facilities = Lists.newArrayList();
+    facilities.add(olmisFacilityRepository.save(referenceDataCreator.facility(
         "Program", "program", facilityType, zones.get(random.nextInt(zones.size()))
-    ));
-    olmisFacilityRepository.save(referenceDataUtil.create(
-        "CMST - Central", "cmstc", facilityType, centralEastZone));
-    olmisFacilityRepository.save(referenceDataUtil.create(
-        "CMST - South", "cmsts", facilityType, southWestZone));
-    olmisFacilityRepository.save(referenceDataUtil.create(
-        "CMST - North", "cmstn", facilityType, northernZone));
+    )));
+    facilities.add(olmisFacilityRepository.save(referenceDataCreator.facility(
+        "CMST - Central", "cmstc", facilityType, centralEastZone)));
+    facilities.add(olmisFacilityRepository.save(referenceDataCreator.facility(
+        "CMST - South", "cmsts", facilityType, southWestZone)));
+    facilities.add(olmisFacilityRepository.save(referenceDataCreator.facility(
+        "CMST - North", "cmstn", facilityType, northernZone)));
+
+    Iterable<SupervisoryNode> supervisoryNodes = olmisSupervisoryNodeRepository.save(facilities
+        .stream()
+        .map(referenceDataCreator::supervisoryNode)
+        .collect(Collectors.toList())
+    );
+
+    RequisitionGroup requisitionGroup = olmisRequisitionGroupRepository.save(
+        referenceDataCreator.requisitionGroup(
+            supervisoryNodes.iterator().next(), olmisFacilityRepository.findAll())
+    );
+
+    olmisProgramRepository.save(Arrays
+        .stream(new String[]{"em", "mal", "fp", "hiv", "tb"})
+        .map(referenceDataCreator::program)
+        .collect(Collectors.toList())
+    );
+
+    olmisRequisitionGroupProgramScheduleRepository.save(StreamSupport
+        .stream(olmisProgramRepository.findAll().spliterator(), false)
+        .map(program ->
+            referenceDataCreator.requisitionGroupProgramSchedule(
+                requisitionGroup, program, processingSchedule
+            )
+        )
+        .collect(Collectors.toList())
+    );
 
     List<Main> mains = mainRepository.findAll();
 
@@ -176,27 +229,21 @@ public class DemoCreator {
         .map(Main::getProcessingDate)
         .distinct()
         .sorted()
-        .map(referenceDataUtil::create)
+        .map(referenceDataCreator::processingPeriod)
         .collect(Collectors.toList())
     );
 
     olmisOrderableDisplayCategoryRepository.save(programRepository
         .findAll()
         .stream()
-        .map(referenceDataUtil::create)
+        .map(referenceDataCreator::orderableDisplayCategory)
         .collect(Collectors.toList())
     );
 
     olmisOrderableRepository.save(productRepository
         .findAll()
         .stream()
-        .map(referenceDataUtil::create)
-        .collect(Collectors.toList())
-    );
-
-    olmisProgramRepository.save(Arrays
-        .stream(new String[]{"em", "mal", "fp", "hiv", "tb"})
-        .map(referenceDataUtil::create)
+        .map(referenceDataCreator::orderable)
         .collect(Collectors.toList())
     );
 
@@ -229,8 +276,7 @@ public class DemoCreator {
 
           categories
               .forEach(category -> {
-                Product product = productRepository
-                    .findByProductId(category.getProduct());
+                Product product = productRepository.findByProductId(category.getProduct());
                 Orderable orderable = olmisOrderableRepository.findFirstByProductCode(
                     new Code(product.getProductId().trim())
                 );
@@ -244,7 +290,7 @@ public class DemoCreator {
 
                 if (null == programOrderable) {
                   olmisProgramOrderableRepository.save(
-                      referenceDataUtil.create(
+                      referenceDataCreator.programOrderable(
                           program, orderable, displayCategory, category.getOrder(), 5
                       )
                   );
@@ -262,7 +308,7 @@ public class DemoCreator {
                 .collect(Collectors.toList())
         )
         .flatMap(Collection::stream)
-        .map(pair -> referenceDataUtil.create(pair.getRight(), pair.getLeft()))
+        .map(pair -> referenceDataCreator.stockAdjustmentReason(pair.getRight(), pair.getLeft()))
         .collect(Collectors.toList())
     );
 
