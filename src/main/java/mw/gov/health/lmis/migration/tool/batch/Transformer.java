@@ -20,7 +20,6 @@ import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.Program;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.RequisitionGroupProgramSchedule;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.User;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.OlmisFacilityRepository;
-import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.OlmisOrderableRepository;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.OlmisProcessingPeriodRepository;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.OlmisProgramRepository;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.OlmisRequisitionGroupProgramScheduleRepository;
@@ -55,9 +54,6 @@ public class Transformer implements ItemProcessor<Main, List<Requisition>> {
 
   @Autowired
   private OlmisRequisitionTemplateRepository olmisRequisitionTemplateRepository;
-
-  @Autowired
-  private OlmisOrderableRepository olmisOrderableRepository;
 
   @Autowired
   private OlmisUserRepository olmisUserRepository;
