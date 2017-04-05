@@ -18,6 +18,9 @@ public class ScmDatabaseHandler {
   @Autowired
   private ToolProperties toolProperties;
 
+  /**
+   * Get access to access database.
+   */
   public Database getDatabase() {
     File accessFile = toolProperties.getConfiguration().getAccessFile();
 

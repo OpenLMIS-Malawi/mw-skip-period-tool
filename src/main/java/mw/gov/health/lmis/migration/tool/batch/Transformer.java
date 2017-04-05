@@ -122,8 +122,6 @@ public class Transformer implements ItemProcessor<Main, List<Requisition>> {
       numberOfPreviousPeriodsToAverage = previousRequisitions.size();
     }
 
-    User user = olmisUserRepository.findByUsername(toolProperties.getParameters().getCreator());
-
     requisition.setTemplate(template);
     requisition.setPreviousRequisitions(previousRequisitions);
     requisition.setPreviousAdjustedConsumptions(numberOfPreviousPeriodsToAverage);
@@ -141,6 +139,8 @@ public class Transformer implements ItemProcessor<Main, List<Requisition>> {
         .findByProgramAndFacility(program.getId(), facility.getId());
 
     requisition.setSupervisoryNodeId(schedule.getRequisitionGroup().getSupervisoryNode().getId());
+
+    User user = olmisUserRepository.findByUsername(toolProperties.getParameters().getCreator());
 
     requisition.getStatusChanges()
         .add(StatusChange.newStatusChange(requisition, user.getId(), INITIATED));
