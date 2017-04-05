@@ -34,9 +34,11 @@ import org.slf4j.LoggerFactory;
 
 import lombok.Getter;
 import lombok.Setter;
-import mw.gov.health.lmis.migration.tool.Pair;
 import mw.gov.health.lmis.migration.tool.openlmis.BaseEntity;
+import mw.gov.health.lmis.migration.tool.openlmis.CurrencyConfig;
+import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.FacilityTypeApprovedProduct;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.Orderable;
+import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.ProgramOrderable;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.StockAdjustmentReason;
 
 import java.math.BigDecimal;
@@ -84,7 +86,7 @@ public class RequisitionLineItem extends BaseEntity {
   public static final String DISPENSING_UNIT = "dispensingUnit";
   public static final String PACKS_TO_SHIP = "packsToShip";
   public static final String TOTAL_COST = "totalCost";
-  static final BigDecimal PRICE_PER_PACK_IF_NULL = BigDecimal.ZERO;
+  public static final BigDecimal PRICE_PER_PACK_IF_NULL = BigDecimal.ZERO;
   private static final Logger LOGGER = LoggerFactory.getLogger(RequisitionLineItem.class);
 
   @Getter
@@ -223,15 +225,21 @@ public class RequisitionLineItem extends BaseEntity {
   /**
    * Initiates a requisition line item with specified requisition and product.
    *
-   * @param requisition requisition to apply
-   * @param pair        orderable product and max periods of stock value
+   * @param requisition     requisition to apply
+   * @param approvedProduct facilityTypeApprovedProduct to apply
    */
-  public RequisitionLineItem(Requisition requisition, Pair<Orderable, Double> pair) {
+  public RequisitionLineItem(Requisition requisition, FacilityTypeApprovedProduct approvedProduct) {
     this();
     this.requisition = requisition;
-    this.maxPeriodsOfStock = BigDecimal.valueOf(pair.getRight());
-    this.orderableId = pair.getLeft().getId();
-    this.pricePerPack = Money.of(CurrencyUnit.of(CURRENCY_CODE), PRICE_PER_PACK_IF_NULL);
+    this.maxPeriodsOfStock = BigDecimal.valueOf(approvedProduct.getMaxPeriodsOfStock());
+
+    ProgramOrderable product = approvedProduct.getProgramOrderable();
+    this.orderableId = product.getProduct().getId();
+
+    Money priceFromProduct = product.getPricePerPack();
+    this.pricePerPack = priceFromProduct == null
+        ? Money.of(CurrencyUnit.of(CurrencyConfig.CURRENCY_CODE), PRICE_PER_PACK_IF_NULL)
+        : priceFromProduct;
   }
 
   /**
@@ -355,8 +363,8 @@ public class RequisitionLineItem extends BaseEntity {
    * Calculate and set all calculated fields in this requisition line item.
    */
   void calculateAndSetFields(RequisitionTemplate template,
-                                     Collection<StockAdjustmentReason> stockAdjustmentReasons,
-                                     Integer numberOfMonthsInPeriod) {
+                             Collection<StockAdjustmentReason> stockAdjustmentReasons,
+                             Integer numberOfMonthsInPeriod) {
     calculateAndSetTotalLossesAndAdjustments(stockAdjustmentReasons);
     calculateAndSetStockOnHand(template);
     calculateAndSetTotalConsumedQuantity(template);

@@ -30,12 +30,12 @@ import org.joda.money.Money;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import mw.gov.health.lmis.migration.tool.Pair;
 import mw.gov.health.lmis.migration.tool.openlmis.BaseEntity;
 import mw.gov.health.lmis.migration.tool.openlmis.CurrencyConfig;
 import mw.gov.health.lmis.migration.tool.openlmis.ExternalStatus;
 import mw.gov.health.lmis.migration.tool.openlmis.fulfillment.domain.ProofOfDelivery;
 import mw.gov.health.lmis.migration.tool.openlmis.fulfillment.domain.ProofOfDeliveryLineItem;
+import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.FacilityTypeApprovedProduct;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.Orderable;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.StockAdjustmentReason;
 import mw.gov.health.lmis.migration.tool.openlmis.requisition.RequisitionHelper;
@@ -205,14 +205,14 @@ public class Requisition extends BaseTimestampedEntity {
    *
    * @param template             the requisition template for this requisition to use (based on
    *                             program)
-   * @param pairs                the full supply products for this requisitions facility to build
+   * @param approvedProducts     the full supply products for this requisitions facility to build
    *                             requisition lines for
    * @param previousRequisitions the previous requisitions for this program/facility. Used for field
    *                             calculations and set previous adjusted consumptions. Pass empty
    *                             list if there are no previous requisitions.
    */
   public void initiate(RequisitionTemplate template,
-                       Collection<Pair<Orderable, Double>> pairs,
+                       Collection<FacilityTypeApprovedProduct> approvedProducts,
                        List<Requisition> previousRequisitions,
                        int numberOfPreviousPeriodsToAverage,
                        ProofOfDelivery proofOfDelivery,
@@ -221,9 +221,9 @@ public class Requisition extends BaseTimestampedEntity {
     this.previousRequisitions = previousRequisitions;
 
     setRequisitionLineItems(
-        pairs
+        approvedProducts
             .stream()
-            .map(pair -> new RequisitionLineItem(this, pair))
+            .map(approvedProduct -> new RequisitionLineItem(this, approvedProduct))
             .collect(Collectors.toList())
     );
 
@@ -361,7 +361,7 @@ public class Requisition extends BaseTimestampedEntity {
    *
    * @param productId UUID of orderable product
    * @return first RequisitionLineItem that have productId property equals to the given productId
-   *         argument; otherwise null;
+   * argument; otherwise null;
    */
   public RequisitionLineItem findLineByProductId(UUID productId) {
     if (null == requisitionLineItems) {
@@ -469,7 +469,7 @@ public class Requisition extends BaseTimestampedEntity {
    * Sets appropriate value for Previous Adjusted Consumptions field in
    * each {@link RequisitionLineItem}.
    */
-  void setPreviousAdjustedConsumptions(int numberOfPreviousPeriodsToAverage) {
+  public void setPreviousAdjustedConsumptions(int numberOfPreviousPeriodsToAverage) {
     List<RequisitionLineItem> previousRequisitionLineItems = RequisitionHelper
         .getNonSkippedLineItems(previousRequisitions.subList(0, numberOfPreviousPeriodsToAverage));
 
