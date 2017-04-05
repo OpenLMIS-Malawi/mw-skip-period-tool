@@ -212,9 +212,5 @@ hs_err_pid*
 Session.vim
 # temporary
 .netrwhist
-*~
 # auto-generated tag files
 tags
-
-### project
-log
