@@ -26,15 +26,19 @@ public final class OpenLmisNumberUtils extends NumberUtils {
     throw new UnsupportedOperationException();
   }
 
-  static int zeroIfNull(Integer value) {
+  public static int zeroIfNull(Integer value) {
     return defaultIfNull(value, 0);
   }
 
-  static long zeroIfNull(Long value) {
+  public static long zeroIfNull(Long value) {
     return defaultIfNull(value, 0L);
   }
 
-  static BigDecimal zeroIfNull(BigDecimal value) {
+  public static short zeroIfNull(Short value) {
+    return defaultIfNull(value, (short) 0);
+  }
+
+  public static BigDecimal zeroIfNull(BigDecimal value) {
     return defaultIfNull(value, BigDecimal.ZERO);
   }
 

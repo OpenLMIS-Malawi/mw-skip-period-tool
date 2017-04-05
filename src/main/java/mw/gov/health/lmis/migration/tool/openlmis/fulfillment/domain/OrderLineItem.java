@@ -15,13 +15,15 @@
 
 package mw.gov.health.lmis.migration.tool.openlmis.fulfillment.domain;
 
+import static mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.OpenLmisNumberUtils.zeroIfNull;
+
 import org.hibernate.annotations.Type;
-import mw.gov.health.lmis.migration.tool.openlmis.BaseEntity;
-import mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.RequisitionLineItem;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import mw.gov.health.lmis.migration.tool.openlmis.BaseEntity;
+import mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.RequisitionLineItem;
 
 import java.util.UUID;
 
@@ -74,7 +76,7 @@ public class OrderLineItem extends BaseEntity {
     OrderLineItem orderLineItem = new OrderLineItem();
     orderLineItem.setOrderableId(line.getOrderableId());
     orderLineItem.setFilledQuantity(0L);
-    orderLineItem.setApprovedQuantity(line.getApprovedQuantity().longValue());
+    orderLineItem.setApprovedQuantity((long) zeroIfNull(line.getApprovedQuantity()));
     orderLineItem.setPacksToShip(line.getPacksToShip());
 
     if (line.getRequestedQuantity() != null) {

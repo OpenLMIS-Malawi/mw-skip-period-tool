@@ -46,9 +46,12 @@ public class ItemServiceImpl implements ItemService {
   private ToolProperties toolProperties;
 
   @Override
-  public Multimap<String, Item> groupByCategory(Date processingDate, String facility) {
-    List<Item> items = itemRepository.search(processingDate, facility);
+  public List<Item> search(Date processingDate, String facility) {
+    return itemRepository.search(processingDate, facility);
+  }
 
+  @Override
+  public Multimap<String, Item> groupByCategory(List<Item> items) {
     Multimap<String, Item> groups = HashMultimap.create();
     for (Item item : items) {
       toolProperties
@@ -70,9 +73,9 @@ public class ItemServiceImpl implements ItemService {
   }
 
   @Override
-  public Double getMonthsOfStock(Item item) {
+  public BigDecimal getMonthsOfStock(Item item) {
     if (0 == item.getClosingBalance() || 0 == item.getAdjustedDispensedQuantity()) {
-      return BigDecimal.ZERO.doubleValue();
+      return BigDecimal.ZERO;
     }
 
     return BigDecimal.valueOf(item.getClosingBalance())
@@ -80,22 +83,23 @@ public class ItemServiceImpl implements ItemService {
             BigDecimal.valueOf(item.getAdjustedDispensedQuantity()),
             1,
             BigDecimal.ROUND_HALF_UP
-        )
-        .doubleValue();
+        );
   }
 
   @Override
   public String getNotes(Collection<Item> items) {
     List<String> notes = Lists.newArrayList();
 
-    for (Item item : items) {
-      notes.add(item.getNote());
+    items
+        .forEach(item -> {
+          notes.add(item.getNote());
 
-      commentRepository.search(item.getId())
-          .forEach(comment -> notes.add(
-              comment.getType() + ": " + comment.getComment()
-          ));
-    }
+          commentRepository
+              .search(item.getId())
+              .forEach(comment -> notes.add(
+                  comment.getType() + ": " + comment.getComment()
+              ));
+        });
 
     notes.removeIf(StringUtils::isBlank);
 

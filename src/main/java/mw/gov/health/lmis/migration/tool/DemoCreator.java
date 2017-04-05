@@ -9,6 +9,7 @@ import com.google.common.collect.Multimap;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import lombok.AllArgsConstructor;
 import mw.gov.health.lmis.migration.tool.config.ToolProgramMapping;
 import mw.gov.health.lmis.migration.tool.config.ToolProperties;
 import mw.gov.health.lmis.migration.tool.openlmis.BaseEntity;
@@ -310,7 +311,7 @@ public class DemoCreator {
                 .collect(Collectors.toList())
         )
         .flatMap(Collection::stream)
-        .map(pair -> referenceDataCreator.stockAdjustmentReason(pair.getRight(), pair.getLeft()))
+        .map(pair -> referenceDataCreator.stockAdjustmentReason(pair.right, pair.left))
         .collect(Collectors.toList())
     );
 
@@ -322,4 +323,9 @@ public class DemoCreator {
     );
   }
 
+  @AllArgsConstructor
+  private static class Pair<L, R> {
+    private final L left;
+    private final R right;
+  }
 }

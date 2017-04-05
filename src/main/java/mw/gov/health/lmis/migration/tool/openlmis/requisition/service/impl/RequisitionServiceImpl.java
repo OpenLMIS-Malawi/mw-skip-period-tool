@@ -1,7 +1,7 @@
 package mw.gov.health.lmis.migration.tool.openlmis.requisition.service.impl;
 
 import static org.apache.commons.lang3.StringUtils.containsIgnoreCase;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import com.google.common.collect.Lists;
 
@@ -59,13 +59,24 @@ public class RequisitionServiceImpl implements RequisitionService {
   @Override
   public void addStatusMessage(Requisition requisition, User user, String generalNote,
                                String lineNotes) {
-    String message = generalNote + "; " + lineNotes;
-
-    if (isNotBlank(message)) {
-      requisition.setStatusMessages(Lists.newArrayList(StatusMessage.newStatusMessage(
-          requisition, user.getId(), user.getFirstName(), user.getLastName(), message
-      )));
+    if (isBlank(generalNote) && isBlank(lineNotes)) {
+      return;
     }
+
+    String message;
+
+    if (isBlank(generalNote)) {
+      message = lineNotes;
+    } else if (isBlank(lineNotes)) {
+      message = generalNote;
+    } else {
+      message = generalNote + "; " + lineNotes;
+    }
+
+    StatusMessage statusMessage = StatusMessage.newStatusMessage(
+        requisition, user.getId(), user.getFirstName(), user.getLastName(), message
+    );
+    requisition.setStatusMessages(Lists.newArrayList(statusMessage));
   }
 
   @Override

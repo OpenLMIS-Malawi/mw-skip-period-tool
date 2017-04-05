@@ -1,19 +1,20 @@
 package mw.gov.health.lmis.migration.tool.batch;
 
-import com.google.common.collect.Lists;
+import static mw.gov.health.lmis.migration.tool.openlmis.ExternalStatus.APPROVED;
+import static mw.gov.health.lmis.migration.tool.openlmis.ExternalStatus.AUTHORIZED;
+import static mw.gov.health.lmis.migration.tool.openlmis.ExternalStatus.INITIATED;
+import static mw.gov.health.lmis.migration.tool.openlmis.ExternalStatus.SUBMITTED;
+
 import com.google.common.collect.Sets;
 
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import mw.gov.health.lmis.migration.tool.Pair;
 import mw.gov.health.lmis.migration.tool.config.MappingHelper;
 import mw.gov.health.lmis.migration.tool.config.ToolProperties;
-import mw.gov.health.lmis.migration.tool.openlmis.ExternalStatus;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.Code;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.Facility;
-import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.Orderable;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.ProcessingPeriod;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.Program;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.RequisitionGroupProgramSchedule;
@@ -25,14 +26,13 @@ import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.Olmis
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.OlmisRequisitionGroupProgramScheduleRepository;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.OlmisUserRepository;
 import mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.Requisition;
-import mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.RequisitionLineItem;
 import mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.RequisitionTemplate;
+import mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.StatusChange;
 import mw.gov.health.lmis.migration.tool.openlmis.requisition.repository.OlmisRequisitionTemplateRepository;
 import mw.gov.health.lmis.migration.tool.openlmis.requisition.service.RequisitionService;
 import mw.gov.health.lmis.migration.tool.scm.domain.Item;
 import mw.gov.health.lmis.migration.tool.scm.domain.Main;
 import mw.gov.health.lmis.migration.tool.scm.service.ItemService;
-import mw.gov.health.lmis.migration.tool.scm.service.ProductService;
 
 import java.time.ZonedDateTime;
 import java.util.Collection;
@@ -76,38 +76,35 @@ public class Transformer implements ItemProcessor<Main, List<Requisition>> {
   private RequisitionService requisitionService;
 
   @Autowired
-  private ProductService productService;
-
-  @Autowired
   private ToolProperties toolProperties;
 
   /**
    * Converts the given {@link Main} object into {@link Requisition} object.
    */
   @Override
-  public List<Requisition> process(Main main) {
+  public List<Requisition> process(Main item) {
+    List<Item> items = itemService.search(item.getProcessingDate(), item.getFacility());
+
     return itemService
-        .groupByCategory(main.getProcessingDate(), main.getFacility())
+        .groupByCategory(items)
         .asMap()
         .entrySet()
         .parallelStream()
-        .map(entry -> createRequisition(entry.getKey(), entry.getValue(), main))
+        .map(entry -> createRequisition(entry.getKey(), entry.getValue(), item))
         .collect(Collectors.toList());
   }
 
-  private Requisition createRequisition(String programCode, Collection<Item> items,
-                                        Main main) {
+  private Requisition createRequisition(String programCode, Collection<Item> items, Main main) {
     String code = MappingHelper.getFacilityCode(toolProperties, main.getFacility());
     Facility facility = olmisFacilityRepository.findByCode(code);
     Program program = olmisProgramRepository.findByCode(new Code(programCode));
     ProcessingPeriod period = olmisProcessingPeriodRepository
-        .findByStartDate(safeNull(main.getProcessingDate()).toLocalDate());
+        .findByStartDate(convert(main.getProcessingDate()).toLocalDate());
 
     Requisition requisition = new Requisition();
     requisition.setFacilityId(facility.getId());
     requisition.setProgramId(program.getId());
     requisition.setProcessingPeriodId(period.getId());
-    requisition.setStatus(ExternalStatus.INITIATED);
     requisition.setEmergency(false);
     requisition.setNumberOfMonthsInPeriod(period.getDurationInMonths());
 
@@ -129,71 +126,45 @@ public class Transformer implements ItemProcessor<Main, List<Requisition>> {
       numberOfPreviousPeriodsToAverage = previousRequisitions.size();
     }
 
-    User user = olmisUserRepository
-        .findByUsername(toolProperties.getParameters().getCreator());
+    User user = olmisUserRepository.findByUsername(toolProperties.getParameters().getCreator());
 
-    List<Pair<Orderable, Double>> pairs = items
-        .parallelStream()
-        .map(item -> {
-          String productCode = productService.getProductCode(item.getProduct());
-          return new Pair<>(
-              olmisOrderableRepository.findFirstByProductCode(new Code(productCode)),
-              itemService.getMonthsOfStock(item));
-        })
-        .collect(Collectors.toList());
-
-    requisition.initiate(template, pairs, previousRequisitions,
-        numberOfPreviousPeriodsToAverage, null, user.getId());
-
+    requisition.setTemplate(template);
+    requisition.setPreviousRequisitions(previousRequisitions);
+    requisition.setPreviousAdjustedConsumptions(numberOfPreviousPeriodsToAverage);
     requisition.setAvailableNonFullSupplyProducts(Sets.newHashSet());
-
-    requisition.setCreatedDate(safeNull(main.getCreatedDate()));
-    requisition.setModifiedDate(safeNull(main.getModifiedDate()));
-
-    requisition
-        .getRequisitionLineItems()
+    requisition.setCreatedDate(convert(main.getCreatedDate()));
+    requisition.setModifiedDate(convert(main.getModifiedDate()));
+    requisition.setStatus(APPROVED);
+    requisition.setRequisitionLineItems(items
         .parallelStream()
-        .forEach(line -> updateLine(line, requisition, items));
-
-    List<Orderable> products = Lists.newArrayList(olmisOrderableRepository.findAll());
-
-    requisition.submit(products, user.getId());
-    requisition.authorize(products, user.getId());
-    requisitionService.addStatusMessage(
-        requisition, user, main.getNotes(), itemService.getNotes(items)
+        .map(item -> itemConverter.convert(item, requisition))
+        .collect(Collectors.toList())
     );
 
     RequisitionGroupProgramSchedule schedule = olmisRequisitionGroupProgramScheduleRepository
         .findByProgramAndFacility(program.getId(), facility.getId());
+
     requisition.setSupervisoryNodeId(schedule.getRequisitionGroup().getSupervisoryNode().getId());
 
-    requisition.approve(null, products, user.getId());
+    requisition.getStatusChanges()
+        .add(StatusChange.newStatusChange(requisition, user.getId(), INITIATED));
+    requisition.getStatusChanges()
+        .add(StatusChange.newStatusChange(requisition, user.getId(), SUBMITTED));
+    requisition.getStatusChanges()
+        .add(StatusChange.newStatusChange(requisition, user.getId(), AUTHORIZED));
+    requisition.getStatusChanges()
+        .add(StatusChange.newStatusChange(requisition, user.getId(), APPROVED));
+
+    requisitionService.addStatusMessage(
+        requisition, user, main.getNotes(), itemService.getNotes(items)
+    );
 
     requisitionService.convertToOrder(requisition, user, program, facility);
 
     return requisition;
   }
 
-  private void updateLine(RequisitionLineItem line, Requisition requisition,
-                          Collection<Item> items) {
-    Orderable orderable = olmisOrderableRepository.findOne(line.getOrderableId());
-    Item item = items
-        .stream()
-        .filter(elem -> productService
-            .getProductCode(elem.getProduct())
-            .equals(orderable.getProductCode().toString())
-        )
-        .findFirst()
-        .orElseThrow(() -> new IllegalStateException("can't find correct item element from list"));
-
-    line.updateFrom(itemConverter.convert(item, requisition.getProgramId()));
-  }
-
-  private ZonedDateTime safeNull(Date date) {
-    if (null == date) {
-      return null;
-    }
-
+  private ZonedDateTime convert(Date date) {
     return date
         .toInstant()
         .atZone(TimeZone.getTimeZone(toolProperties.getParameters().getTimeZone()).toZoneId());
