@@ -32,6 +32,7 @@ import mw.gov.health.lmis.migration.tool.scm.repository.AdjustmentTypeRepository
 import mw.gov.health.lmis.migration.tool.scm.service.ItemService;
 import mw.gov.health.lmis.migration.tool.scm.service.ProductService;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @Component
@@ -72,7 +73,6 @@ public class ItemConverter {
     requisitionLineItem.setStockAdjustments(Lists.newArrayList());
     requisitionLineItem.setPreviousAdjustedConsumptions(Lists.newArrayList());
     requisitionLineItem.setRequisition(requisition);
-    requisitionLineItem.setMaxPeriodsOfStock(itemService.getMonthsOfStock(item));
     requisitionLineItem.setOrderableId(orderable.getId());
     requisitionLineItem.setPricePerPack(
         Money.of(CurrencyUnit.of(CURRENCY_CODE), PRICE_PER_PACK_IF_NULL)
@@ -125,7 +125,22 @@ public class ItemConverter {
     requisitionLineItem.setNonFullSupply(false);
     requisitionLineItem.setApprovedQuantity(item.getRequiredQuantity());
 
+    requisitionLineItem.setMaxPeriodsOfStock(getMonthsOfStock(requisitionLineItem));
+
     return requisitionLineItem;
+  }
+
+  private BigDecimal getMonthsOfStock(RequisitionLineItem requisitionLineItem) {
+    if (0 == requisitionLineItem.getAdjustedConsumption()) {
+      return BigDecimal.ZERO;
+    }
+
+    return BigDecimal.valueOf(requisitionLineItem.getStockOnHand())
+        .divide(
+            BigDecimal.valueOf(requisitionLineItem.getAdjustedConsumption()),
+            1,
+            BigDecimal.ROUND_HALF_UP
+        );
   }
 
 }

@@ -21,7 +21,6 @@ import mw.gov.health.lmis.migration.tool.scm.repository.ItemRepository;
 import mw.gov.health.lmis.migration.tool.scm.repository.ProgramRepository;
 import mw.gov.health.lmis.migration.tool.scm.service.ItemService;
 
-import java.math.BigDecimal;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
@@ -70,20 +69,6 @@ public class ItemServiceImpl implements ItemService {
     }
 
     return groups;
-  }
-
-  @Override
-  public BigDecimal getMonthsOfStock(Item item) {
-    if (0 == item.getClosingBalance() || 0 == item.getAdjustedDispensedQuantity()) {
-      return BigDecimal.ZERO;
-    }
-
-    return BigDecimal.valueOf(item.getClosingBalance())
-        .divide(
-            BigDecimal.valueOf(item.getAdjustedDispensedQuantity()),
-            1,
-            BigDecimal.ROUND_HALF_UP
-        );
   }
 
   @Override
