@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 
 import mw.gov.health.lmis.migration.tool.config.ToolProgramWarehouseMapping;
 import mw.gov.health.lmis.migration.tool.config.ToolProperties;
+import mw.gov.health.lmis.migration.tool.openlmis.ExternalStatus;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.Facility;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.GeographicZone;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.ProcessingPeriod;
@@ -74,7 +75,8 @@ public class RequisitionServiceImpl implements RequisitionService {
     }
 
     StatusMessage statusMessage = StatusMessage.newStatusMessage(
-        requisition, user.getId(), user.getFirstName(), user.getLastName(), message
+        requisition, user.getId(), user.getFirstName(), user.getLastName(), message,
+        ExternalStatus.AUTHORIZED
     );
     requisition.setStatusMessages(Lists.newArrayList(statusMessage));
   }

@@ -5,12 +5,12 @@
  * This program is free software: you can redistribute it and/or modify it under the terms
  * of the GNU Affero General Public License as published by the Free Software Foundation, either
  * version 3 of the License, or (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
- * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU Affero General Public License for more details. You should have received a copy of
  * the GNU Affero General Public License along with this program. If not, see
- * http://www.gnu.org/licenses.  For additional information contact info@OpenLMIS.org. 
+ * http://www.gnu.org/licenses.  For additional information contact info@OpenLMIS.org.
  */
 
 package mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain;
@@ -42,36 +42,38 @@ public final class CommodityType extends Orderable {
   @OneToMany(mappedBy = "commodityType")
   private Set<TradeItem> tradeItems;
 
-  private CommodityType(Code productCode, Dispensable dispensable, String name, long packSize,
-                        long packRoundingThreshold, boolean roundToZero) {
-    super(productCode, dispensable, name, packSize, packRoundingThreshold, roundToZero);
+  private CommodityType(Code productCode, Dispensable dispensable, String fullProductName,
+                        long netContent, long packRoundingThreshold, boolean roundToZero) {
+    super(productCode, dispensable, fullProductName, netContent, packRoundingThreshold,
+        roundToZero);
     tradeItems = new HashSet<>();
   }
 
   /**
    * Create a new commodity type.
    *
-   * @param productCode           a unique product code
-   * @param name                  name of product
-   * @param description           the description to display in ordering, fulfilling, etc
-   * @param packSize              the number of dispensing units in the pack
+   * @param productCode a unique product code
+   * @param fullProductName fullProductName of product
+   * @param description the description to display in ordering, fulfilling, etc
+   * @param netContent    the number of dispensing units in the pack
    * @param packRoundingThreshold determines how number of packs is rounded
-   * @param roundToZero           determines if number of packs can be rounded to zero
+   * @param roundToZero determines if number of packs can be rounded to zero
    * @return a new CommodityType
    */
   @JsonCreator
-  public static CommodityType newCommodityType(@JsonProperty("productCode") String productCode,
-                                               @JsonProperty("dispensingUnit")
-                                                   String dispensingUnit,
-                                               @JsonProperty("name") String name,
-                                               @JsonProperty("description") String description,
-                                               @JsonProperty("packSize") long packSize,
-                                               @JsonProperty("packRoundingThreshold")
-                                                   long packRoundingThreshold,
-                                               @JsonProperty("roundToZero") boolean roundToZero) {
+  public static CommodityType newCommodityType(
+      @JsonProperty("productCode") String productCode,
+      @JsonProperty("dispensingUnit")
+          String dispensingUnit,
+      @JsonProperty("fullProductName") String fullProductName,
+      @JsonProperty("description") String description,
+      @JsonProperty("netContent") long netContent,
+      @JsonProperty("packRoundingThreshold")
+          long packRoundingThreshold,
+      @JsonProperty("roundToZero") boolean roundToZero) {
     Code code = Code.code(productCode);
     Dispensable dispensable = Dispensable.createNew(dispensingUnit);
-    CommodityType commodityType = new CommodityType(code, dispensable, name, packSize,
+    CommodityType commodityType = new CommodityType(code, dispensable, fullProductName, netContent,
         packRoundingThreshold, roundToZero);
     commodityType.description = description;
     return commodityType;
@@ -104,7 +106,6 @@ public final class CommodityType extends Orderable {
 
   /**
    * Sets the associated {@link TradeItem} that may fulfill for this.
-   *
    * @param tradeItems the trade items.
    */
   public void setTradeItems(Set<TradeItem> tradeItems) {

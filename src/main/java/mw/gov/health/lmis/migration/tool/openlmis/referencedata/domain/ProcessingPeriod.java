@@ -15,11 +15,10 @@
 
 package mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain;
 
-import mw.gov.health.lmis.migration.tool.openlmis.BaseEntity;
-
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import mw.gov.health.lmis.migration.tool.openlmis.BaseEntity;
 
 import java.time.LocalDate;
 import java.time.Period;
@@ -38,8 +37,7 @@ import javax.persistence.Table;
 public class ProcessingPeriod extends BaseEntity {
 
   @ManyToOne
-  //@JoinColumn(name = "processingScheduleId", nullable = false)
-  @JoinColumn(name = "processingScheduleId")
+  @JoinColumn(name = "processingScheduleId", nullable = false)
   @Getter
   @Setter
   private ProcessingSchedule processingSchedule;

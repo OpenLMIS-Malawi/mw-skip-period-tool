@@ -392,7 +392,7 @@ public class RequisitionLineItem extends BaseEntity {
   /**
    * Sets appropriate value for Average Consumption field in {@link RequisitionLineItem}.
    */
-  void calculateAndSetAverageConsumption() {
+  public void calculateAndSetAverageConsumption() {
     List<Integer> previous = new ArrayList<>(getPreviousAdjustedConsumptions());
     previous.add(getAdjustedConsumption());
     Integer calculated = calculateAverageConsumption(previous);

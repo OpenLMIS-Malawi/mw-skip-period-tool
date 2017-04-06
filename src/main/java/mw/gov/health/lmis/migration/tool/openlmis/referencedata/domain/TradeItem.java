@@ -5,12 +5,12 @@
  * This program is free software: you can redistribute it and/or modify it under the terms
  * of the GNU Affero General Public License as published by the Free Software Foundation, either
  * version 3 of the License, or (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
- * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU Affero General Public License for more details. You should have received a copy of
  * the GNU Affero General Public License along with this program. If not, see
- * http://www.gnu.org/licenses.  For additional information contact info@OpenLMIS.org. 
+ * http://www.gnu.org/licenses.  For additional information contact info@OpenLMIS.org.
  */
 
 package mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain;
@@ -31,34 +31,35 @@ import javax.persistence.ManyToOne;
  *
  * <p>TradeItem's also may:
  * <ul>
- * <li>have a GlobalTradeItemNumber</li>
- * <li>a MSRP</li>
+ *   <li>have a GlobalTradeItemNumber</li>
+ *   <li>a MSRP</li>
  * </ul>
  */
 @Entity
 @DiscriminatorValue("TRADE_ITEM")
 @NoArgsConstructor
 public final class TradeItem extends Orderable {
+
   @JsonProperty
-  private String manufacturer;
+  private String manufacturerOfTradeItem;
 
   @ManyToOne
   private CommodityType commodityType;
 
-  private TradeItem(Code productCode, Dispensable dispensable, String name, long packSize,
-                    long packRoundingThreshold, boolean roundToZero) {
-    super(productCode, dispensable, name, packSize, packRoundingThreshold, roundToZero);
+  private TradeItem(Code productCode, Dispensable dispensable, String fullProductName,
+                    long netContent, long packRoundingThreshold, boolean roundToZero) {
+    super(productCode, dispensable, fullProductName, netContent, packRoundingThreshold,
+        roundToZero);
   }
 
   @Override
   public String getDescription() {
-    return manufacturer;
+    return manufacturerOfTradeItem;
   }
 
   /**
    * A TradeItem can fulfill for the given product if the product is this trade item or if this
    * product's CommodityType is the given product.
-   *
    * @param product the product we'd like to fulfill for.
    * @return true if we can fulfill for the given product, false otherwise.
    */
@@ -69,31 +70,29 @@ public final class TradeItem extends Orderable {
 
   /**
    * Factory method to create a new trade item.
-   *
-   * @param productCode           a unique product code
-   * @param name                  name of product
-   * @param packSize              the # of dispensing units contained
+   * @param productCode a unique product code
+   * @param fullProductName fullProductName of product
+   * @param netContent the # of dispensing units contained
    * @param packRoundingThreshold determines how number of packs is rounded
-   * @param roundToZero           determines if number of packs can be rounded to zero
+   * @param roundToZero determines if number of packs can be rounded to zero
    * @return a new trade item or armageddon if failure
    */
   @JsonCreator
   public static TradeItem newTradeItem(@JsonProperty("productCode") String productCode,
                                        @JsonProperty("dispensingUnit") String dispensingUnit,
-                                       @JsonProperty("name") String name,
-                                       @JsonProperty("packSize") long packSize,
+                                       @JsonProperty("fullProductName") String fullProductName,
+                                       @JsonProperty("netContent") long netContent,
                                        @JsonProperty("packRoundingThreshold")
                                            long packRoundingThreshold,
                                        @JsonProperty("roundToZero") boolean roundToZero) {
     Code code = Code.code(productCode);
     Dispensable dispensable = Dispensable.createNew(dispensingUnit);
-    return new TradeItem(code, dispensable, name, packSize,
+    return new TradeItem(code, dispensable, fullProductName, netContent,
         packRoundingThreshold, roundToZero);
   }
 
   /**
    * Assign a commodity type.
-   *
    * @param commodityType the given commodity type, or null to un-assign.
    */
   void assignCommodityType(CommodityType commodityType) {

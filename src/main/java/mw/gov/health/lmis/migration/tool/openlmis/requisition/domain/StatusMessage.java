@@ -71,19 +71,29 @@ public class StatusMessage extends BaseTimestampedEntity {
   private String body;
 
   private StatusMessage(Requisition requisition, UUID authorId, String authorFirstName,
-                        String authorLastName, String body) {
+                        String authorLastName, String body, ExternalStatus status) {
     this.requisition = Objects.requireNonNull(requisition);
     this.authorId = authorId;
     this.authorFirstName = authorFirstName;
     this.authorLastName = authorLastName;
-    this.status = Objects.requireNonNull(requisition.getStatus());
+    this.status = Objects.requireNonNull(status);
     this.body = Objects.requireNonNull(body);
+    this.setCreatedDate(requisition.getCreatedDate());
+    this.setModifiedDate(requisition.getModifiedDate());
   }
 
   public static StatusMessage newStatusMessage(Requisition requisition, UUID authorId,
                                                String authorFirstName, String authorLastName,
                                                String body) {
-    return new StatusMessage(requisition, authorId, authorFirstName, authorLastName, body);
+    return new StatusMessage(
+        requisition, authorId, authorFirstName, authorLastName, body, requisition.getStatus()
+    );
+  }
+
+  public static StatusMessage newStatusMessage(Requisition requisition, UUID authorId,
+                                               String authorFirstName, String authorLastName,
+                                               String body, ExternalStatus status) {
+    return new StatusMessage(requisition, authorId, authorFirstName, authorLastName, body, status);
   }
 
   /**

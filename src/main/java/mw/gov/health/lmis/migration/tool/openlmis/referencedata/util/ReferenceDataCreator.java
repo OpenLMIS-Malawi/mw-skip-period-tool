@@ -5,6 +5,7 @@ import static java.time.temporal.TemporalAdjusters.lastDayOfMonth;
 
 import com.google.common.collect.Sets;
 
+import org.apache.commons.lang3.RandomStringUtils;
 import org.joda.money.CurrencyUnit;
 import org.joda.money.Money;
 import org.slf4j.Logger;
@@ -14,6 +15,7 @@ import org.springframework.stereotype.Component;
 
 import mw.gov.health.lmis.migration.tool.config.ToolProperties;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.Code;
+import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.CommodityType;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.Facility;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.FacilityType;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.GeographicLevel;
@@ -29,7 +31,6 @@ import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.Requisiti
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.RequisitionGroupProgramSchedule;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.StockAdjustmentReason;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.SupervisoryNode;
-import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.TradeItem;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.User;
 import mw.gov.health.lmis.migration.tool.scm.domain.AdjustmentType;
 import mw.gov.health.lmis.migration.tool.scm.domain.Product;
@@ -77,10 +78,10 @@ public class ReferenceDataCreator {
   public Orderable orderable(Product product) {
     LOGGER.info("Create orderable: {}", product.getName());
 
-    Orderable orderable = new TradeItem();
+    Orderable orderable = new CommodityType();
     orderable.setId(UUID.randomUUID());
     orderable.setProductCode(new Code(product.getProductId().trim()));
-    orderable.setName(product.getName().trim());
+    orderable.setFullProductName(product.getName().trim());
 
     return orderable;
   }
@@ -107,7 +108,7 @@ public class ReferenceDataCreator {
   /**
    * Creates processing period.
    */
-  public ProcessingPeriod processingPeriod(Date dateTime) {
+  public ProcessingPeriod processingPeriod(Date dateTime, ProcessingSchedule schedule) {
     LOGGER.info("Create processing period: {}", dateTime);
 
     SystemDefault systemDefault = systemDefaultRepository
@@ -129,6 +130,7 @@ public class ReferenceDataCreator {
     processingPeriod.setName(startDate.getMonth() + "-" + endDate.getMonth());
     processingPeriod.setStartDate(startDate);
     processingPeriod.setEndDate(endDate);
+    processingPeriod.setProcessingSchedule(schedule);
 
     return processingPeriod;
   }
@@ -225,8 +227,8 @@ public class ReferenceDataCreator {
    */
   public ProgramOrderable programOrderable(Program program, Orderable product,
                                            OrderableDisplayCategory category,
-                                           int displayOrder, double pricePerPack) {
-    LOGGER.info("Create program orderable: {};{}", program.getName(), product.getName());
+                                           int displayOrder) {
+    LOGGER.info("Create program orderable: {};{}", program.getName(), product.getFullProductName());
 
     ProgramOrderable programOrderable = new ProgramOrderable();
     programOrderable.setProgram(program);
@@ -235,7 +237,7 @@ public class ReferenceDataCreator {
     programOrderable.setFullSupply(true);
     programOrderable.setOrderableDisplayCategory(category);
     programOrderable.setDisplayOrder(displayOrder);
-    programOrderable.setPricePerPack(Money.of(CurrencyUnit.USD, pricePerPack));
+    programOrderable.setPricePerPack(Money.of(CurrencyUnit.USD, (double) 5));
 
     return programOrderable;
   }
@@ -273,7 +275,7 @@ public class ReferenceDataCreator {
     LOGGER.info("Create requisition group for node: {}", node.getCode());
 
     RequisitionGroup group = new RequisitionGroup();
-    group.setCode("requisition-group-one");
+    group.setCode("requisition-group-" + RandomStringUtils.random(5));
     group.setName(group.getCode());
     group.setSupervisoryNode(node);
     group.setMemberFacilities(Sets.newHashSet(facilities));

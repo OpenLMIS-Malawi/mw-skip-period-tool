@@ -5,25 +5,24 @@
  * This program is free software: you can redistribute it and/or modify it under the terms
  * of the GNU Affero General Public License as published by the Free Software Foundation, either
  * version 3 of the License, or (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
- * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU Affero General Public License for more details. You should have received a copy of
  * the GNU Affero General Public License along with this program. If not, see
- * http://www.gnu.org/licenses.  For additional information contact info@OpenLMIS.org. 
+ * http://www.gnu.org/licenses.  For additional information contact info@OpenLMIS.org.
  */
 
 package mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import mw.gov.health.lmis.migration.tool.openlmis.BaseEntity;
-
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import mw.gov.health.lmis.migration.tool.openlmis.BaseEntity;
 
-import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
@@ -55,10 +54,12 @@ public abstract class Orderable extends BaseEntity {
   @Embedded
   private Dispensable dispensable;
 
-  private String name;
+  @Setter
+  private String fullProductName;
 
   @JsonProperty
-  private long packSize;
+  @Getter(AccessLevel.PACKAGE)
+  private long netContent;
 
   @JsonProperty
   private long packRoundingThreshold;
@@ -70,12 +71,12 @@ public abstract class Orderable extends BaseEntity {
       fetch = FetchType.EAGER)
   private Set<ProgramOrderable> programOrderables;
 
-  protected Orderable(Code productCode, Dispensable dispensable, String name, long packSize,
-                      long packRoundingThreshold, boolean roundToZero) {
+  protected Orderable(Code productCode, Dispensable dispensable, String fullProductName,
+                      long netContent, long packRoundingThreshold, boolean roundToZero) {
     this.productCode = productCode;
     this.dispensable = dispensable;
-    this.name = name;
-    this.packSize = packSize;
+    this.fullProductName = fullProductName;
+    this.netContent = netContent;
     this.packRoundingThreshold = packRoundingThreshold;
     this.roundToZero = roundToZero;
     this.programOrderables = new LinkedHashSet<>();
@@ -87,7 +88,6 @@ public abstract class Orderable extends BaseEntity {
 
   /**
    * Return this orderable product's unique product code.
-   *
    * @return a copy of this product's unique product code.
    */
   @JsonProperty
@@ -101,18 +101,7 @@ public abstract class Orderable extends BaseEntity {
   }
 
   /**
-   * Return this orderable product's name.
-   *
-   * @return this product's name.
-   */
-  @JsonProperty
-  public final String getName() {
-    return name;
-  }
-
-  /**
    * Adds product for ordering within a program.
-   *
    * @param programOrderable the association to a {@link Program}
    * @return true if successful, false otherwise.
    */
@@ -125,28 +114,15 @@ public abstract class Orderable extends BaseEntity {
   }
 
   @JsonProperty
-  protected final void setPrograms(Set<ProgramOrderable> ppBuilders) {
-    Set<ProgramOrderable> workProgProducts = new HashSet<>();
-
-    // add or modify associations
-    for (ProgramOrderable programOrderable : ppBuilders) {
-      workProgProducts.add(programOrderable);
-      addToProgram(programOrderable);
-    }
-    this.programOrderables.retainAll(workProgProducts); // remove old associations
-  }
-
-  @JsonProperty
   protected final Set<ProgramOrderable> getPrograms() {
     return programOrderables;
   }
 
   /**
    * Get the association to a {@link Program}.
-   *
    * @param program the Program this product is (maybe) in.
    * @return the asssociation to the given {@link Program}, or null if this product is not in the
-   *         given program.
+   *        given program.
    */
   public ProgramOrderable getProgramOrderable(Program program) {
     for (ProgramOrderable programOrderable : programOrderables) {
@@ -164,17 +140,16 @@ public abstract class Orderable extends BaseEntity {
   /**
    * Returns the number of packs to order. For this Orderable given a desired number of
    * dispensing units, will return the number of packs that should be ordered.
-   *
    * @param dispensingUnits # of dispensing units we'd like to order for
    * @return the number of packs that should be ordered.
    */
   public long packsToOrder(long dispensingUnits) {
-    if (dispensingUnits <= 0 || packSize == 0) {
+    if (dispensingUnits <= 0 || netContent == 0) {
       return 0;
     }
 
-    long packsToOrder = dispensingUnits / packSize;
-    long remainderQuantity = dispensingUnits % packSize;
+    long packsToOrder = dispensingUnits / netContent;
+    long remainderQuantity = dispensingUnits % netContent;
 
     if (remainderQuantity > 0 && remainderQuantity > packRoundingThreshold) {
       packsToOrder += 1;
@@ -189,7 +164,6 @@ public abstract class Orderable extends BaseEntity {
 
   /**
    * Determines if product may be used to fulfill for the given product.
-   *
    * @param product the product we'd like to fulfill for.
    * @return true if this product can fulfill for the given product.  False otherwise.
    */
@@ -197,7 +171,6 @@ public abstract class Orderable extends BaseEntity {
 
   /**
    * Determines equality based on product codes.
-   *
    * @param object another Orderable, ideally.
    * @return true if the two are semantically equal.  False otherwise.
    */

@@ -61,6 +61,8 @@ public class StatusChange extends BaseTimestampedEntity {
     this.requisition = Objects.requireNonNull(requisition);
     this.authorId = authorId;
     this.status = Objects.requireNonNull(status);
+    this.setCreatedDate(requisition.getCreatedDate());
+    this.setModifiedDate(requisition.getModifiedDate());
   }
 
   public static StatusChange newStatusChange(Requisition requisition, UUID authorId) {
