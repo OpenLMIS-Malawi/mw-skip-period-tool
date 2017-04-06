@@ -12,6 +12,11 @@ public class ToolParameters {
   private String requestedQuantityExplanation;
   private String timeZone = "CAT";
   private OrderNumberConfiguration orderNumberConfiguration = new OrderNumberConfiguration();
+  private String serverUrl;
+  private String adminId;
+  private String programSupervisorRoleId;
+  private String clientId;
+  private String clientSecret;
 
   @Getter
   @Setter
