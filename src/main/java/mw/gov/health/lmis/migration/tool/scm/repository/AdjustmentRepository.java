@@ -13,6 +13,9 @@ import java.util.List;
 @Repository
 public class AdjustmentRepository extends BaseRepository<Adjustment> {
 
+  /**
+   * Finds all adjustmenets for the given item.
+   */
   public List<Adjustment> search(Integer itemId) {
     return search(
         ImmutableMap.of("ctf_ItemID", itemId),

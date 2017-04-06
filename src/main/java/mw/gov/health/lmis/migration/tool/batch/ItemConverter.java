@@ -29,7 +29,6 @@ import mw.gov.health.lmis.migration.tool.scm.domain.AdjustmentType;
 import mw.gov.health.lmis.migration.tool.scm.domain.Item;
 import mw.gov.health.lmis.migration.tool.scm.repository.AdjustmentRepository;
 import mw.gov.health.lmis.migration.tool.scm.repository.AdjustmentTypeRepository;
-import mw.gov.health.lmis.migration.tool.scm.service.ItemService;
 import mw.gov.health.lmis.migration.tool.scm.service.ProductService;
 
 import java.math.BigDecimal;
@@ -52,9 +51,6 @@ public class ItemConverter {
 
   @Autowired
   private OlmisOrderableRepository olmisOrderableRepository;
-
-  @Autowired
-  private ItemService itemService;
 
   @Autowired
   private ProductService productService;

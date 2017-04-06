@@ -84,14 +84,6 @@ public class StatusMessage extends BaseTimestampedEntity {
 
   public static StatusMessage newStatusMessage(Requisition requisition, UUID authorId,
                                                String authorFirstName, String authorLastName,
-                                               String body) {
-    return new StatusMessage(
-        requisition, authorId, authorFirstName, authorLastName, body, requisition.getStatus()
-    );
-  }
-
-  public static StatusMessage newStatusMessage(Requisition requisition, UUID authorId,
-                                               String authorFirstName, String authorLastName,
                                                String body, ExternalStatus status) {
     return new StatusMessage(requisition, authorId, authorFirstName, authorLastName, body, status);
   }

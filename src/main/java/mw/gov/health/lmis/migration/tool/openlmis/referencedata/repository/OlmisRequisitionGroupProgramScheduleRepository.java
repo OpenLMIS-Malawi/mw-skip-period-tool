@@ -15,7 +15,7 @@ public interface OlmisRequisitionGroupProgramScheduleRepository
   @Query("SELECT rgps FROM RequisitionGroupProgramSchedule rgps "
       + "INNER JOIN rgps.requisitionGroup rg INNER JOIN rg.memberFacilities f "
       + "WHERE f.id = :facility AND rgps.program.id = :program")
-  List<RequisitionGroupProgramSchedule> findByProgramAndFacility(@Param("program") UUID programId,
-                                                                 @Param("facility") UUID facilityId);
+  List<RequisitionGroupProgramSchedule> findByProgramAndFacility(@Param("program") UUID program,
+                                                                 @Param("facility") UUID facility);
 
 }

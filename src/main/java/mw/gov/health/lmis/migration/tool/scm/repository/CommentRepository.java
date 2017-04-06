@@ -25,6 +25,9 @@ public class CommentRepository extends BaseRepository<Comment> {
     return new Comment(row);
   }
 
+  /**
+   * Retrieves all comments for the given item.
+   */
   public List<Comment> search(Integer itemId) {
     return search(
         ImmutableMap.of("ctf_ItemID", itemId),
