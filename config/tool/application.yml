@@ -11,7 +11,7 @@ tool:
             days: 0
             months: 0
             years: 5
-        creator: "supply chain manager"
+        creator: "scm"
         requestedQuantityExplanation: "transferred from supply manager"
         timeZone: "CAT"
         orderNumberConfiguration:
