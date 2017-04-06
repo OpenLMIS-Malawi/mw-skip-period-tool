@@ -143,10 +143,6 @@ public class DemoCreator {
    * Creates demo data.
    */
   public void createDemoData() {
-    olmisUserRepository.save(
-        referenceDataCreator.user("supply chain manager", "supply chain", "manager")
-    );
-
     FacilityType facilityType = olmisFacilityTypeRepository.save(
         referenceDataCreator.facilityType()
     );
@@ -200,9 +196,17 @@ public class DemoCreator {
         .collect(Collectors.toList())
     );
 
-    RequisitionGroup requisitionGroup = olmisRequisitionGroupRepository.save(
-        referenceDataCreator.requisitionGroup(
-            supervisoryNodes.iterator().next(), olmisFacilityRepository.findAll())
+    olmisUserRepository.save(
+        referenceDataCreator.user("scm", "supply chain", "manager")
+    );
+
+    Iterable<RequisitionGroup> requisitionGroups = olmisRequisitionGroupRepository.save(
+        StreamSupport
+            .stream(supervisoryNodes.spliterator(), false)
+            .map(node -> referenceDataCreator.requisitionGroup(
+                node, olmisFacilityRepository.findAll()
+            ))
+            .collect(Collectors.toList())
     );
 
     olmisProgramRepository.save(Arrays
@@ -215,15 +219,17 @@ public class DemoCreator {
         referenceDataCreator.processingSchedule()
     );
 
-    olmisRequisitionGroupProgramScheduleRepository.save(StreamSupport
-        .stream(olmisProgramRepository.findAll().spliterator(), false)
-        .map(program ->
-            referenceDataCreator.requisitionGroupProgramSchedule(
-                requisitionGroup, program, processingSchedule
-            )
-        )
-        .collect(Collectors.toList())
-    );
+    requisitionGroups
+        .forEach(group -> olmisRequisitionGroupProgramScheduleRepository.save(
+            StreamSupport
+                .stream(olmisProgramRepository.findAll().spliterator(), false)
+                .map(program ->
+                    referenceDataCreator.requisitionGroupProgramSchedule(
+                        group, program, processingSchedule
+                    )
+                )
+                .collect(Collectors.toList())
+        ));
 
     List<Main> mains = mainRepository.findAll();
 
@@ -232,7 +238,7 @@ public class DemoCreator {
         .map(Main::getProcessingDate)
         .distinct()
         .sorted()
-        .map(referenceDataCreator::processingPeriod)
+        .map(date -> referenceDataCreator.processingPeriod(date, processingSchedule))
         .collect(Collectors.toList())
     );
 
@@ -294,7 +300,7 @@ public class DemoCreator {
                 if (null == programOrderable) {
                   olmisProgramOrderableRepository.save(
                       referenceDataCreator.programOrderable(
-                          program, orderable, displayCategory, category.getOrder(), 5
+                          program, orderable, displayCategory, category.getOrder()
                       )
                   );
                 }
