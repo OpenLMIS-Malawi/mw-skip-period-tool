@@ -16,6 +16,7 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
@@ -41,12 +42,21 @@ public abstract class BaseRepository<T> {
   }
 
   List<T> search(Map<String, Object> rowPattern) {
+    return search(rowPattern, arg -> true);
+  }
+
+  List<T> search(Map<String, Object> rowPattern, Predicate<T> predicate) {
     Cursor cursor = getCursor();
-    List<Row> found = Lists.newArrayList();
+    List<T> found = Lists.newArrayList();
 
     try {
       while (cursor.findNextRow(rowPattern)) {
-        found.add(cursor.getCurrentRow());
+        Row currentRow = cursor.getCurrentRow();
+        T object = mapRow(currentRow);
+
+        if (predicate.test(object)) {
+          found.add(object);
+        }
       }
     } catch (IOException exp) {
       throw new IllegalStateException(
@@ -54,10 +64,7 @@ public abstract class BaseRepository<T> {
       );
     }
 
-    return found
-        .stream()
-        .map(this::mapRow)
-        .collect(Collectors.toList());
+    return found;
   }
 
   /**

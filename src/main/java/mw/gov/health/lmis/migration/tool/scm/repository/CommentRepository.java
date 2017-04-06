@@ -1,5 +1,7 @@
 package mw.gov.health.lmis.migration.tool.scm.repository;
 
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+
 import com.google.common.collect.ImmutableMap;
 
 import com.healthmarketscience.jackcess.Row;
@@ -24,6 +26,9 @@ public class CommentRepository extends BaseRepository<Comment> {
   }
 
   public List<Comment> search(Integer itemId) {
-    return search(ImmutableMap.of("ctf_ItemID", itemId));
+    return search(
+        ImmutableMap.of("ctf_ItemID", itemId),
+        arg -> isNotBlank(arg.getComment())
+    );
   }
 }

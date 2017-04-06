@@ -14,7 +14,10 @@ import java.util.List;
 public class AdjustmentRepository extends BaseRepository<Adjustment> {
 
   public List<Adjustment> search(Integer itemId) {
-    return search(ImmutableMap.of("ctf_ItemID", itemId));
+    return search(
+        ImmutableMap.of("ctf_ItemID", itemId),
+        arg -> null != arg.getQuantity() && arg.getQuantity() > 0
+    );
   }
 
   @Override

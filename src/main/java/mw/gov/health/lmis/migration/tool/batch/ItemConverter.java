@@ -89,11 +89,6 @@ public class ItemConverter {
 
     for (int idx = 0, size = adjustments.size(); idx < size; ++idx) {
       Adjustment adjustment = adjustments.get(idx);
-
-      if (null == adjustment.getQuantity()) {
-        continue;
-      }
-
       AdjustmentType type = adjustmentTypeRepository.findByType(adjustment.getType());
       String name = MappingHelper.getAdjustmentName(toolProperties, type.getName());
 
