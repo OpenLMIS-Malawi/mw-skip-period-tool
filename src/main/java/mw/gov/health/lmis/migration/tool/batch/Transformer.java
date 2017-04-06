@@ -33,6 +33,7 @@ import mw.gov.health.lmis.migration.tool.scm.domain.Item;
 import mw.gov.health.lmis.migration.tool.scm.domain.Main;
 import mw.gov.health.lmis.migration.tool.scm.service.ItemService;
 
+import java.time.LocalDate;
 import java.time.ZonedDateTime;
 import java.util.Collection;
 import java.util.Date;
@@ -103,6 +104,8 @@ public class Transformer implements ItemProcessor<Main, List<Requisition>> {
     requisition.setProcessingPeriodId(period.getId());
     requisition.setEmergency(false);
     requisition.setNumberOfMonthsInPeriod(period.getDurationInMonths());
+    requisition.setCreatedDate(convert(period.getStartDate()));
+    requisition.setModifiedDate(convert(period.getStartDate()));
 
     RequisitionTemplate template = olmisRequisitionTemplateRepository
         .findByProgramId(program.getId());
@@ -124,7 +127,6 @@ public class Transformer implements ItemProcessor<Main, List<Requisition>> {
 
     requisition.setTemplate(template);
     requisition.setPreviousRequisitions(previousRequisitions);
-    requisition.setPreviousAdjustedConsumptions(numberOfPreviousPeriodsToAverage);
     requisition.setAvailableNonFullSupplyProducts(Sets.newHashSet());
     requisition.setCreatedDate(convert(main.getCreatedDate()));
     requisition.setModifiedDate(convert(main.getModifiedDate()));
@@ -134,9 +136,10 @@ public class Transformer implements ItemProcessor<Main, List<Requisition>> {
         .map(item -> itemConverter.convert(item, requisition))
         .collect(Collectors.toList())
     );
+    requisition.setPreviousAdjustedConsumptions(numberOfPreviousPeriodsToAverage);
 
     RequisitionGroupProgramSchedule schedule = olmisRequisitionGroupProgramScheduleRepository
-        .findByProgramAndFacility(program.getId(), facility.getId());
+        .findByProgramAndFacility(program.getId(), facility.getId()).get(0);
 
     requisition.setSupervisoryNodeId(schedule.getRequisitionGroup().getSupervisoryNode().getId());
 
@@ -158,6 +161,12 @@ public class Transformer implements ItemProcessor<Main, List<Requisition>> {
     requisitionService.convertToOrder(requisition, user, program, facility);
 
     return requisition;
+  }
+
+  private ZonedDateTime convert(LocalDate date) {
+    return date
+        .atStartOfDay()
+        .atZone(TimeZone.getTimeZone(toolProperties.getParameters().getTimeZone()).toZoneId());
   }
 
   private ZonedDateTime convert(Date date) {
