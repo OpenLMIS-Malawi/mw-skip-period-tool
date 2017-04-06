@@ -122,7 +122,7 @@ public class ItemConverter {
   }
 
   private BigDecimal getMonthsOfStock(RequisitionLineItem requisitionLineItem) {
-    if (0 == requisitionLineItem.getAdjustedConsumption()) {
+    if (0 == zeroIfNull(requisitionLineItem.getAdjustedConsumption())) {
       return BigDecimal.ZERO;
     }
 
