@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import mw.gov.health.lmis.migration.tool.config.ToolProgramMapping;
 import mw.gov.health.lmis.migration.tool.config.ToolProperties;
 import mw.gov.health.lmis.migration.tool.scm.domain.CategoryProductJoin;
+import mw.gov.health.lmis.migration.tool.scm.domain.Comment;
 import mw.gov.health.lmis.migration.tool.scm.domain.Item;
 import mw.gov.health.lmis.migration.tool.scm.domain.Program;
 import mw.gov.health.lmis.migration.tool.scm.repository.CategoryProductJoinRepository;
@@ -24,6 +25,8 @@ import mw.gov.health.lmis.migration.tool.scm.service.ItemService;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -50,9 +53,11 @@ public class ItemServiceImpl implements ItemService {
   }
 
   @Override
-  public Multimap<String, Item> groupByCategory(List<Item> items) {
+  public Map<String, Collection<Item>> groupByCategory(List<Item> items) {
     Multimap<String, Item> groups = HashMultimap.create();
-    for (Item item : items) {
+    for (int i = 0, size = items.size(); i < size; i++) {
+      Item item = items.get(i);
+
       toolProperties
           .getMapping()
           .getPrograms()
@@ -68,22 +73,24 @@ public class ItemServiceImpl implements ItemService {
           .forEach(code -> groups.put(code, item));
     }
 
-    return groups;
+    return groups.asMap();
   }
 
   @Override
   public String getNotes(Collection<Item> items) {
+    List<Integer> ids = items.stream().map(Item::getId).collect(Collectors.toList());
+    Map<Integer, List<Comment>> groups = commentRepository.search(ids);
     List<String> notes = Lists.newArrayList();
 
     items
         .forEach(item -> {
           notes.add(item.getNote());
 
-          commentRepository
-              .search(item.getId())
-              .forEach(comment -> notes.add(
-                  comment.getType() + ": " + comment.getComment()
-              ));
+          Optional
+              .ofNullable(groups.get(item.getId()))
+              .ifPresent(list -> list
+                  .forEach(
+                      elem -> notes.add(elem.getType() + ": " + elem.getComment())));
         });
 
     notes.removeIf(StringUtils::isBlank);

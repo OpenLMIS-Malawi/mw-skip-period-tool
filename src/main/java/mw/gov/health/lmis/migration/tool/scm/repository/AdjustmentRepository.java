@@ -1,6 +1,6 @@
 package mw.gov.health.lmis.migration.tool.scm.repository;
 
-import com.google.common.collect.ImmutableMap;
+import static mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.OpenLmisNumberUtils.isNotZero;
 
 import com.healthmarketscience.jackcess.Row;
 
@@ -9,6 +9,8 @@ import org.springframework.stereotype.Repository;
 import mw.gov.health.lmis.migration.tool.scm.domain.Adjustment;
 
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Repository
 public class AdjustmentRepository extends BaseRepository<Adjustment> {
@@ -16,11 +18,10 @@ public class AdjustmentRepository extends BaseRepository<Adjustment> {
   /**
    * Finds all adjustmenets for the given item.
    */
-  public List<Adjustment> search(Integer itemId) {
-    return search(
-        ImmutableMap.of("ctf_ItemID", itemId),
-        arg -> null != arg.getQuantity() && arg.getQuantity() > 0
-    );
+  public Map<Integer, List<Adjustment>> search(List<Integer> itemIds) {
+    return search(elem -> isNotZero(elem.getQuantity()) && itemIds.contains(elem.getItem()))
+        .stream()
+        .collect(Collectors.groupingBy(Adjustment::getItem));
   }
 
   @Override

@@ -84,7 +84,6 @@ public class Transformer implements ItemProcessor<Main, List<Requisition>> {
 
     return itemService
         .groupByCategory(items)
-        .asMap()
         .entrySet()
         .parallelStream()
         .map(entry -> createRequisition(entry.getKey(), entry.getValue(), item))
@@ -131,11 +130,7 @@ public class Transformer implements ItemProcessor<Main, List<Requisition>> {
     requisition.setCreatedDate(convert(main.getCreatedDate()));
     requisition.setModifiedDate(convert(main.getModifiedDate()));
     requisition.setStatus(APPROVED);
-    requisition.setRequisitionLineItems(items
-        .parallelStream()
-        .map(item -> itemConverter.convert(item, requisition))
-        .collect(Collectors.toList())
-    );
+    requisition.setRequisitionLineItems(itemConverter.convert(items, requisition));
     requisition.setPreviousAdjustedConsumptions(numberOfPreviousPeriodsToAverage);
 
     RequisitionGroupProgramSchedule schedule = olmisRequisitionGroupProgramScheduleRepository

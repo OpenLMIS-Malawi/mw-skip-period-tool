@@ -2,8 +2,6 @@ package mw.gov.health.lmis.migration.tool.scm.repository;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
-import com.google.common.collect.ImmutableMap;
-
 import com.healthmarketscience.jackcess.Row;
 
 import org.springframework.stereotype.Repository;
@@ -11,6 +9,8 @@ import org.springframework.stereotype.Repository;
 import mw.gov.health.lmis.migration.tool.scm.domain.Comment;
 
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Repository
 public class CommentRepository extends BaseRepository<Comment> {
@@ -28,10 +28,9 @@ public class CommentRepository extends BaseRepository<Comment> {
   /**
    * Retrieves all comments for the given item.
    */
-  public List<Comment> search(Integer itemId) {
-    return search(
-        ImmutableMap.of("ctf_ItemID", itemId),
-        arg -> isNotBlank(arg.getComment())
-    );
+  public Map<Integer, List<Comment>> search(List<Integer> itemIds) {
+    return search(elem -> isNotBlank(elem.getComment()) && itemIds.contains(elem.getItem()))
+        .stream()
+        .collect(Collectors.groupingBy(Comment::getItem));
   }
 }

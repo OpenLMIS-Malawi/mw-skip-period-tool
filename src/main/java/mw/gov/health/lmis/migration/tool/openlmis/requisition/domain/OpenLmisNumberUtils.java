@@ -15,6 +15,8 @@
 
 package mw.gov.health.lmis.migration.tool.openlmis.requisition.domain;
 
+import static java.math.BigDecimal.ZERO;
+
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 
@@ -39,7 +41,11 @@ public final class OpenLmisNumberUtils extends NumberUtils {
   }
 
   public static BigDecimal zeroIfNull(BigDecimal value) {
-    return defaultIfNull(value, BigDecimal.ZERO);
+    return defaultIfNull(value, ZERO);
+  }
+
+  public static boolean isNotZero(Integer value) {
+    return null != value && 0 != value;
   }
 
   private static <N extends Number> N defaultIfNull(N number, N defaultNumber) {

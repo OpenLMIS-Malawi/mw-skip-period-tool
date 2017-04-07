@@ -32,7 +32,11 @@ import mw.gov.health.lmis.migration.tool.scm.repository.AdjustmentTypeRepository
 import mw.gov.health.lmis.migration.tool.scm.service.ProductService;
 
 import java.math.BigDecimal;
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Component
 public class ItemConverter {
@@ -61,7 +65,18 @@ public class ItemConverter {
   /**
    * Converts {@link Item} object into {@link RequisitionLineItem} object.
    */
-  public RequisitionLineItem convert(Item item, Requisition requisition) {
+  public List<RequisitionLineItem> convert(Collection<Item> items, Requisition requisition) {
+    List<Integer> ids = items.stream().map(Item::getId).collect(Collectors.toList());
+    Map<Integer, List<Adjustment>> adjustments = adjustmentRepository.search(ids);
+
+    return items
+        .parallelStream()
+        .map(item -> convert(item, requisition, adjustments.get(item.getId())))
+        .collect(Collectors.toList());
+  }
+
+  private RequisitionLineItem convert(Item item, Requisition requisition,
+                                      List<Adjustment> adjustments) {
     String productCode = productService.getProductCode(item.getProduct());
     Orderable orderable = olmisOrderableRepository.findFirstByProductCode(new Code(productCode));
 
@@ -80,25 +95,27 @@ public class ItemConverter {
     requisitionLineItem.setTotalConsumedQuantity(item.getDispensedQuantity());
 
     Program program = olmisProgramRepository.findOne(requisition.getProgramId());
-    List<StockAdjustment> stockAdjustments = Lists.newArrayList();
-    List<Adjustment> adjustments = adjustmentRepository.search(item.getId());
 
-    for (int idx = 0, size = adjustments.size(); idx < size; ++idx) {
-      Adjustment adjustment = adjustments.get(idx);
-      AdjustmentType type = adjustmentTypeRepository.findByType(adjustment.getType());
-      String name = MappingHelper.getAdjustmentName(toolProperties, type.getName());
+    Optional
+        .ofNullable(adjustments)
+        .ifPresent(list -> requisitionLineItem.setStockAdjustments(
+            list
+                .parallelStream()
+                .map(adjustment -> {
+                  AdjustmentType type = adjustmentTypeRepository.findByType(adjustment.getType());
+                  String name = MappingHelper.getAdjustmentName(toolProperties, type.getName());
 
-      StockAdjustmentReason stockAdjustmentReason = olmisStockAdjustmentReasonRepository
-          .findByProgramAndName(program, name);
+                  StockAdjustmentReason stockAdjustmentReason =
+                      olmisStockAdjustmentReasonRepository.findByProgramAndName(program, name);
 
-      StockAdjustment stockAdjustment = new StockAdjustment();
-      stockAdjustment.setReasonId(stockAdjustmentReason.getId());
-      stockAdjustment.setQuantity(adjustment.getQuantity());
+                  StockAdjustment stockAdjustment = new StockAdjustment();
+                  stockAdjustment.setReasonId(stockAdjustmentReason.getId());
+                  stockAdjustment.setQuantity(adjustment.getQuantity());
 
-      stockAdjustments.add(stockAdjustment);
-    }
+                  return stockAdjustment;
+                })
+                .collect(Collectors.toList())));
 
-    requisitionLineItem.setStockAdjustments(stockAdjustments);
     requisitionLineItem.setTotalLossesAndAdjustments(
         calculateTotalLossesAndAdjustments(
             requisitionLineItem,

@@ -5,7 +5,6 @@ import static org.apache.commons.lang3.time.DateUtils.addMonths;
 import static org.apache.commons.lang3.time.DateUtils.addYears;
 import static org.apache.commons.lang3.time.DateUtils.truncate;
 
-import com.healthmarketscience.jackcess.Cursor;
 import com.healthmarketscience.jackcess.Row;
 
 import org.springframework.stereotype.Repository;
@@ -13,7 +12,6 @@ import org.springframework.stereotype.Repository;
 import mw.gov.health.lmis.migration.tool.config.ToolParameters;
 import mw.gov.health.lmis.migration.tool.scm.domain.Main;
 
-import java.io.IOException;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
@@ -41,27 +39,9 @@ public class MainRepository extends BaseRepository<Main> {
         Calendar.DATE
     );
 
-    Cursor cursor = getCursor();
-    TreeSet<Main> set = new TreeSet<>();
+    List<Main> mains = search(main -> !main.getProcessingDate().before(nowAtStartOfDay));
 
-    try {
-      Row row;
-
-      while ((row = cursor.getNextRow()) != null) {
-        Main main = mapRow(row);
-        Date processingDate = main.getProcessingDate();
-
-        if (!processingDate.before(nowAtStartOfDay)) {
-          set.add(main);
-        }
-      }
-    } catch (IOException exp) {
-      throw new IllegalStateException(
-          "There was an issue with retriving a row from table: " + getTableName(), exp
-      );
-    }
-
-    return set
+    return new TreeSet<>(mains)
         .stream()
         .skip(page * pageSize)
         .limit(pageSize)

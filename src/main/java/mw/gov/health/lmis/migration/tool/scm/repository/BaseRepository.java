@@ -41,21 +41,18 @@ public abstract class BaseRepository<T> {
         .collect(Collectors.toList());
   }
 
-  List<T> search(Map<String, Object> rowPattern) {
-    return search(rowPattern, arg -> true);
-  }
-
-  List<T> search(Map<String, Object> rowPattern, Predicate<T> predicate) {
+  List<T> search(Predicate<T> predicate) {
     Cursor cursor = getCursor();
-    List<T> found = Lists.newArrayList();
+    List<T> list = Lists.newArrayList();
 
     try {
-      while (cursor.findNextRow(rowPattern)) {
-        Row currentRow = cursor.getCurrentRow();
-        T object = mapRow(currentRow);
+      Row row;
 
-        if (predicate.test(object)) {
-          found.add(object);
+      while ((row = cursor.getNextRow()) != null) {
+        T element = mapRow(row);
+
+        if (predicate.test(element)) {
+          list.add(element);
         }
       }
     } catch (IOException exp) {
@@ -64,7 +61,7 @@ public abstract class BaseRepository<T> {
       );
     }
 
-    return found;
+    return list;
   }
 
   /**
