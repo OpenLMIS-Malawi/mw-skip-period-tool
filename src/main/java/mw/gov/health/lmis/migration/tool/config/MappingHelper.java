@@ -32,12 +32,24 @@ public final class MappingHelper {
    * Retrieve correct product code from mapping section. If there is no key-value pair,
    * a default code will be returned.
    */
-  public static String getProductCode(ToolProperties toolProperties, String name,
-                                      String defaultCode) {
-    return toolProperties
+  public static String getProductCode(ToolProperties toolProperties, String name, String code) {
+    String property = toolProperties
         .getMapping()
         .getProducts()
-        .getProperty(name, defaultCode);
+        .getProperty(name);
+
+    if (null == property) {
+      property = toolProperties
+          .getMapping()
+          .getProducts()
+          .getProperty(code);
+    }
+
+    if (null == property) {
+      property = code;
+    }
+
+    return property;
   }
 
 }
