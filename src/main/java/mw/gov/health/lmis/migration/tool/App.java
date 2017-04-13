@@ -24,13 +24,10 @@ public class App {
   }
 
   @Bean
-  CommandLineRunner commandLineRunner(JobLauncher jobLauncher, Job migrationJob,
-                                      DemoCreator demoCreator,
-                                      AdministratorUtil administratorUtil) {
+  CommandLineRunner commandLineRunner(JobLauncher launcher, Job job, DemoCreator demoCreator) {
     return args -> {
       demoCreator.createDemoData();
-      administratorUtil.assignPrograms("em", "mal", "fp", "hiv", "tb");
-      jobLauncher.run(migrationJob, new JobParameters());
+      launcher.run(job, new JobParameters());
     };
   }
 

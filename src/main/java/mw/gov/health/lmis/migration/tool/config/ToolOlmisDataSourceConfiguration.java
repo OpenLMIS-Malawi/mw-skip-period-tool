@@ -15,6 +15,6 @@ public class ToolOlmisDataSourceConfiguration {
   private String host = "localhost";
   private Integer port = 5432;
   private String database = "open_lmis";
-  private String username;
-  private String password;
+  private String username = "postgres";
+  private String password = "password";
 }

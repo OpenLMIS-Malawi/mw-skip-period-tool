@@ -8,21 +8,18 @@ import mw.gov.health.lmis.migration.tool.openlmis.fulfillment.domain.OrderNumber
 @Setter
 public class ToolParameters {
   private Interval interval = new Interval();
-  private String creator;
-  private String requestedQuantityExplanation;
+  private String creator = "scm";
+  private String requestedQuantityExplanation = "transferred from supply manager";
   private String timeZone = "CAT";
-  private OrderNumberConfiguration orderNumberConfiguration = new OrderNumberConfiguration();
-  private String serverUrl;
-  private String adminId;
-  private String programSupervisorRoleId;
-  private String clientId;
-  private String clientSecret;
+  private OrderNumberConfiguration orderNumberConfiguration = new OrderNumberConfiguration(
+      "O", true, false, false
+  );
 
   @Getter
   @Setter
-  public class Interval {
-    private Integer days;
-    private Integer months;
-    private Integer years;
+  public static class Interval {
+    private Integer days = 0;
+    private Integer months = 0;
+    private Integer years = 5;
   }
 }

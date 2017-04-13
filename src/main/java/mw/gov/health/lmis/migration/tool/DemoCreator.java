@@ -143,6 +143,16 @@ public class DemoCreator {
    * Creates demo data.
    */
   public void createDemoData() {
+    if (toolProperties.getConfiguration().getInsertDemoData().isReferenceData()) {
+      createReferenceDemoData();
+    }
+
+    if (toolProperties.getConfiguration().getInsertDemoData().isRequisition()) {
+      createRequisitionDemoData();
+    }
+  }
+
+  private void createReferenceDemoData() {
     FacilityType facilityType = olmisFacilityTypeRepository.save(
         referenceDataCreator.facilityType()
     );
@@ -320,7 +330,9 @@ public class DemoCreator {
         .map(pair -> referenceDataCreator.stockAdjustmentReason(pair.right, pair.left))
         .collect(Collectors.toList())
     );
+  }
 
+  private void createRequisitionDemoData() {
     olmisRequisitionTemplateRepository.save(StreamSupport
         .stream(olmisProgramRepository.findAll().spliterator(), false)
         .map(BaseEntity::getId)

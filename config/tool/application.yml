@@ -19,13 +19,11 @@ tool:
             includeOrderNumberPrefix: true
             includeProgramCode: false
             includeTypeSuffix: false
-        serverUrl: "http://address_to_open_lmis_server"
-        adminId: "a337ec45-31a0-4f2b-9b2e-a105c4b669bb"
-        programSupervisorRoleId: "d30a2fbb-51d9-49ad-90fe-fb405470a439"
-        clientId: "trusted-client"
-        clientSecret: "secret"
     configuration:
-        accessFile: "database.mdb"
+        insertDemoData:
+            referenceData: false
+            requisition: true
+        accessFile: "../../data/kasungu-data-centre.mdb"
         olmis:
             dialect: "org.hibernate.dialect.PostgreSQL94Dialect"
             showSql: false
