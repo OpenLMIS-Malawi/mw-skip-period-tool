@@ -39,10 +39,16 @@ public class FacilityTypeApprovedProduct extends BaseEntity {
   private FacilityType facilityType;
 
   @ManyToOne
-  @JoinColumn(name = "programOrderableId", nullable = false)
+  @JoinColumn(name = "orderableId", nullable = false)
   @Getter
   @Setter
-  private ProgramOrderable programOrderable;
+  private Orderable orderable;
+
+  @ManyToOne
+  @JoinColumn(name = "programId", nullable = false)
+  @Getter
+  @Setter
+  private Program program;
 
   @Column(nullable = false)
   @Getter
@@ -60,6 +66,7 @@ public class FacilityTypeApprovedProduct extends BaseEntity {
   private Double emergencyOrderPoint;
 
   @Override
+  @SuppressWarnings("PMD.CyclomaticComplexity")
   public boolean equals(Object other) {
 
     if (this == other) {
@@ -74,7 +81,10 @@ public class FacilityTypeApprovedProduct extends BaseEntity {
     if (!facilityType.equals(otherFacility.facilityType)) {
       return false;
     }
-    if (!programOrderable.equals(otherFacility.programOrderable)) {
+    if (!program.equals(otherFacility.program)) {
+      return false;
+    }
+    if (!orderable.equals(otherFacility.orderable)) {
       return false;
     }
     if (!maxPeriodsOfStock.equals(otherFacility.maxPeriodsOfStock)) {
@@ -92,7 +102,8 @@ public class FacilityTypeApprovedProduct extends BaseEntity {
   @Override
   public int hashCode() {
     int result = facilityType.hashCode();
-    result = 31 * result + programOrderable.hashCode();
+    result = 31 * result + program.hashCode();
+    result = 31 * result + orderable.hashCode();
     result = 31 * result + maxPeriodsOfStock.hashCode();
     result = 31 * result + (minPeriodsOfStock != null ? minPeriodsOfStock.hashCode() : 0);
     result = 31 * result + (emergencyOrderPoint != null ? emergencyOrderPoint.hashCode() : 0);

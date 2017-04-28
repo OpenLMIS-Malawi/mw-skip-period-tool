@@ -16,7 +16,6 @@
 package mw.gov.health.lmis.migration.tool.openlmis.requisition.domain;
 
 import static java.util.Objects.isNull;
-import static mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.OpenLmisNumberUtils.zeroIfNull;
 
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
@@ -33,9 +32,6 @@ import lombok.Setter;
 import mw.gov.health.lmis.migration.tool.openlmis.BaseEntity;
 import mw.gov.health.lmis.migration.tool.openlmis.CurrencyConfig;
 import mw.gov.health.lmis.migration.tool.openlmis.ExternalStatus;
-import mw.gov.health.lmis.migration.tool.openlmis.fulfillment.domain.ProofOfDelivery;
-import mw.gov.health.lmis.migration.tool.openlmis.fulfillment.domain.ProofOfDeliveryLineItem;
-import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.FacilityTypeApprovedProduct;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.Orderable;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.StockAdjustmentReason;
 import mw.gov.health.lmis.migration.tool.openlmis.requisition.RequisitionHelper;
@@ -198,74 +194,6 @@ public class Requisition extends BaseTimestampedEntity {
     this.processingPeriodId = processingPeriodId;
     this.status = status;
     this.emergency = emergency;
-  }
-
-  /**
-   * Initiates the state of a requisition by creating line items based on products
-   *
-   * @param template             the requisition template for this requisition to use (based on
-   *                             program)
-   * @param approvedProducts     the full supply products for this requisitions facility to build
-   *                             requisition lines for
-   * @param previousRequisitions the previous requisitions for this program/facility. Used for field
-   *                             calculations and set previous adjusted consumptions. Pass empty
-   *                             list if there are no previous requisitions.
-   */
-  public void initiate(RequisitionTemplate template,
-                       Collection<FacilityTypeApprovedProduct> approvedProducts,
-                       List<Requisition> previousRequisitions,
-                       int numberOfPreviousPeriodsToAverage,
-                       ProofOfDelivery proofOfDelivery,
-                       UUID initiator) {
-    this.template = template;
-    this.previousRequisitions = previousRequisitions;
-
-    setRequisitionLineItems(
-        approvedProducts
-            .stream()
-            .map(approvedProduct -> new RequisitionLineItem(this, approvedProduct))
-            .collect(Collectors.toList())
-    );
-
-    // Firstly, if we display the column ...
-    // ... and if the previous requisition exists ...
-    if (!previousRequisitions.isEmpty()
-        && null != previousRequisitions.get(0)
-        && template.isColumnDisplayed(RequisitionLineItem.BEGINNING_BALANCE)) {
-      // .. for each line from the current requisition ...
-      getNonSkippedFullSupplyRequisitionLineItems().forEach(currentLine -> {
-        // ... we try to find line in the previous requisition for the same product ...
-        RequisitionLineItem previousLine = previousRequisitions.get(0)
-            .findLineByProductId(currentLine.getOrderableId());
-
-        // ... and in the end we use it to calculate beginning balance in a new line.
-        currentLine.setBeginningBalance(
-            LineItemFieldsCalculator.calculateBeginningBalance(previousLine));
-      });
-    }
-
-    // Secondly, if Proof Of Delivery exists and it is submitted ...
-    if (null != proofOfDelivery && proofOfDelivery.isSubmitted()) {
-      // .. for each line from the current requisition ...
-      getNonSkippedFullSupplyRequisitionLineItems().forEach(requisitionLine -> {
-        // ... we try to find line in POD for the same product ...
-        ProofOfDeliveryLineItem proofOfDeliveryLine = proofOfDelivery
-            .findLineByProductId(requisitionLine.getOrderableId());
-
-        // ... and if line exists we set value for Total Received Quantity (B) column
-        if (null != proofOfDeliveryLine) {
-          requisitionLine.setTotalReceivedQuantity(
-              (int) zeroIfNull(proofOfDeliveryLine.getQuantityReceived())
-          );
-        }
-      });
-    }
-
-    setPreviousAdjustedConsumptions(numberOfPreviousPeriodsToAverage);
-
-    status = ExternalStatus.INITIATED;
-
-    statusChanges.add(StatusChange.newStatusChange(this, initiator));
   }
 
   /**

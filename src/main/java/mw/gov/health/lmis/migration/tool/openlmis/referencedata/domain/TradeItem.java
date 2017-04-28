@@ -18,11 +18,15 @@ package mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
+import javax.persistence.CascadeType;
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
-import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 
 /**
  * TradeItems represent branded/produced/physical products.  A TradeItem is used for Product's that
@@ -43,8 +47,10 @@ public final class TradeItem extends Orderable {
   @JsonProperty
   private String manufacturerOfTradeItem;
 
-  @ManyToOne
-  private CommodityType commodityType;
+  @OneToMany(mappedBy = "tradeItem", cascade = CascadeType.ALL)
+  @JsonProperty
+  @Getter
+  private List<TradeItemClassification> classifications;
 
   private TradeItem(Code productCode, Dispensable dispensable, String fullProductName,
                     long netContent, long packRoundingThreshold, boolean roundToZero) {
@@ -65,7 +71,7 @@ public final class TradeItem extends Orderable {
    */
   @Override
   public boolean canFulfill(Orderable product) {
-    return this.equals(product) || hasCommodityType(product);
+    return this.equals(product);
   }
 
   /**
@@ -89,29 +95,5 @@ public final class TradeItem extends Orderable {
     Dispensable dispensable = Dispensable.createNew(dispensingUnit);
     return new TradeItem(code, dispensable, fullProductName, netContent,
         packRoundingThreshold, roundToZero);
-  }
-
-  /**
-   * Assign a commodity type.
-   * @param commodityType the given commodity type, or null to un-assign.
-   */
-  void assignCommodityType(CommodityType commodityType) {
-    if (null == commodityType || hasSameDispensingUnit(commodityType)) {
-      this.commodityType = commodityType;
-    } else {
-      throw new IllegalArgumentException();
-    }
-  }
-
-  /*
-  returns true if we have a commodity type and the one given has the same product code,
-   false otherwise.
-   */
-  private boolean hasCommodityType(Orderable product) {
-    return null != commodityType && commodityType.equals(product);
-  }
-
-  private boolean hasSameDispensingUnit(Orderable product) {
-    return this.getDispensable().equals(product.getDispensable());
   }
 }

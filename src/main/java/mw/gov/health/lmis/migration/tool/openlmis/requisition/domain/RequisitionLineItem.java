@@ -27,7 +27,6 @@ import static mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.Line
 
 import org.hibernate.annotations.Parameter;
 import org.hibernate.annotations.Type;
-import org.joda.money.CurrencyUnit;
 import org.joda.money.Money;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,10 +34,7 @@ import org.slf4j.LoggerFactory;
 import lombok.Getter;
 import lombok.Setter;
 import mw.gov.health.lmis.migration.tool.openlmis.BaseEntity;
-import mw.gov.health.lmis.migration.tool.openlmis.CurrencyConfig;
-import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.FacilityTypeApprovedProduct;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.Orderable;
-import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.ProgramOrderable;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.StockAdjustmentReason;
 
 import java.math.BigDecimal;
@@ -220,26 +216,6 @@ public class RequisitionLineItem extends BaseEntity {
     stockAdjustments = new ArrayList<>();
     this.skipped = false;
     previousAdjustedConsumptions = new ArrayList<>();
-  }
-
-  /**
-   * Initiates a requisition line item with specified requisition and product.
-   *
-   * @param requisition     requisition to apply
-   * @param approvedProduct facilityTypeApprovedProduct to apply
-   */
-  public RequisitionLineItem(Requisition requisition, FacilityTypeApprovedProduct approvedProduct) {
-    this();
-    this.requisition = requisition;
-    this.maxPeriodsOfStock = BigDecimal.valueOf(approvedProduct.getMaxPeriodsOfStock());
-
-    ProgramOrderable product = approvedProduct.getProgramOrderable();
-    this.orderableId = product.getProduct().getId();
-
-    Money priceFromProduct = product.getPricePerPack();
-    this.pricePerPack = priceFromProduct == null
-        ? Money.of(CurrencyUnit.of(CurrencyConfig.CURRENCY_CODE), PRICE_PER_PACK_IF_NULL)
-        : priceFromProduct;
   }
 
   /**

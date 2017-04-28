@@ -1,31 +1,18 @@
-/*
- * This program is part of the OpenLMIS logistics management information system platform software.
- * Copyright © 2017 VillageReach
- *
- * This program is free software: you can redistribute it and/or modify it under the terms
- * of the GNU Affero General Public License as published by the Free Software Foundation, either
- * version 3 of the License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
- * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- * See the GNU Affero General Public License for more details. You should have received a copy of
- * the GNU Affero General Public License along with this program. If not, see
- * http://www.gnu.org/licenses.  For additional information contact info@OpenLMIS.org.
- */
-
 package mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonInclude;
 
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.List;
 
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 
 /**
@@ -36,48 +23,27 @@ import javax.persistence.OneToMany;
 @Entity
 @DiscriminatorValue("COMMODITY_TYPE")
 @NoArgsConstructor
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public final class CommodityType extends Orderable {
+
   private String description;
 
-  @OneToMany(mappedBy = "commodityType")
-  private Set<TradeItem> tradeItems;
+  @Getter
+  private String classificationSystem;
 
-  private CommodityType(Code productCode, Dispensable dispensable, String fullProductName,
-                        long netContent, long packRoundingThreshold, boolean roundToZero) {
-    super(productCode, dispensable, fullProductName, netContent, packRoundingThreshold,
-        roundToZero);
-    tradeItems = new HashSet<>();
-  }
+  @Getter
+  private String classificationId;
 
-  /**
-   * Create a new commodity type.
-   *
-   * @param productCode a unique product code
-   * @param fullProductName fullProductName of product
-   * @param description the description to display in ordering, fulfilling, etc
-   * @param netContent    the number of dispensing units in the pack
-   * @param packRoundingThreshold determines how number of packs is rounded
-   * @param roundToZero determines if number of packs can be rounded to zero
-   * @return a new CommodityType
-   */
-  @JsonCreator
-  public static CommodityType newCommodityType(
-      @JsonProperty("productCode") String productCode,
-      @JsonProperty("dispensingUnit")
-          String dispensingUnit,
-      @JsonProperty("fullProductName") String fullProductName,
-      @JsonProperty("description") String description,
-      @JsonProperty("netContent") long netContent,
-      @JsonProperty("packRoundingThreshold")
-          long packRoundingThreshold,
-      @JsonProperty("roundToZero") boolean roundToZero) {
-    Code code = Code.code(productCode);
-    Dispensable dispensable = Dispensable.createNew(dispensingUnit);
-    CommodityType commodityType = new CommodityType(code, dispensable, fullProductName, netContent,
-        packRoundingThreshold, roundToZero);
-    commodityType.description = description;
-    return commodityType;
-  }
+  @Getter
+  @ManyToOne
+  @JoinColumn(columnDefinition = "parentid")
+  private CommodityType parent;
+
+  @Getter
+  @Setter
+  @OneToMany(mappedBy = "parent")
+  @JsonIgnore
+  private List<CommodityType> children;
 
   @Override
   public String getDescription() {
@@ -87,35 +53,5 @@ public final class CommodityType extends Orderable {
   @Override
   public boolean canFulfill(Orderable product) {
     return this.equals(product);
-  }
-
-  /**
-   * Add a TradeItem that can be fulfilled for this CommodityType.
-   *
-   * @param tradeItem the trade item
-   * @return true if added, false if it's already added or was otherwise unable to add.
-   */
-  public boolean addTradeItem(TradeItem tradeItem) {
-    boolean added = tradeItems.add(tradeItem);
-    if (added) {
-      tradeItem.assignCommodityType(this);
-    }
-
-    return added;
-  }
-
-  /**
-   * Sets the associated {@link TradeItem} that may fulfill for this.
-   * @param tradeItems the trade items.
-   */
-  public void setTradeItems(Set<TradeItem> tradeItems) {
-    this.tradeItems.forEach(tradeItem -> tradeItem.assignCommodityType(null));
-    this.tradeItems.clear();
-    tradeItems.forEach(tradeItem -> addTradeItem(tradeItem));
-  }
-
-  @JsonIgnore
-  public Set<TradeItem> getTradeItems() {
-    return tradeItems;
   }
 }
