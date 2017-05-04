@@ -8,6 +8,7 @@ import mw.gov.health.lmis.migration.tool.openlmis.fulfillment.domain.OrderNumber
 @Setter
 public class ToolParameters {
   private Interval interval = new Interval();
+  private Integer numberOfPeriodsToAverage = 2;
   private String creator = "scm";
   private String requestedQuantityExplanation = "transferred from supply manager";
   private String timeZone = "CAT";

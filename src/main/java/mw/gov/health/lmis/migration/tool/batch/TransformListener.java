@@ -35,7 +35,7 @@ public class TransformListener
   public void afterProcess(Main item, List<Requisition> result) {
     if (LOGGER.isInfoEnabled()) {
       LOGGER.info(
-          "Converted Product Tracking form ({};{}) to OpenLMIS {} requisitions in {}s",
+          "Converted Product Tracking form ({};{}) to {} OpenLMIS requisitions in {}s",
           item.getFacility(), dateFormat.format(item.getProcessingDate()), result.size(),
           Duration.between(startTime, LocalTime.now()).getSeconds()
       );

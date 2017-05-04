@@ -35,15 +35,14 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import mw.gov.health.lmis.migration.tool.config.ToolProperties;
 import mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.AvailableRequisitionColumn;
 import mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.RequisitionTemplate;
 import mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.RequisitionTemplateColumn;
 import mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.SourceType;
 import mw.gov.health.lmis.migration.tool.openlmis.requisition.repository.OlmisAvailableRequisitionColumnRepository;
-import mw.gov.health.lmis.migration.tool.scm.repository.SystemDefaultRepository;
 
 import java.util.Map;
-import java.util.Optional;
 import java.util.UUID;
 
 @Component
@@ -57,22 +56,10 @@ public class RequsitionUtil {
 
   /**
    * Creates new instance of this class.
-   *
-   * @param systemDefaultRepository repository that will receive system configuration settings from
-   *                                Supply Chain Manager.
    */
   @Autowired
-  public RequsitionUtil(SystemDefaultRepository systemDefaultRepository) {
-    Short currentNumberOfPeriodsToAverage = systemDefaultRepository
-        .findAll()
-        .iterator()
-        .next()
-        .getNumberOfPeriodsToAverage();
-
-    this.numberOfPeriodsToAverage = Optional
-        .ofNullable(currentNumberOfPeriodsToAverage)
-        .orElse((short) 2)
-        .intValue();
+  public RequsitionUtil(ToolProperties properties) {
+    this.numberOfPeriodsToAverage = properties.getParameters().getNumberOfPeriodsToAverage();
   }
 
   /**

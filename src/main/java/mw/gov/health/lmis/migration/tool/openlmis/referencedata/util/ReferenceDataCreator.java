@@ -34,8 +34,6 @@ import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.Superviso
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.User;
 import mw.gov.health.lmis.migration.tool.scm.domain.AdjustmentType;
 import mw.gov.health.lmis.migration.tool.scm.domain.Product;
-import mw.gov.health.lmis.migration.tool.scm.domain.SystemDefault;
-import mw.gov.health.lmis.migration.tool.scm.repository.SystemDefaultRepository;
 
 import java.time.LocalDate;
 import java.util.Date;
@@ -46,9 +44,6 @@ import java.util.UUID;
 @Component
 public class ReferenceDataCreator {
   private static final Logger LOGGER = LoggerFactory.getLogger(ReferenceDataCreator.class);
-
-  @Autowired
-  private SystemDefaultRepository systemDefaultRepository;
 
   @Autowired
   private ToolProperties toolProperties;
@@ -111,19 +106,12 @@ public class ReferenceDataCreator {
   public ProcessingPeriod processingPeriod(Date dateTime, ProcessingSchedule schedule) {
     LOGGER.info("Create processing period: {}", dateTime);
 
-    SystemDefault systemDefault = systemDefaultRepository
-        .findAll()
-        .iterator()
-        .next();
-
-    long numberOfMonths = systemDefault.getReportingPeriod() - 1L;
-
     LocalDate startDate = dateTime
         .toInstant()
         .atZone(TimeZone.getTimeZone(toolProperties.getParameters().getTimeZone()).toZoneId())
         .toLocalDate()
         .with(firstDayOfMonth());
-    LocalDate endDate = startDate.plusMonths(numberOfMonths).with(lastDayOfMonth());
+    LocalDate endDate = startDate.with(lastDayOfMonth());
 
     ProcessingPeriod processingPeriod = new ProcessingPeriod();
     processingPeriod.setId(UUID.randomUUID());

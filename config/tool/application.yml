@@ -11,6 +11,7 @@ tool:
             days: 0
             months: 0
             years: 5
+        numberOfPeriodsToAverage: 2
         creator: "scm"
         requestedQuantityExplanation: "transferred from supply manager"
         timeZone: "CAT"
