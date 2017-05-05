@@ -11,7 +11,7 @@ public class FacilityRepository extends BaseRepository<Facility> {
 
   @Override
   String getTableName() {
-    return "Facility";
+    return properties.getTableNames().getFacility();
   }
 
   @Override

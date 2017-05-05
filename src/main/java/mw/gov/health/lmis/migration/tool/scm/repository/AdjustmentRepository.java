@@ -16,7 +16,7 @@ import java.util.stream.Collectors;
 public class AdjustmentRepository extends BaseRepository<Adjustment> {
 
   /**
-   * Finds all adjustmenets for the given item.
+   * Finds all adjustments for the given item.
    */
   public Map<Integer, List<Adjustment>> search(List<Integer> itemIds) {
     return search(elem -> isNotZero(elem.getQuantity()) && itemIds.contains(elem.getItem()))
@@ -26,7 +26,7 @@ public class AdjustmentRepository extends BaseRepository<Adjustment> {
 
   @Override
   String getTableName() {
-    return "CTF_Adjustments";
+    return properties.getTableNames().getAdjustment();
   }
 
   @Override

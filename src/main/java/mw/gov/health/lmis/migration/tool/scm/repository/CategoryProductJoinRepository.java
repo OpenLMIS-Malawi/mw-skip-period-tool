@@ -12,7 +12,7 @@ public class CategoryProductJoinRepository extends BaseRepository<CategoryProduc
 
   @Override
   String getTableName() {
-    return "tblCategoryProductJoin";
+    return properties.getTableNames().getCategoryProductJoin();
   }
 
   @Override

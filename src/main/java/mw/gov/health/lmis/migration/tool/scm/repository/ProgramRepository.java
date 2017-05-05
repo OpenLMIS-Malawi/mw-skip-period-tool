@@ -12,7 +12,7 @@ public class ProgramRepository extends BaseRepository<Program> {
 
   @Override
   String getTableName() {
-    return "Program";
+    return properties.getTableNames().getProgram();
   }
 
   @Override

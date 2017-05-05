@@ -10,6 +10,7 @@ import com.healthmarketscience.jackcess.Table;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
+import mw.gov.health.lmis.migration.tool.config.ToolProperties;
 import mw.gov.health.lmis.migration.tool.scm.ScmDatabaseHandler;
 
 import java.io.IOException;
@@ -26,6 +27,9 @@ public abstract class BaseRepository<T> {
 
   @Autowired
   private ScmDatabaseHandler handler;
+
+  @Autowired
+  protected ToolProperties properties;
 
   /**
    * Find all rows from the given table.

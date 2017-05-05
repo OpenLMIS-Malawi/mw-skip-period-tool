@@ -17,7 +17,7 @@ public class CommentRepository extends BaseRepository<Comment> {
 
   @Override
   String getTableName() {
-    return "CTF_Comments";
+    return properties.getTableNames().getComment();
   }
 
   @Override

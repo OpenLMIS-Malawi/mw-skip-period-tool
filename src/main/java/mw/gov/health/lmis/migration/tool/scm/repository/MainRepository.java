@@ -50,7 +50,7 @@ public class MainRepository extends BaseRepository<Main> {
 
   @Override
   String getTableName() {
-    return "CTF_Main";
+    return properties.getTableNames().getMain();
   }
 
   @Override

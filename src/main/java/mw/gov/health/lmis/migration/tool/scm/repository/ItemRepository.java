@@ -23,7 +23,7 @@ public class ItemRepository extends BaseRepository<Item> {
 
   @Override
   String getTableName() {
-    return "CTF_Item";
+    return properties.getTableNames().getItem();
   }
 
   @Override

@@ -6,6 +6,16 @@ spring:
             enabled: false
 
 tool:
+    tableNames:
+        adjustment: "CTF_Adjustments"
+        adjustmentType: "Adj_Type"
+        categoryProductJoin: "tblCategoryProductJoin"
+        comment: "CTF_Comments"
+        facility: "Facility"
+        item: "CTF_Item"
+        main: "CTF_Main"
+        product: "Product"
+        program: "Program"
     parameters:
         interval:
             days: 0

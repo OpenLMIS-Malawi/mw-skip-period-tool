@@ -12,7 +12,7 @@ public class AdjustmentTypeRepository extends BaseRepository<AdjustmentType> {
 
   @Override
   String getTableName() {
-    return "Adj_Type";
+    return properties.getTableNames().getAdjustmentType();
   }
 
   @Override

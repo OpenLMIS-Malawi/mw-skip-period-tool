@@ -11,8 +11,8 @@ import mw.gov.health.lmis.migration.tool.scm.domain.Product;
 public class ProductRepository extends BaseRepository<Product> {
 
   @Override
-  String getTableName() {
-    return "Product";
+  public String getTableName() {
+    return properties.getTableNames().getProduct();
   }
 
   @Override
