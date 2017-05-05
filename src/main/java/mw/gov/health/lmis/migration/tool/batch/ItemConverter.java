@@ -12,16 +12,20 @@ import org.joda.money.Money;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import mw.gov.health.lmis.migration.tool.config.MappingHelper;
 import mw.gov.health.lmis.migration.tool.config.ToolProperties;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.Code;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.Orderable;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.Program;
+import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.StockAdjustmentReason;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.OlmisOrderableRepository;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.OlmisProgramRepository;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.OlmisStockAdjustmentReasonRepository;
 import mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.Requisition;
 import mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.RequisitionLineItem;
+import mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.StockAdjustment;
 import mw.gov.health.lmis.migration.tool.scm.domain.Adjustment;
+import mw.gov.health.lmis.migration.tool.scm.domain.AdjustmentType;
 import mw.gov.health.lmis.migration.tool.scm.domain.Item;
 import mw.gov.health.lmis.migration.tool.scm.repository.AdjustmentRepository;
 import mw.gov.health.lmis.migration.tool.scm.repository.AdjustmentTypeRepository;
@@ -31,6 +35,7 @@ import java.math.BigDecimal;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Component
@@ -92,28 +97,25 @@ public class ItemConverter {
 
     Program program = olmisProgramRepository.findOne(requisition.getProgramId());
 
-    //    Optional
-    //        .ofNullable(adjustments)
-    //        .ifPresent(list -> requisitionLineItem.setStockAdjustments(
-    //            list
-    //                .parallelStream()
-    //                .map(adjustment -> {
-    //                  AdjustmentType type = adjustmentTypeRepository.findByType(
-    // adjustment.getType());
-    //                  String name = MappingHelper.getAdjustmentName(toolProperties,
-    // type.getName());
-    //
-    //                  StockAdjustmentReason stockAdjustmentReason =
-    //                      olmisStockAdjustmentReasonRepository.findByProgramAndName(program,
-    // name);
-    //
-    //                  StockAdjustment stockAdjustment = new StockAdjustment();
-    //                  stockAdjustment.setReasonId(stockAdjustmentReason.getId());
-    //                  stockAdjustment.setQuantity(adjustment.getQuantity());
-    //
-    //                  return stockAdjustment;
-    //                })
-    //                .collect(Collectors.toList())));
+    Optional
+        .ofNullable(adjustments)
+        .ifPresent(list -> requisitionLineItem.setStockAdjustments(
+            list
+                .parallelStream()
+                .map(adjustment -> {
+                  AdjustmentType type = adjustmentTypeRepository.findByType(adjustment.getType());
+                  String name = MappingHelper.getAdjustmentName(toolProperties, type.getName());
+
+                  StockAdjustmentReason stockAdjustmentReason =
+                      olmisStockAdjustmentReasonRepository.findByProgramAndName(program, name);
+
+                  StockAdjustment stockAdjustment = new StockAdjustment();
+                  stockAdjustment.setReasonId(stockAdjustmentReason.getId());
+                  stockAdjustment.setQuantity(adjustment.getQuantity());
+
+                  return stockAdjustment;
+                })
+                .collect(Collectors.toList())));
 
     requisitionLineItem.setTotalLossesAndAdjustments(
         calculateTotalLossesAndAdjustments(

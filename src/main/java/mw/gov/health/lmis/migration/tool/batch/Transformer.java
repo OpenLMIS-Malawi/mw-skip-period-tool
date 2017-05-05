@@ -153,7 +153,7 @@ public class Transformer implements ItemProcessor<Main, List<Requisition>> {
         requisition, user, main.getNotes(), itemService.getNotes(items)
     );
 
-    //requisitionService.convertToOrder(requisition, user, program, facility);
+    requisitionService.convertToOrder(requisition, user, program, facility);
 
     return requisition;
   }
