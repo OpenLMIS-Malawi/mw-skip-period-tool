@@ -111,7 +111,7 @@ public class Transformer implements ItemProcessor<Main, List<Requisition>> {
     requisition.setModifiedDate(convert(period.getStartDate()));
 
     RequisitionTemplate template = olmisRequisitionTemplateRepository
-        .findByProgramId(program.getId());
+        .findFirstByProgramIdOrderByCreatedDateDesc(program.getId());
 
     int numberOfPreviousPeriodsToAverage;
     List<Requisition> previousRequisitions;
