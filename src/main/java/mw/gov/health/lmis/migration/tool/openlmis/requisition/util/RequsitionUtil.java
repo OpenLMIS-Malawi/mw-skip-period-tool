@@ -35,6 +35,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import mw.gov.health.lmis.migration.tool.config.ToolParameters;
 import mw.gov.health.lmis.migration.tool.config.ToolProperties;
 import mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.AvailableRequisitionColumn;
 import mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.RequisitionTemplate;
@@ -42,7 +43,9 @@ import mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.Requisition
 import mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.SourceType;
 import mw.gov.health.lmis.migration.tool.openlmis.requisition.repository.OlmisAvailableRequisitionColumnRepository;
 
+import java.time.ZonedDateTime;
 import java.util.Map;
+import java.util.TimeZone;
 import java.util.UUID;
 
 @Component
@@ -53,6 +56,9 @@ public class RequsitionUtil {
 
   @Autowired
   private OlmisAvailableRequisitionColumnRepository olmisAvailableRequisitionColumnRepository;
+
+  @Autowired
+  private ToolProperties toolProperties;
 
   /**
    * Creates new instance of this class.
@@ -68,10 +74,19 @@ public class RequsitionUtil {
   public RequisitionTemplate createTemplate(UUID programId) {
     LOGGER.info("Create requisition template for program: {}", programId);
 
+    ToolParameters.Interval interval = toolProperties.getParameters().getInterval();
+    ZonedDateTime now = ZonedDateTime
+        .now(TimeZone.getTimeZone(toolProperties.getParameters().getTimeZone()).toZoneId())
+        .minusYears(interval.getYears())
+        .minusMonths(interval.getMonths())
+        .minusDays(interval.getDays());
+
     RequisitionTemplate template = new RequisitionTemplate();
     template.setProgramId(programId);
     template.setNumberOfPeriodsToAverage(numberOfPeriodsToAverage);
     template.setColumnsMap(getRequisitionTemplateColumnMap());
+    template.setCreatedDate(now);
+    template.setModifiedDate(now);
 
     return template;
   }
