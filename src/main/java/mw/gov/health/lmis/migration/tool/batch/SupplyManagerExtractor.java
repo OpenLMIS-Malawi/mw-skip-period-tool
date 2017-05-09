@@ -20,6 +20,9 @@ public class SupplyManagerExtractor extends AbstractPagingItemReader<Main> {
   private MainRepository mainRepository;
   private ToolProperties toolProperties;
 
+  /**
+   * Creates new instance with passed values.
+   */
   @Autowired
   public SupplyManagerExtractor(MainRepository mainRepository, ToolProperties toolProperties) {
     this.mainRepository = mainRepository;
