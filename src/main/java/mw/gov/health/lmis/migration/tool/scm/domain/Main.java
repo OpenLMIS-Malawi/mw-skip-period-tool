@@ -94,12 +94,12 @@ public class Main extends BaseEntity implements Comparable<Main> {
 
   @Override
   public int compareTo(Main that) {
-    int compare = this.getFacility().compareTo(that.getFacility());
+    int compare = this.getProcessingDate().compareTo(that.getProcessingDate());
 
     if (0 != compare) {
       return compare;
     }
 
-    return this.getProcessingDate().compareTo(that.getProcessingDate());
+    return this.getFacility().compareTo(that.getFacility());
   }
 }
