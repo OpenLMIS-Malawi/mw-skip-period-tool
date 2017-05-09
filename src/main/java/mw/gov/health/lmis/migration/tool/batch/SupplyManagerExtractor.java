@@ -17,11 +17,16 @@ import java.util.concurrent.CopyOnWriteArrayList;
 public class SupplyManagerExtractor extends AbstractPagingItemReader<Main> {
   private static final Logger LOG = LoggerFactory.getLogger(SupplyManagerExtractor.class);
 
-  @Autowired
   private MainRepository mainRepository;
+  private ToolProperties toolProperties;
 
   @Autowired
-  private ToolProperties toolProperties;
+  public SupplyManagerExtractor(MainRepository mainRepository, ToolProperties toolProperties) {
+    this.mainRepository = mainRepository;
+    this.toolProperties = toolProperties;
+
+    setPageSize(toolProperties.getConfiguration().getBatch().getChunk());
+  }
 
   @Override
   protected void doReadPage() {
