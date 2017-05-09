@@ -7,6 +7,8 @@ import static mw.gov.health.lmis.migration.tool.openlmis.ExternalStatus.SUBMITTE
 
 import com.google.common.collect.Sets;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -17,6 +19,7 @@ import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.Code;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.Facility;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.ProcessingPeriod;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.Program;
+import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.RequisitionGroup;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.RequisitionGroupProgramSchedule;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.User;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.OlmisFacilityRepository;
@@ -43,6 +46,7 @@ import java.util.stream.Collectors;
 
 @Component
 public class Transformer implements ItemProcessor<Main, List<Requisition>> {
+  private static final Logger LOGGER = LoggerFactory.getLogger(Transformer.class);
 
   @Autowired
   private OlmisFacilityRepository olmisFacilityRepository;
@@ -133,10 +137,18 @@ public class Transformer implements ItemProcessor<Main, List<Requisition>> {
     requisition.setRequisitionLineItems(itemConverter.convert(items, requisition));
     requisition.setPreviousAdjustedConsumptions(numberOfPreviousPeriodsToAverage);
 
-    RequisitionGroupProgramSchedule schedule = olmisRequisitionGroupProgramScheduleRepository
-        .findByProgramAndFacility(program.getId(), facility.getId()).get(0);
+    List<RequisitionGroupProgramSchedule> schedule = olmisRequisitionGroupProgramScheduleRepository
+        .findByProgramAndFacility(program.getId(), facility.getId());
 
-    requisition.setSupervisoryNodeId(schedule.getRequisitionGroup().getSupervisoryNode().getId());
+    if (!schedule.isEmpty()) {
+      RequisitionGroup requisitionGroup = schedule.get(0).getRequisitionGroup();
+      requisition.setSupervisoryNodeId(requisitionGroup.getSupervisoryNode().getId());
+    } else {
+      LOGGER.warn(
+          "Can't set supervisory node ID for program {} and facility {}",
+          program.getCode(), facility.getCode()
+      );
+    }
 
     User user = olmisUserRepository.findByUsername(toolProperties.getParameters().getCreator());
 
