@@ -157,8 +157,8 @@ public class Transformer implements ItemProcessor<Main, List<Requisition>> {
     requisition.setTemplate(template);
     requisition.setPreviousRequisitions(previousRequisitions);
     requisition.setAvailableNonFullSupplyProducts(Sets.newHashSet());
-    requisition.setCreatedDate(convert(main.getCreatedDate(), period.getStartDate()));
-    requisition.setModifiedDate(convert(main.getModifiedDate(), period.getStartDate()));
+    requisition.setCreatedDate(convert(main.getModifiedDate(), period.getStartDate()));
+    requisition.setModifiedDate(convert(main.getModifiedDate(), period.getEndDate()));
     requisition.setStatus(APPROVED);
     requisition.setRequisitionLineItems(itemConverter.convert(items, requisition));
     requisition.setPreviousAdjustedConsumptions(numberOfPreviousPeriodsToAverage);
