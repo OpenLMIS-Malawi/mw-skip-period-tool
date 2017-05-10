@@ -37,10 +37,12 @@ import mw.gov.health.lmis.migration.tool.scm.domain.Main;
 import mw.gov.health.lmis.migration.tool.scm.service.ItemService;
 
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 import java.util.TimeZone;
 import java.util.stream.Collectors;
 
@@ -91,15 +93,40 @@ public class Transformer implements ItemProcessor<Main, List<Requisition>> {
         .entrySet()
         .parallelStream()
         .map(entry -> createRequisition(entry.getKey(), entry.getValue(), item))
+        .filter(Objects::nonNull)
         .collect(Collectors.toList());
   }
 
   private Requisition createRequisition(String programCode, Collection<Item> items, Main main) {
     String code = MappingHelper.getFacilityCode(toolProperties, main.getFacility());
     Facility facility = olmisFacilityRepository.findByCode(code);
+
+    if (null == facility) {
+      LOGGER.error("Can't find facility with code {}", code);
+      return null;
+    }
+
     Program program = olmisProgramRepository.findByCode(new Code(programCode));
-    ProcessingPeriod period = olmisProcessingPeriodRepository
-        .findByStartDate(convert(main.getProcessingDate()).toLocalDate());
+
+    if (null == program) {
+      LOGGER.error("Can't find program with code {}", programCode);
+      return null;
+    }
+
+    ZonedDateTime processingDate = convert(main.getProcessingDate());
+
+    if (null == processingDate) {
+      LOGGER.error("Can't convert processing date to ZonedDateTime instance");
+      return null;
+    }
+
+    LocalDate startDate = processingDate.toLocalDate();
+    ProcessingPeriod period = olmisProcessingPeriodRepository.findByStartDate(startDate);
+
+    if (null == period) {
+      LOGGER.error("Can't find period with start date {}", startDate);
+      return null;
+    }
 
     Requisition requisition = new Requisition();
     requisition.setFacilityId(facility.getId());
@@ -107,8 +134,6 @@ public class Transformer implements ItemProcessor<Main, List<Requisition>> {
     requisition.setProcessingPeriodId(period.getId());
     requisition.setEmergency(false);
     requisition.setNumberOfMonthsInPeriod(period.getDurationInMonths());
-    requisition.setCreatedDate(convert(period.getStartDate()));
-    requisition.setModifiedDate(convert(period.getStartDate()));
 
     RequisitionTemplate template = olmisRequisitionTemplateRepository
         .findFirstByProgramIdOrderByCreatedDateDesc(program.getId());
@@ -131,8 +156,8 @@ public class Transformer implements ItemProcessor<Main, List<Requisition>> {
     requisition.setTemplate(template);
     requisition.setPreviousRequisitions(previousRequisitions);
     requisition.setAvailableNonFullSupplyProducts(Sets.newHashSet());
-    requisition.setCreatedDate(convert(main.getCreatedDate()));
-    requisition.setModifiedDate(convert(main.getModifiedDate()));
+    requisition.setCreatedDate(convert(main.getCreatedDate(), period.getStartDate()));
+    requisition.setModifiedDate(convert(main.getModifiedDate(), period.getStartDate()));
     requisition.setStatus(APPROVED);
     requisition.setRequisitionLineItems(itemConverter.convert(items, requisition));
     requisition.setPreviousAdjustedConsumptions(numberOfPreviousPeriodsToAverage);
@@ -170,16 +195,24 @@ public class Transformer implements ItemProcessor<Main, List<Requisition>> {
     return requisition;
   }
 
-  private ZonedDateTime convert(LocalDate date) {
-    return date
-        .atStartOfDay()
-        .atZone(TimeZone.getTimeZone(toolProperties.getParameters().getTimeZone()).toZoneId());
+  private ZonedDateTime convert(Date date) {
+    return convert(date, null);
   }
 
-  private ZonedDateTime convert(Date date) {
-    return date
-        .toInstant()
-        .atZone(TimeZone.getTimeZone(toolProperties.getParameters().getTimeZone()).toZoneId());
+  private ZonedDateTime convert(Date date, LocalDate localDate) {
+    String timeZoneName = toolProperties.getParameters().getTimeZone();
+    TimeZone timeZone = TimeZone.getTimeZone(timeZoneName);
+    ZoneId zoneId = timeZone.toZoneId();
+
+    if (null != date) {
+      return date.toInstant().atZone(zoneId);
+    }
+
+    if (null != localDate) {
+      return localDate.atStartOfDay(zoneId);
+    }
+
+    return null;
   }
 
 }

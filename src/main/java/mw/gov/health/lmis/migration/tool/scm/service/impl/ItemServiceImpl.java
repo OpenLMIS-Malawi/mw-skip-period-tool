@@ -7,6 +7,8 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -31,6 +33,7 @@ import java.util.stream.Collectors;
 
 @Service
 public class ItemServiceImpl implements ItemService {
+  private static final Logger LOGGER = LoggerFactory.getLogger(ItemServiceImpl.class);
 
   @Autowired
   private CategoryProductJoinRepository categoryProductJoinRepository;
@@ -100,6 +103,12 @@ public class ItemServiceImpl implements ItemService {
 
   private String getCategoryName(Item item) {
     CategoryProductJoin join = categoryProductJoinRepository.findById(item.getCategoryProduct());
+
+    if (null == join) {
+      LOGGER.error("Can't find Category Product Join for {}", item.getCategoryProduct());
+      return null;
+    }
+
     Program program = programRepository.findByProgramId(join.getProgram());
 
     return program.getName();

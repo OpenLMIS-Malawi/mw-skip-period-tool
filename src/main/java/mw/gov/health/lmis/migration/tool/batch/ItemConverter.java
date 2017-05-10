@@ -9,6 +9,8 @@ import com.google.common.collect.Lists;
 
 import org.joda.money.CurrencyUnit;
 import org.joda.money.Money;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -35,12 +37,14 @@ import java.math.BigDecimal;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Component
 @SuppressWarnings("PMD")
 public class ItemConverter {
+  private static final Logger LOGGER = LoggerFactory.getLogger(ItemConverter.class);
 
   @Autowired
   private OlmisProgramRepository olmisProgramRepository;
@@ -109,12 +113,22 @@ public class ItemConverter {
                   StockAdjustmentReason stockAdjustmentReason =
                       olmisStockAdjustmentReasonRepository.findByProgramAndName(program, name);
 
+                  if (null == stockAdjustmentReason) {
+                    LOGGER.error(
+                        "Can't find stock adjustment reason for program {} with name {}",
+                        program.getCode(), name
+                    );
+                    
+                    return null;
+                  }
+
                   StockAdjustment stockAdjustment = new StockAdjustment();
                   stockAdjustment.setReasonId(stockAdjustmentReason.getId());
                   stockAdjustment.setQuantity(adjustment.getQuantity());
 
                   return stockAdjustment;
                 })
+                .filter(Objects::nonNull)
                 .collect(Collectors.toList())));
 
     requisitionLineItem.setTotalLossesAndAdjustments(
