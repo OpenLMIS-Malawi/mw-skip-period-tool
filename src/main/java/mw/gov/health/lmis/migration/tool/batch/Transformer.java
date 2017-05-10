@@ -36,9 +36,11 @@ import mw.gov.health.lmis.migration.tool.scm.domain.Item;
 import mw.gov.health.lmis.migration.tool.scm.domain.Main;
 import mw.gov.health.lmis.migration.tool.scm.service.ItemService;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
@@ -113,18 +115,17 @@ public class Transformer implements ItemProcessor<Main, List<Requisition>> {
       return null;
     }
 
-    ZonedDateTime processingDate = convert(main.getProcessingDate());
+    LocalDate processingDate = getProcessingDate(main.getProcessingDate());
 
     if (null == processingDate) {
-      LOGGER.error("Can't convert processing date to ZonedDateTime instance");
+      LOGGER.error("Can't convert processing date to LocalDate instance");
       return null;
     }
 
-    LocalDate startDate = processingDate.toLocalDate();
-    ProcessingPeriod period = olmisProcessingPeriodRepository.findByStartDate(startDate);
+    ProcessingPeriod period = olmisProcessingPeriodRepository.findInPeriod(processingDate);
 
     if (null == period) {
-      LOGGER.error("Can't find period with start date {}", startDate);
+      LOGGER.error("Can't find period for processing date {}", processingDate);
       return null;
     }
 
@@ -195,8 +196,15 @@ public class Transformer implements ItemProcessor<Main, List<Requisition>> {
     return requisition;
   }
 
-  private ZonedDateTime convert(Date date) {
-    return convert(date, null);
+  private LocalDate getProcessingDate(Date date) {
+    String timeZoneName = toolProperties.getParameters().getTimeZone();
+    TimeZone timeZone = TimeZone.getTimeZone(timeZoneName);
+    ZoneId zoneId = timeZone.toZoneId();
+
+    Instant instant = date.toInstant();
+    instant = instant.truncatedTo(ChronoUnit.DAYS);
+
+    return instant.atZone(zoneId).toLocalDate();
   }
 
   private ZonedDateTime convert(Date date, LocalDate localDate) {
