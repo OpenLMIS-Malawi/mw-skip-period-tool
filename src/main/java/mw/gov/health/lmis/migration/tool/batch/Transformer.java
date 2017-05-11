@@ -4,6 +4,7 @@ import static mw.gov.health.lmis.migration.tool.openlmis.ExternalStatus.APPROVED
 import static mw.gov.health.lmis.migration.tool.openlmis.ExternalStatus.AUTHORIZED;
 import static mw.gov.health.lmis.migration.tool.openlmis.ExternalStatus.INITIATED;
 import static mw.gov.health.lmis.migration.tool.openlmis.ExternalStatus.SUBMITTED;
+import static org.springframework.util.CollectionUtils.isEmpty;
 
 import com.google.common.collect.Sets;
 
@@ -30,6 +31,7 @@ import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.Olmis
 import mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.Requisition;
 import mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.RequisitionTemplate;
 import mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.StatusChange;
+import mw.gov.health.lmis.migration.tool.openlmis.requisition.repository.OlmisRequisitionRepository;
 import mw.gov.health.lmis.migration.tool.openlmis.requisition.repository.OlmisRequisitionTemplateRepository;
 import mw.gov.health.lmis.migration.tool.openlmis.requisition.service.RequisitionService;
 import mw.gov.health.lmis.migration.tool.scm.domain.Item;
@@ -81,6 +83,9 @@ public class Transformer implements ItemProcessor<Main, List<Requisition>> {
   private RequisitionService requisitionService;
 
   @Autowired
+  private OlmisRequisitionRepository olmisRequisitionRepository;
+
+  @Autowired
   private ToolProperties toolProperties;
 
   /**
@@ -126,6 +131,19 @@ public class Transformer implements ItemProcessor<Main, List<Requisition>> {
 
     if (null == period) {
       LOGGER.error("Can't find period for processing date {}", processingDate);
+      return null;
+    }
+
+    List<Requisition> requisitions = olmisRequisitionRepository
+        .findByFacilityIdAndProgramIdAndProcessingPeriodId(
+            facility.getId(), program.getId(), period.getId()
+        );
+
+    if (!isEmpty(requisitions)) {
+      LOGGER.warn(
+          "Requisition for facility {}, program {} and period {} exists. Skipping...",
+          facility.getCode(), program.getCode(), period.getName()
+      );
       return null;
     }
 
