@@ -29,6 +29,7 @@ public class SupplyManagerExtractor extends AbstractPagingItemReader<Main> {
     this.toolProperties = toolProperties;
 
     setPageSize(toolProperties.getConfiguration().getBatch().getChunk());
+    setSaveState(false);
   }
 
   @Override

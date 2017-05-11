@@ -8,6 +8,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Component;
 
+import mw.gov.health.lmis.migration.tool.config.ToolProperties;
 import mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.Requisition;
 import mw.gov.health.lmis.migration.tool.openlmis.requisition.repository.OlmisRequisitionRepository;
 
@@ -20,6 +21,18 @@ public class RequisitionReader extends AbstractPagingItemReader<Requisition> {
 
   @Autowired
   private OlmisRequisitionRepository olmisRequisitionRepository;
+
+  /**
+   * Creates new instance with passed values.
+   */
+  @Autowired
+  public RequisitionReader(OlmisRequisitionRepository olmisRequisitionRepository,
+                                ToolProperties toolProperties) {
+    this.olmisRequisitionRepository = olmisRequisitionRepository;
+
+    setPageSize(toolProperties.getConfiguration().getBatch().getChunk());
+    setSaveState(false);
+  }
 
   @Override
   protected void doReadPage() {
