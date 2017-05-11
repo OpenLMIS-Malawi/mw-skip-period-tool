@@ -23,6 +23,9 @@ import java.util.stream.Collectors;
 public class MainRepository extends BaseRepository<Main> {
   private Date nowAtStartOfDay;
 
+  /**
+   * Creates new instance with passing tool properties.
+   */
   @Autowired
   public MainRepository(ToolProperties toolProperties) {
     ToolParameters.Interval period = toolProperties.getParameters().getInterval();
