@@ -18,7 +18,6 @@ public class SupplyManagerExtractor extends AbstractPagingItemReader<Main> {
   private static final Logger LOG = LoggerFactory.getLogger(SupplyManagerExtractor.class);
 
   private MainRepository mainRepository;
-  private ToolProperties toolProperties;
 
   /**
    * Creates new instance with passed values.
@@ -26,7 +25,6 @@ public class SupplyManagerExtractor extends AbstractPagingItemReader<Main> {
   @Autowired
   public SupplyManagerExtractor(MainRepository mainRepository, ToolProperties toolProperties) {
     this.mainRepository = mainRepository;
-    this.toolProperties = toolProperties;
 
     setPageSize(toolProperties.getConfiguration().getBatch().getChunk());
     setSaveState(false);
@@ -36,9 +34,7 @@ public class SupplyManagerExtractor extends AbstractPagingItemReader<Main> {
   protected void doReadPage() {
     LOG.debug("Reading mains. Page: {}, page size: {}", getPage(), getPageSize());
 
-    List<Main> content = mainRepository.searchInPeriod(
-        toolProperties.getParameters().getInterval(), getPage(), getPageSize()
-    );
+    List<Main> content = mainRepository.searchInPeriod(getPage(), getPageSize());
 
     LOG.debug("{} main have been retrieved.", content.size());
 

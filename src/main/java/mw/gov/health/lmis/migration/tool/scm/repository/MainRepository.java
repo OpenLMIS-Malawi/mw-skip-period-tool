@@ -7,41 +7,39 @@ import static org.apache.commons.lang3.time.DateUtils.truncate;
 
 import com.healthmarketscience.jackcess.Row;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 import mw.gov.health.lmis.migration.tool.config.ToolParameters;
+import mw.gov.health.lmis.migration.tool.config.ToolProperties;
 import mw.gov.health.lmis.migration.tool.scm.domain.Main;
 
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
-import java.util.TreeSet;
 import java.util.stream.Collectors;
 
 @Repository
 public class MainRepository extends BaseRepository<Main> {
+  private Date nowAtStartOfDay;
+
+  @Autowired
+  public MainRepository(ToolProperties toolProperties) {
+    ToolParameters.Interval period = toolProperties.getParameters().getInterval();
+
+    nowAtStartOfDay = new Date();
+    nowAtStartOfDay = addYears(nowAtStartOfDay, -1 * period.getYears());
+    nowAtStartOfDay = addMonths(nowAtStartOfDay, -1 * period.getMonths());
+    nowAtStartOfDay = addDays(nowAtStartOfDay, -1 * period.getDays());
+    nowAtStartOfDay = truncate(nowAtStartOfDay, Calendar.DATE);
+  }
 
   /**
    * Find mains that have processing date in the given period.
    */
-  public List<Main> searchInPeriod(ToolParameters.Interval period, long page, long pageSize) {
-    Date nowAtStartOfDay = truncate(
-        addDays(
-            addMonths(
-                addYears(
-                    new Date(),
-                    -1 * period.getYears()
-                ),
-                -1 * period.getMonths()
-            ),
-            -1 * period.getDays()
-        ),
-        Calendar.DATE
-    );
-
+  public List<Main> searchInPeriod(long page, long pageSize) {
     List<Main> mains = search(main -> !main.getProcessingDate().before(nowAtStartOfDay));
-
-    return new TreeSet<>(mains)
+    return mains
         .stream()
         .skip(page * pageSize)
         .limit(pageSize)
