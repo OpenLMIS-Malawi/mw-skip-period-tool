@@ -17,7 +17,6 @@ import mw.gov.health.lmis.migration.tool.scm.domain.Main;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Repository
 public class MainRepository extends BaseRepository<Main> {
@@ -40,13 +39,8 @@ public class MainRepository extends BaseRepository<Main> {
   /**
    * Find mains that have processing date in the given period.
    */
-  public List<Main> searchInPeriod(long page, long pageSize) {
-    List<Main> mains = search(main -> !main.getProcessingDate().before(nowAtStartOfDay));
-    return mains
-        .stream()
-        .skip(page * pageSize)
-        .limit(pageSize)
-        .collect(Collectors.toList());
+  public List<Main> searchInPeriod() {
+    return search(main -> !main.getProcessingDate().before(nowAtStartOfDay));
   }
 
   @Override

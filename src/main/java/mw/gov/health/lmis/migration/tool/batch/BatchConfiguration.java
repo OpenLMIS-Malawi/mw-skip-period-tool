@@ -1,5 +1,9 @@
 package mw.gov.health.lmis.migration.tool.batch;
 
+import static java.lang.Math.max;
+import static java.lang.Runtime.getRuntime;
+import static org.springframework.batch.repeat.support.TaskExecutorRepeatTemplate.DEFAULT_THROTTLE_LIMIT;
+
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing;
@@ -11,6 +15,7 @@ import org.springframework.boot.autoconfigure.batch.BatchProperties;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.task.SimpleAsyncTaskExecutor;
 
 import mw.gov.health.lmis.migration.tool.config.ToolBatchConfiguration;
 import mw.gov.health.lmis.migration.tool.config.ToolProperties;
@@ -58,6 +63,8 @@ public class BatchConfiguration {
         .listener(new SupplyManagerExtractListener())
         .listener(new TransformListener())
         .listener(new OlmisLoadListener())
+        .taskExecutor(new SimpleAsyncTaskExecutor())
+        .throttleLimit(max(DEFAULT_THROTTLE_LIMIT, getRuntime().availableProcessors() - 1))
         .build();
   }
 
@@ -67,9 +74,9 @@ public class BatchConfiguration {
    */
   @Bean
   public Step previousRequisitions(StepBuilderFactory stepBuilderFactory,
-                                      RequisitionReader reader, RequisitionWriter writer,
-                                      RequisitionProcessor processor,
-                                      ToolProperties toolProperties)
+                                   RequisitionReader reader, RequisitionWriter writer,
+                                   RequisitionProcessor processor,
+                                   ToolProperties toolProperties)
       throws ClassNotFoundException, IllegalAccessException, InstantiationException {
     ToolBatchConfiguration batchProperties = toolProperties
         .getConfiguration()
