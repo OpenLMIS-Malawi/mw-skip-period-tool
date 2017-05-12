@@ -69,41 +69,15 @@ public class BatchConfiguration {
   }
 
   /**
-   * Configure Spring Batch Step that will read {@link Requisition} object, set previous
-   * requisitions and save it into OpenLMIS database.
-   */
-  @Bean
-  public Step previousRequisitions(StepBuilderFactory stepBuilderFactory,
-                                   RequisitionReader reader, RequisitionWriter writer,
-                                   RequisitionProcessor processor,
-                                   ToolProperties toolProperties)
-      throws ClassNotFoundException, IllegalAccessException, InstantiationException {
-    ToolBatchConfiguration batchProperties = toolProperties
-        .getConfiguration()
-        .getBatch();
-
-    return stepBuilderFactory
-        .get("previousRequisitions")
-        .<Requisition, Requisition>chunk(batchProperties.getChunk())
-        .reader(reader)
-        .processor(processor)
-        .writer(writer)
-        .faultTolerant()
-        .skipPolicy(batchProperties.getSkipPolicy().newInstance())
-        .build();
-  }
-
-  /**
    * Configure Spring Batch Job that will transform {@link Main} object into {@link Requisition}.
    */
   @Bean
-  public Job migrationJob(JobBuilderFactory jobBuilderFactory, Step migrationStep,
-                          Step previousRequisitions) {
+  public Job migrationJob(JobBuilderFactory jobBuilderFactory, Step migrationStep) {
     return jobBuilderFactory
         .get("migrationJob")
         .incrementer(new RunIdIncrementer())
-        .start(migrationStep)
-        .next(previousRequisitions)
+        .flow(migrationStep)
+        .end()
         .build();
   }
 
