@@ -72,7 +72,8 @@ public abstract class BaseRepository<T> {
    * Find a row by field and value.
    */
   T find(String field, Object value) {
-    return mapRow(findRow(ImmutableMap.of(field, value)));
+    Row row = findRow(ImmutableMap.of(field, value));
+    return null == row ? null : mapRow(row);
   }
 
   abstract String getTableName();
