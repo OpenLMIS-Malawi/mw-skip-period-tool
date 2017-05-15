@@ -42,11 +42,8 @@ import mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.Requisition
 import mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.SourceType;
 import mw.gov.health.lmis.migration.tool.openlmis.requisition.repository.OlmisAvailableRequisitionColumnRepository;
 
-import java.time.ZoneId;
 import java.time.ZonedDateTime;
-import java.util.Date;
 import java.util.Map;
-import java.util.TimeZone;
 import java.util.UUID;
 
 @Component
@@ -75,10 +72,8 @@ public class RequsitionUtil {
   public RequisitionTemplate createTemplate(UUID programId) {
     LOGGER.info("Create requisition template for program: {}", programId);
 
-    Date startDate = toolProperties.getParameters().getStartDate();
-    ZoneId zoneId = TimeZone.getTimeZone(toolProperties.getParameters().getTimeZone()).toZoneId();
-    ZonedDateTime createdDate = ZonedDateTime.ofInstant(startDate.toInstant(), zoneId);
-
+    ZonedDateTime createdDate = toolProperties.getParameters().getStartDate();
+    
     RequisitionTemplate template = new RequisitionTemplate();
     template.setProgramId(programId);
     template.setNumberOfPeriodsToAverage(numberOfPeriodsToAverage);

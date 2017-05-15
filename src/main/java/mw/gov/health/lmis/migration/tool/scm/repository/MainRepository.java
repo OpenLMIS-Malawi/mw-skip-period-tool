@@ -8,29 +8,31 @@ import org.springframework.stereotype.Repository;
 import mw.gov.health.lmis.migration.tool.config.ToolProperties;
 import mw.gov.health.lmis.migration.tool.scm.domain.Main;
 
-import java.util.Date;
+import java.time.Instant;
 import java.util.List;
+import java.util.function.Predicate;
 
 @Repository
 public class MainRepository extends BaseRepository<Main> {
-  private Date startDate;
-  private Date endDate;
+  private final SearchInPeriodPredicate searchInPeriodPredicate = new SearchInPeriodPredicate();
+
+  private Instant startDate;
+  private Instant endDate;
 
   /**
    * Creates new instance with passing tool properties.
    */
   @Autowired
   public MainRepository(ToolProperties toolProperties) {
-    startDate = toolProperties.getParameters().getStartDate();
-    endDate = toolProperties.getParameters().getEndDate();
+    startDate = toolProperties.getParameters().getStartDate().toInstant();
+    endDate = toolProperties.getParameters().getEndDate().toInstant();
   }
 
   /**
    * Find mains that have processing date in the given period.
    */
   public List<Main> searchInPeriod() {
-    return search(main -> !main.getProcessingDate().before(startDate)
-        && !main.getProcessingDate().after(endDate));
+    return search(searchInPeriodPredicate);
   }
 
   @Override
@@ -41,5 +43,16 @@ public class MainRepository extends BaseRepository<Main> {
   @Override
   Main mapRow(Row row) {
     return new Main(row);
+  }
+
+  private final class SearchInPeriodPredicate implements Predicate<Main> {
+
+    @Override
+    public boolean test(Main main) {
+      Instant processingDate = main.getProcessingDate().toInstant();
+
+      return processingDate.isAfter(startDate) && processingDate.isBefore(endDate);
+    }
+
   }
 }
