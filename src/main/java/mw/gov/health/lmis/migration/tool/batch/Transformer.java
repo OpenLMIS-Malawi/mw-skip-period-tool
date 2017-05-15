@@ -6,6 +6,7 @@ import static mw.gov.health.lmis.migration.tool.openlmis.ExternalStatus.INITIATE
 import static mw.gov.health.lmis.migration.tool.openlmis.ExternalStatus.SUBMITTED;
 import static org.springframework.util.CollectionUtils.isEmpty;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
 import org.slf4j.Logger;
@@ -157,29 +158,13 @@ public class Transformer implements ItemProcessor<Main, List<Requisition>> {
     RequisitionTemplate template = olmisRequisitionTemplateRepository
         .findFirstByProgramIdOrderByCreatedDateDesc(program.getId());
 
-    int numberOfPreviousPeriodsToAverage;
-    List<Requisition> previousRequisitions;
-    if (template.getNumberOfPeriodsToAverage() == null) {
-      numberOfPreviousPeriodsToAverage = 0;
-      previousRequisitions = requisitionService.getRecentRequisitions(requisition, 1);
-    } else {
-      numberOfPreviousPeriodsToAverage = template.getNumberOfPeriodsToAverage() - 1;
-      previousRequisitions = requisitionService
-          .getRecentRequisitions(requisition, numberOfPreviousPeriodsToAverage);
-    }
-
-    if (numberOfPreviousPeriodsToAverage > previousRequisitions.size()) {
-      numberOfPreviousPeriodsToAverage = previousRequisitions.size();
-    }
-
     requisition.setTemplate(template);
-    requisition.setPreviousRequisitions(previousRequisitions);
+    requisition.setPreviousRequisitions(Lists.newArrayList());
     requisition.setAvailableNonFullSupplyProducts(Sets.newHashSet());
     requisition.setCreatedDate(convert(main.getModifiedDate(), period.getStartDate()));
     requisition.setModifiedDate(convert(main.getModifiedDate(), period.getEndDate()));
     requisition.setStatus(APPROVED);
     requisition.setRequisitionLineItems(itemConverter.convert(items, requisition));
-    requisition.setPreviousAdjustedConsumptions(numberOfPreviousPeriodsToAverage);
 
     List<RequisitionGroupProgramSchedule> schedule = olmisRequisitionGroupProgramScheduleRepository
         .findByProgramAndFacility(program.getId(), facility.getId());
