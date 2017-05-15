@@ -35,7 +35,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import mw.gov.health.lmis.migration.tool.config.ToolParameters;
 import mw.gov.health.lmis.migration.tool.config.ToolProperties;
 import mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.AvailableRequisitionColumn;
 import mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.RequisitionTemplate;
@@ -43,7 +42,9 @@ import mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.Requisition
 import mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.SourceType;
 import mw.gov.health.lmis.migration.tool.openlmis.requisition.repository.OlmisAvailableRequisitionColumnRepository;
 
+import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.util.Date;
 import java.util.Map;
 import java.util.TimeZone;
 import java.util.UUID;
@@ -74,19 +75,16 @@ public class RequsitionUtil {
   public RequisitionTemplate createTemplate(UUID programId) {
     LOGGER.info("Create requisition template for program: {}", programId);
 
-    ToolParameters.Interval interval = toolProperties.getParameters().getInterval();
-    ZonedDateTime now = ZonedDateTime
-        .now(TimeZone.getTimeZone(toolProperties.getParameters().getTimeZone()).toZoneId())
-        .minusYears(interval.getYears())
-        .minusMonths(interval.getMonths())
-        .minusDays(interval.getDays());
+    Date startDate = toolProperties.getParameters().getStartDate();
+    ZoneId zoneId = TimeZone.getTimeZone(toolProperties.getParameters().getTimeZone()).toZoneId();
+    ZonedDateTime createdDate = ZonedDateTime.ofInstant(startDate.toInstant(), zoneId);
 
     RequisitionTemplate template = new RequisitionTemplate();
     template.setProgramId(programId);
     template.setNumberOfPeriodsToAverage(numberOfPeriodsToAverage);
     template.setColumnsMap(getRequisitionTemplateColumnMap());
-    template.setCreatedDate(now);
-    template.setModifiedDate(now);
+    template.setCreatedDate(createdDate);
+    template.setModifiedDate(createdDate);
 
     return template;
   }

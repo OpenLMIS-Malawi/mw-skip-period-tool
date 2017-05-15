@@ -17,10 +17,8 @@ tool:
         product: "Product"
         program: "Program"
     parameters:
-        interval:
-            days: 0
-            months: 0
-            years: 5
+        startDate: 2012-01-01
+        endDate: 2017-12-31
         numberOfPeriodsToAverage: 2
         creator: "scm"
         requestedQuantityExplanation: "transferred from supply manager"

@@ -18,7 +18,7 @@ This section is used only by the tool and it is devided into 3 smaller sections
 
 #### parameters section
 The following list explains all settings in the *parameters* section:
-* interval - set how old data should be migrated into OpenLMIS system. By default this field is set to 5 years. It is possible to set days, months and years. The value should be an integer.
+* start/end date - set from what period data should be migrated into OpenLMIS system. By default the start date is set to today date minus 5 years and with first day of month. The end date is set to today date with last day of month. The format for dates is the following: YYYY-MM-DD
 * creator - when a requisition is created we need to set who create/submit/authorize/approve and so on. This field should contain a username.
 * requestedQuantityExplanation - the value of this field will be populated into *Requested Quantity Explanation* column in each requisition.
 * timeZone - set time zone for dates

@@ -1,46 +1,36 @@
 package mw.gov.health.lmis.migration.tool.scm.repository;
 
-import static org.apache.commons.lang3.time.DateUtils.addDays;
-import static org.apache.commons.lang3.time.DateUtils.addMonths;
-import static org.apache.commons.lang3.time.DateUtils.addYears;
-import static org.apache.commons.lang3.time.DateUtils.truncate;
-
 import com.healthmarketscience.jackcess.Row;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
-import mw.gov.health.lmis.migration.tool.config.ToolParameters;
 import mw.gov.health.lmis.migration.tool.config.ToolProperties;
 import mw.gov.health.lmis.migration.tool.scm.domain.Main;
 
-import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
 @Repository
 public class MainRepository extends BaseRepository<Main> {
-  private Date nowAtStartOfDay;
+  private Date startDate;
+  private Date endDate;
 
   /**
    * Creates new instance with passing tool properties.
    */
   @Autowired
   public MainRepository(ToolProperties toolProperties) {
-    ToolParameters.Interval period = toolProperties.getParameters().getInterval();
-
-    nowAtStartOfDay = new Date();
-    nowAtStartOfDay = addYears(nowAtStartOfDay, -1 * period.getYears());
-    nowAtStartOfDay = addMonths(nowAtStartOfDay, -1 * period.getMonths());
-    nowAtStartOfDay = addDays(nowAtStartOfDay, -1 * period.getDays());
-    nowAtStartOfDay = truncate(nowAtStartOfDay, Calendar.DATE);
+    startDate = toolProperties.getParameters().getStartDate();
+    endDate = toolProperties.getParameters().getEndDate();
   }
 
   /**
    * Find mains that have processing date in the given period.
    */
   public List<Main> searchInPeriod() {
-    return search(main -> !main.getProcessingDate().before(nowAtStartOfDay));
+    return search(main -> !main.getProcessingDate().before(startDate)
+        && !main.getProcessingDate().after(endDate));
   }
 
   @Override
