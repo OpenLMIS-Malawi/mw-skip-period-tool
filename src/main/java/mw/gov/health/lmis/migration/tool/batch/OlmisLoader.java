@@ -8,7 +8,9 @@ import mw.gov.health.lmis.migration.tool.config.ToolProperties;
 import mw.gov.health.lmis.migration.tool.openlmis.fulfillment.domain.Order;
 import mw.gov.health.lmis.migration.tool.openlmis.fulfillment.domain.OrderNumberConfiguration;
 import mw.gov.health.lmis.migration.tool.openlmis.fulfillment.domain.OrderStatus;
+import mw.gov.health.lmis.migration.tool.openlmis.fulfillment.domain.ProofOfDelivery;
 import mw.gov.health.lmis.migration.tool.openlmis.fulfillment.repository.OrderRepository;
+import mw.gov.health.lmis.migration.tool.openlmis.fulfillment.repository.ProofOfDeliveryRepository;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.Program;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.User;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.OlmisProgramRepository;
@@ -35,6 +37,9 @@ public class OlmisLoader implements ItemWriter<List<Requisition>> {
   private OlmisUserRepository olmisUserRepository;
 
   @Autowired
+  private ProofOfDeliveryRepository proofOfDeliveryRepository;
+
+  @Autowired
   private ToolProperties toolProperties;
 
   /**
@@ -59,7 +64,9 @@ public class OlmisLoader implements ItemWriter<List<Requisition>> {
           order.setStatus(OrderStatus.RECEIVED);
           order.setOrderCode(config.generateOrderNumber(order, program));
 
-          orderRepository.save(order);
+          order = orderRepository.save(order);
+
+          proofOfDeliveryRepository.save(new ProofOfDelivery(order));
         });
   }
 
