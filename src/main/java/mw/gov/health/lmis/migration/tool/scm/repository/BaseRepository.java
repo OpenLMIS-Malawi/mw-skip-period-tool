@@ -5,22 +5,20 @@ import com.google.common.collect.Lists;
 
 import com.healthmarketscience.jackcess.Cursor;
 import com.healthmarketscience.jackcess.CursorBuilder;
+import com.healthmarketscience.jackcess.Database;
 import com.healthmarketscience.jackcess.Row;
 import com.healthmarketscience.jackcess.Table;
 
+import org.apache.commons.io.IOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import mw.gov.health.lmis.migration.tool.config.ToolProperties;
 import mw.gov.health.lmis.migration.tool.scm.ScmDatabaseHandler;
 
 import java.io.IOException;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
 
 
 public abstract class BaseRepository<T> {
@@ -35,21 +33,28 @@ public abstract class BaseRepository<T> {
    * Find all rows from the given table.
    */
   public List<T> findAll() {
-    Table table = getTable();
+    Database database = handler.getDatabase();
 
-    Iterator<Row> iterator = table.iterator();
-    Stream<Row> stream = asStream(iterator);
+    try {
+      Table table = getTable(database);
+      List<T> list = Lists.newArrayList();
 
-    return stream
-        .map(this::mapRow)
-        .collect(Collectors.toList());
+      for (Row row : table) {
+        list.add(mapRow(row));
+      }
+
+      return list;
+    } finally {
+      IOUtils.closeQuietly(database);
+    }
   }
 
   List<T> search(Predicate<T> predicate) {
-    Cursor cursor = getCursor();
-    List<T> list = Lists.newArrayList();
+    Database database = handler.getDatabase();
 
     try {
+      Cursor cursor = getCursor(database);
+      List<T> list = Lists.newArrayList();
       Row row;
 
       while ((row = cursor.getNextRow()) != null) {
@@ -59,54 +64,55 @@ public abstract class BaseRepository<T> {
           list.add(element);
         }
       }
-    } catch (IOException exp) {
-      throw new IllegalStateException(
-          "There was an issue with retriving a row from table: " + getTableName(), exp
-      );
-    }
 
-    return list;
+      return list;
+    } catch (IOException exp) {
+      throw new IllegalStateException("Can't retrieve data for table: " + getTableName(), exp);
+    } finally {
+      IOUtils.closeQuietly(database);
+    }
   }
 
   /**
    * Find a row by field and value.
    */
   T find(String field, Object value) {
-    Row row = findRow(ImmutableMap.of(field, value));
-    return null == row ? null : mapRow(row);
+    Database database = handler.getDatabase();
+
+    try {
+      Row row = findRow(database, ImmutableMap.of(field, value));
+      return null == row ? null : mapRow(row);
+    } finally {
+      IOUtils.closeQuietly(database);
+    }
   }
 
   abstract String getTableName();
 
   abstract T mapRow(Row row);
 
-  private Table getTable() {
+  private Table getTable(Database database) {
     try {
-      return handler.getDatabase().getTable(getTableName());
+      return database.getTable(getTableName());
     } catch (IOException exp) {
       throw new IllegalStateException("Can't get table: " + getTableName(), exp);
     }
   }
 
-  Cursor getCursor() {
+  private Cursor getCursor(Database database) {
     try {
-      return CursorBuilder.createCursor(getTable());
+      return CursorBuilder.createCursor(getTable(database));
     } catch (IOException exp) {
       throw new IllegalStateException("Can't create cursors for table: " + getTableName(), exp);
     }
   }
 
-  private Row findRow(Map<String, Object> rowPattern) {
+  private Row findRow(Database database, Map<String, Object> rowPattern) {
     try {
-      return CursorBuilder.findRow(getTable(), rowPattern);
+      return CursorBuilder.findRow(getTable(database), rowPattern);
     } catch (IOException exp) {
       throw new IllegalStateException("Can't find a row in table: " + getTableName(), exp);
     }
-  }
-
-  private Stream<Row> asStream(Iterator<Row> iterator) {
-    Iterable<Row> iterable = () -> iterator;
-    return StreamSupport.stream(iterable.spliterator(), false);
   }
 
 }
