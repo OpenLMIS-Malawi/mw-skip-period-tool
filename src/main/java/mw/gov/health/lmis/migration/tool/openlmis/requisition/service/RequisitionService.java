@@ -11,7 +11,7 @@ public interface RequisitionService {
 
   List<Requisition> getRecentRequisitions(Requisition requisition, int amount);
 
-  void addStatusMessage(Requisition requisition, User user, String generalNote, String lineNotes);
+  void addStatusMessage(Requisition requisition, User user, String generalNote);
 
   void convertToOrder(Requisition requisition, User user, Program program, Facility facility);
 }

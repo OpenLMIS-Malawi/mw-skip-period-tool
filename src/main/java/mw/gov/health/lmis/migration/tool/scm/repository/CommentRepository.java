@@ -9,8 +9,6 @@ import org.springframework.stereotype.Repository;
 import mw.gov.health.lmis.migration.tool.scm.domain.Comment;
 
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 @Repository
 public class CommentRepository extends BaseRepository<Comment> {
@@ -28,9 +26,7 @@ public class CommentRepository extends BaseRepository<Comment> {
   /**
    * Retrieves all comments for the given item.
    */
-  public Map<Integer, List<Comment>> search(List<Integer> itemIds) {
-    return search(elem -> isNotBlank(elem.getComment()) && itemIds.contains(elem.getItem()))
-        .stream()
-        .collect(Collectors.groupingBy(Comment::getItem));
+  public List<Comment> search(Integer itemId) {
+    return search(elem -> itemId.equals(elem.getItem()) && isNotBlank(elem.getComment()));
   }
 }

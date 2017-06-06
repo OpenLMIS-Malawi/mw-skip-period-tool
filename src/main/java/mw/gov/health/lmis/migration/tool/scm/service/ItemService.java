@@ -13,6 +13,6 @@ public interface ItemService {
 
   Map<String, Collection<Item>> groupByCategory(List<Item> items);
 
-  String getNotes(Collection<Item> item);
+  String getNotes(Item item);
 
 }

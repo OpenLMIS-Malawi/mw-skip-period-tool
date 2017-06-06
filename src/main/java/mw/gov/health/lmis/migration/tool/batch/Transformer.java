@@ -190,9 +190,7 @@ public class Transformer implements ItemProcessor<Main, List<Requisition>> {
     requisition.getStatusChanges()
         .add(StatusChange.newStatusChange(requisition, user.getId(), APPROVED));
 
-    requisitionService.addStatusMessage(
-        requisition, user, main.getNotes(), itemService.getNotes(items)
-    );
+    requisitionService.addStatusMessage(requisition, user, main.getNotes());
 
     requisitionService.convertToOrder(requisition, user, program, facility);
 

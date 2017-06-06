@@ -28,7 +28,6 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -80,21 +79,12 @@ public class ItemServiceImpl implements ItemService {
   }
 
   @Override
-  public String getNotes(Collection<Item> items) {
-    List<Integer> ids = items.stream().map(Item::getId).collect(Collectors.toList());
-    Map<Integer, List<Comment>> groups = commentRepository.search(ids);
+  public String getNotes(Item item) {
     List<String> notes = Lists.newArrayList();
+    notes.add(item.getNote());
 
-    items
-        .forEach(item -> {
-          notes.add(item.getNote());
-
-          Optional
-              .ofNullable(groups.get(item.getId()))
-              .ifPresent(list -> list
-                  .forEach(
-                      elem -> notes.add(elem.getType() + ": " + elem.getComment())));
-        });
+    List<Comment> comments = commentRepository.search(item.getId());
+    comments.forEach(elem -> notes.add(elem.getType() + ": " + elem.getComment()));
 
     notes.removeIf(StringUtils::isBlank);
 

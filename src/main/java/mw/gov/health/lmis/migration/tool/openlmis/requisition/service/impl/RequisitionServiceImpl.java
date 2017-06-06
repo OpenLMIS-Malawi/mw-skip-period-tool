@@ -2,9 +2,12 @@ package mw.gov.health.lmis.migration.tool.openlmis.requisition.service.impl;
 
 import static org.apache.commons.lang3.StringUtils.containsIgnoreCase;
 import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.length;
 
 import com.google.common.collect.Lists;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -28,6 +31,7 @@ import java.util.List;
 
 @Service
 public class RequisitionServiceImpl implements RequisitionService {
+  private static final Logger LOGGER = LoggerFactory.getLogger(RequisitionServiceImpl.class);
 
   @Autowired
   private ProcessingPeriodService processingPeriodService;
@@ -58,26 +62,21 @@ public class RequisitionServiceImpl implements RequisitionService {
   }
 
   @Override
-  public void addStatusMessage(Requisition requisition, User user, String generalNote,
-                               String lineNotes) {
-    if (isBlank(generalNote) && isBlank(lineNotes)) {
+  public void addStatusMessage(Requisition requisition, User user, String generalNote) {
+    if (isBlank(generalNote)) {
       return;
     }
 
-    String message;
-
-    if (isBlank(generalNote)) {
-      message = lineNotes;
-    } else if (isBlank(lineNotes)) {
-      message = generalNote;
-    } else {
-      message = generalNote + "; " + lineNotes;
+    if (length(generalNote) > 255) {
+      LOGGER.warn("The general note ({}) is too long. Skipping...", generalNote);
+      return;
     }
 
     StatusMessage statusMessage = StatusMessage.newStatusMessage(
-        requisition, user.getId(), user.getFirstName(), user.getLastName(), message,
+        requisition, user.getId(), user.getFirstName(), user.getLastName(), generalNote,
         ExternalStatus.AUTHORIZED
     );
+
     requisition.setStatusMessages(Lists.newArrayList(statusMessage));
   }
 

@@ -4,6 +4,7 @@ import static mw.gov.health.lmis.migration.tool.openlmis.CurrencyConfig.CURRENCY
 import static mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.LineItemFieldsCalculator.calculateTotalLossesAndAdjustments;
 import static mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.OpenLmisNumberUtils.zeroIfNull;
 import static mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.RequisitionLineItem.PRICE_PER_PACK_IF_NULL;
+import static org.apache.commons.lang3.StringUtils.length;
 
 import com.google.common.collect.Lists;
 
@@ -31,6 +32,7 @@ import mw.gov.health.lmis.migration.tool.scm.domain.AdjustmentType;
 import mw.gov.health.lmis.migration.tool.scm.domain.Item;
 import mw.gov.health.lmis.migration.tool.scm.repository.AdjustmentRepository;
 import mw.gov.health.lmis.migration.tool.scm.repository.AdjustmentTypeRepository;
+import mw.gov.health.lmis.migration.tool.scm.service.ItemService;
 import mw.gov.health.lmis.migration.tool.scm.service.ProductService;
 
 import java.math.BigDecimal;
@@ -63,6 +65,9 @@ public class ItemConverter {
 
   @Autowired
   private ProductService productService;
+
+  @Autowired
+  private ItemService itemService;
 
   @Autowired
   private ToolProperties toolProperties;
@@ -149,6 +154,14 @@ public class ItemConverter {
     requisitionLineItem.setApprovedQuantity(item.getRequiredQuantity());
 
     requisitionLineItem.setMaxPeriodsOfStock(getMonthsOfStock(requisitionLineItem));
+
+    String remarks = itemService.getNotes(item);
+
+    if (length(remarks) > 250) {
+      LOGGER.warn("The remarks ({}) are too long. Skipping...", remarks);
+    } else {
+      requisitionLineItem.setRemarks(remarks);
+    }
 
     return requisitionLineItem;
   }
