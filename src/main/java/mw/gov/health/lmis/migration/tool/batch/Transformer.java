@@ -94,44 +94,53 @@ public class Transformer implements ItemProcessor<Main, List<Requisition>> {
    */
   @Override
   public List<Requisition> process(Main item) {
-    List<Item> items = itemService.search(item.getProcessingDate(), item.getFacility());
-
-    return itemService
-        .groupByCategory(items)
-        .entrySet()
-        .parallelStream()
-        .map(entry -> createRequisition(entry.getKey(), entry.getValue(), item))
-        .filter(Objects::nonNull)
-        .collect(Collectors.toList());
-  }
-
-  private Requisition createRequisition(String programCode, Collection<Item> items, Main main) {
-    String code = MappingHelper.getFacilityCode(toolProperties, main.getFacility());
+    String code = MappingHelper.getFacilityCode(toolProperties, item.getFacility());
     Facility facility = olmisFacilityRepository.findByCode(code);
 
     if (null == facility) {
       LOGGER.error("Can't find facility with code {}", code);
-      return null;
+      return Lists.newArrayList();
     }
 
-    Program program = olmisProgramRepository.findByCode(new Code(programCode));
-
-    if (null == program) {
-      LOGGER.error("Can't find program with code {}", programCode);
-      return null;
-    }
-
-    LocalDate processingDate = getProcessingDate(main.getProcessingDate());
+    LocalDate processingDate = getProcessingDate(item.getProcessingDate());
 
     if (null == processingDate) {
       LOGGER.error("Can't convert processing date to LocalDate instance");
-      return null;
+      return Lists.newArrayList();
     }
 
     ProcessingPeriod period = olmisProcessingPeriodRepository.findInPeriod(processingDate);
 
     if (null == period) {
       LOGGER.error("Can't find period for processing date {}", processingDate);
+      return Lists.newArrayList();
+    }
+
+    String username = toolProperties.getParameters().getCreator();
+    User user = olmisUserRepository.findByUsername(username);
+
+    if (null == user) {
+      LOGGER.error("Can't find user with username {}", username);
+      return Lists.newArrayList();
+    }
+
+    List<Item> items = itemService.search(item.getProcessingDate(), item.getFacility());
+
+    return itemService
+        .groupByCategory(items)
+        .entrySet()
+        .parallelStream()
+        .map(entry -> create(entry.getKey(), entry.getValue(), item, facility, period, user))
+        .filter(Objects::nonNull)
+        .collect(Collectors.toList());
+  }
+
+  private Requisition create(String programCode, Collection<Item> items, Main main,
+                             Facility facility, ProcessingPeriod period, User user) {
+    Program program = olmisProgramRepository.findByCode(new Code(programCode));
+
+    if (null == program) {
+      LOGGER.error("Can't find program with code {}", programCode);
       return null;
     }
 
@@ -178,8 +187,6 @@ public class Transformer implements ItemProcessor<Main, List<Requisition>> {
           program.getCode(), facility.getCode()
       );
     }
-
-    User user = olmisUserRepository.findByUsername(toolProperties.getParameters().getCreator());
 
     requisition.getStatusChanges()
         .add(StatusChange.newStatusChange(requisition, user.getId(), INITIATED));
