@@ -3,15 +3,18 @@ package mw.gov.health.lmis.migration.tool.batch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.ItemReadListener;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import mw.gov.health.lmis.migration.tool.scm.domain.Main;
+import mw.gov.health.lmis.migration.tool.scm.service.MainService;
 
-import java.text.SimpleDateFormat;
-
+@Component
 public class SupplyManagerExtractListener implements ItemReadListener<Main> {
   private static final Logger LOGGER = LoggerFactory.getLogger(SupplyManagerExtractListener.class);
 
-  private final SimpleDateFormat dateFormat = new SimpleDateFormat("MMM/YYYY");
+  @Autowired
+  private MainService mainService;
 
   @Override
   public void beforeRead() {
@@ -23,7 +26,7 @@ public class SupplyManagerExtractListener implements ItemReadListener<Main> {
     if (LOGGER.isInfoEnabled()) {
       LOGGER.info(
           "Read Product Tracking form ({};{})",
-          item.getFacility(), dateFormat.format(item.getProcessingDate())
+          item.getFacility(), mainService.getProcessingDate(item)
       );
     }
   }

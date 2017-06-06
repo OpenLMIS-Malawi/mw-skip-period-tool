@@ -38,12 +38,11 @@ import mw.gov.health.lmis.migration.tool.openlmis.requisition.service.Requisitio
 import mw.gov.health.lmis.migration.tool.scm.domain.Item;
 import mw.gov.health.lmis.migration.tool.scm.domain.Main;
 import mw.gov.health.lmis.migration.tool.scm.service.ItemService;
+import mw.gov.health.lmis.migration.tool.scm.service.MainService;
 
-import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
@@ -81,6 +80,9 @@ public class Transformer implements ItemProcessor<Main, List<Requisition>> {
   private ItemService itemService;
 
   @Autowired
+  private MainService mainService;
+
+  @Autowired
   private RequisitionService requisitionService;
 
   @Autowired
@@ -102,7 +104,7 @@ public class Transformer implements ItemProcessor<Main, List<Requisition>> {
       return Lists.newArrayList();
     }
 
-    LocalDate processingDate = getProcessingDate(item.getProcessingDate());
+    LocalDate processingDate = mainService.getProcessingDate(item);
 
     if (null == processingDate) {
       LOGGER.error("Can't convert processing date to LocalDate instance");
@@ -202,17 +204,6 @@ public class Transformer implements ItemProcessor<Main, List<Requisition>> {
     requisitionService.convertToOrder(requisition, user, program, facility);
 
     return requisition;
-  }
-
-  private LocalDate getProcessingDate(Date date) {
-    String timeZoneName = toolProperties.getParameters().getTimeZone();
-    TimeZone timeZone = TimeZone.getTimeZone(timeZoneName);
-    ZoneId zoneId = timeZone.toZoneId();
-
-    Instant instant = date.toInstant();
-    instant = instant.truncatedTo(ChronoUnit.DAYS);
-
-    return instant.atZone(zoneId).toLocalDate();
   }
 
   private ZonedDateTime convert(Date date, LocalDate localDate) {

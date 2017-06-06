@@ -45,9 +45,14 @@ public class BatchConfiguration {
    */
   @Bean
   public Step migrationStep(StepBuilderFactory stepBuilderFactory,
-                            SupplyManagerExtractor reader, OlmisLoader writer,
-                            Transformer processor, ToolProperties toolProperties)
-      throws ClassNotFoundException, IllegalAccessException, InstantiationException {
+                            SupplyManagerExtractor reader,
+                            SupplyManagerExtractListener readerListener,
+                            OlmisLoader writer,
+                            OlmisLoadListener writerListener,
+                            Transformer processor,
+                            TransformListener processorListener,
+                            ToolProperties toolProperties)
+      throws IllegalAccessException, InstantiationException {
     ToolBatchConfiguration batchProperties = toolProperties
         .getConfiguration()
         .getBatch();
@@ -56,13 +61,13 @@ public class BatchConfiguration {
         .get("migrationStep")
         .<Main, List<Requisition>>chunk(batchProperties.getChunk())
         .reader(reader)
+        .listener(readerListener)
         .processor(processor)
+        .listener(processorListener)
         .writer(writer)
+        .listener(writerListener)
         .faultTolerant()
         .skipPolicy(batchProperties.getSkipPolicy().newInstance())
-        .listener(new SupplyManagerExtractListener())
-        .listener(new TransformListener())
-        .listener(new OlmisLoadListener())
         .taskExecutor(new SimpleAsyncTaskExecutor())
         .throttleLimit(max(DEFAULT_THROTTLE_LIMIT, getRuntime().availableProcessors() - 1))
         .build();
