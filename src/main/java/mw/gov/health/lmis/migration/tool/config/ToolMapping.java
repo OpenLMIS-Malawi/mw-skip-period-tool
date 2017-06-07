@@ -4,6 +4,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 
 @Getter
@@ -13,5 +14,5 @@ public class ToolMapping {
   private Properties facilities;
   private Properties products;
   private Properties stockAdjustmentReasons;
-
+  private Map<Integer, Integer> categoryProductJoins;
 }

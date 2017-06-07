@@ -32,7 +32,7 @@ tool:
         insertDemoData:
             referenceData: false
             requisition: true
-        accessFile: "../../data/kasungu-data-centre.mdb"
+        accessFile: "data.mdb"
         olmis:
             dialect: "org.hibernate.dialect.PostgreSQL94Dialect"
             showSql: false
@@ -105,3 +105,6 @@ tool:
         stockAdjustmentReasons:
             "DE Credit": "Transfer In"
             "DE Debit": "Transfer Out"
+        categoryProductJoins:
+            10: 20
+            15: 30

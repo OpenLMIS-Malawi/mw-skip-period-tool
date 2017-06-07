@@ -95,8 +95,28 @@ public class ItemServiceImpl implements ItemService {
     CategoryProductJoin join = categoryProductJoinRepository.findById(item.getCategoryProduct());
 
     if (null == join) {
-      LOGGER.error("Can't find Category Product Join for {}", item.getCategoryProduct());
-      return null;
+      Map<Integer, Integer> mapping = toolProperties.getMapping().getCategoryProductJoins();
+      Integer id = null == mapping ? null : mapping.get(item.getCategoryProduct());
+
+      if (null == id) {
+        LOGGER.error(
+            "Can't find Category Product Join by default value: {}",
+            item.getCategoryProduct()
+        );
+        return null;
+      }
+
+      LOGGER.warn(
+          "Can't find Category Product Join by default value: {}. Use mapping value: {}",
+          item.getCategoryProduct(), id
+      );
+
+      join = categoryProductJoinRepository.findById(id);
+
+      if (null == join) {
+        LOGGER.error("Can't find Category Product Join for by mapping value: {}", id);
+        return null;
+      }
     }
 
     Program program = programRepository.findByProgramId(join.getProgram());
