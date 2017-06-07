@@ -2,7 +2,7 @@
 All available settings are located in the [application.yml](application.yml) file. The file in this directory should be used as a template and appropriate values should be populated into a custom file.
 
 ## How to use custom file
-* Insure that the custom configuration file is in the same directory as the final jar file
+* Ensure that the custom configuration file is in the same directory as the final jar file
 ```
 cd target
 ls
