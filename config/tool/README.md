@@ -16,8 +16,10 @@ application.yml  migration-tool.jar
 ```
 spring:
     main:
+        banner-mode: (OFF|CONSOLE|LOG)
     batch:
         job:
+            enabled: boolean
 ```
 In this section you can provide standard spring properties that could be read by [Spring](https://spring.io/) library. Currently the template sets two things:
 * the Spring banner will be written only to log file. In other words when a user run the application there will be no Spring banner on default output. There will be addictional file **log** in which there will be more details messages.
@@ -40,17 +42,17 @@ This section is used only by the tool and it is devided into smaller sections
 ```
 tool:
     parameters:
-        startDate:
-        endDate:
-        numberOfPeriodsToAverage:
-        creator:
-        requestedQuantityExplanation:
-        timeZone:
+        startDate: YYYY-MM-DD
+        endDate: YYYY-MM-DD
+        numberOfPeriodsToAverage: integer
+        creator: string
+        requestedQuantityExplanation: string
+        timeZone: string
         orderNumberConfiguration:
-            orderNumberPrefix:
-            includeOrderNumberPrefix:
-            includeProgramCode:
-            includeTypeSuffix:
+            orderNumberPrefix: string
+            includeOrderNumberPrefix: boolean
+            includeProgramCode: boolean
+            includeTypeSuffix: boolean
 ```
 The following list explains all settings in the *parameters* section:
 * start/end date - set from what period data should be migrated into OpenLMIS system. By default the start date is set to today date minus 5 years and with first day of month. The end date is set to today date with last day of month. The format for dates is the following: YYYY-MM-DD
@@ -65,24 +67,25 @@ The following list explains all settings in the *parameters* section:
 tool:
     configuration:
         insertDemoData:
-            referenceData:
-            requisition:
-        accessFile:
+            referenceData: boolean
+            requisition: boolean
+        accessFile: string
         olmis:
-            dialect: 
-            showSql: 
-            hbm2ddl: 
+            dialect: string
+            showSql: boolean
+            hbm2ddl: string
             dataSource:
                 connectionProperties:
-                driverClass: 
-                host: 
-                port: 
-                database: 
-                username: 
-                password: 
+                    string: string
+                driverClass: string
+                host: string
+                port: integer
+                database: string
+                username: string
+                password: string
         batch:
-            chunk: 
-            skipPolicy:
+            chunk: integer
+            skipPolicy: string
 ```
 Before the tool can migrate data from supply manager into OpenLMIS system, it needs to know where SCM database file is located and where is a OpenLMIS database. This section also contains addictional Spring Batch settings.
 
@@ -102,15 +105,22 @@ Before the tool can migrate data from supply manager into OpenLMIS system, it ne
 tool:
     mapping:
         programs:
-            - code:
+            - code: string
               categories:
+                  - string
+                  - string
+                  - ...
               warehouses:
-                  - geographicZone:
-                    code:
+                  - geographicZone: string
+                    code: string
         facilities:
+            string: string
         products:
+            string: string
         stockAdjustmentReasons:
+            string: string
         categoryProductJoins:
+            integer: integer
 ```
 The following list presents available mapping:
 
