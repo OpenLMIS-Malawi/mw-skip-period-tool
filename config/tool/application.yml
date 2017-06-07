@@ -34,7 +34,7 @@ tool:
             requisition: true
         accessFile: "data.mdb"
         olmis:
-            dialect: "org.hibernate.dialect.PostgreSQL94Dialect"
+            dialect: "org.hibernate.spatial.dialect.postgis.PostgisDialect"
             showSql: false
             hbm2ddl: "validate"
             dataSource:

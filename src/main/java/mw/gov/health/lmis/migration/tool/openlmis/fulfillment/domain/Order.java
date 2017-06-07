@@ -30,7 +30,6 @@ import mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.Requisition
 
 import java.math.BigDecimal;
 import java.time.ZonedDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -58,14 +57,13 @@ public class Order extends BaseEntity {
   public static final String STATUS = "status";
   public static final String PROCESSING_PERIOD_ID = "processingPeriodId";
 
-  //@Column(nullable = false, unique = true)
-  @Column(unique = true)
+  @Column(nullable = false, unique = true)
   @Getter
   @Setter
   @Type(type = UUID_TYPE)
   private UUID externalId;
 
-  //@Column(nullable = false)
+  @Column(nullable = false)
   @Getter
   @Setter
   private Boolean emergency;
@@ -85,7 +83,7 @@ public class Order extends BaseEntity {
   @Column(columnDefinition = "timestamp with time zone")
   private ZonedDateTime createdDate;
 
-  //@Column(nullable = false)
+  @Column(nullable = false)
   @Getter
   @Setter
   @Type(type = UUID_TYPE)
@@ -153,24 +151,27 @@ public class Order extends BaseEntity {
 
   @OneToMany(
       mappedBy = "order",
-      cascade = CascadeType.ALL)
+      cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.REMOVE},
+      fetch = FetchType.EAGER,
+      orphanRemoval = true)
   @Getter
   @Setter
-  private List<StatusChange> statusChanges = new ArrayList<>();
+  private List<StatusChange> statusChanges;
+
 
   @PrePersist
   private void prePersist() {
     this.createdDate = ZonedDateTime.now();
     forEachLine(line -> line.setOrder(this));
     forEachStatus(status -> status.setOrder(this));
-    forEachChange(change -> change.setOrder(this));
+    forEachStatusChange(change -> change.setOrder(this));
   }
 
   @PreUpdate
   private void preUpdate() {
     forEachLine(line -> line.setOrder(this));
     forEachStatus(status -> status.setOrder(this));
-    forEachChange(change -> change.setOrder(this));
+    forEachStatusChange(change -> change.setOrder(this));
   }
 
   /**
@@ -191,6 +192,7 @@ public class Order extends BaseEntity {
     this.orderCode = order.orderCode;
     this.status = order.status;
     this.quotedCost = order.quotedCost;
+    this.statusChanges = order.statusChanges;
   }
 
   public void forEachLine(Consumer<OrderLineItem> consumer) {
@@ -203,7 +205,7 @@ public class Order extends BaseEntity {
         .ifPresent(list -> list.forEach(consumer));
   }
 
-  public void forEachChange(Consumer<StatusChange> consumer) {
+  public void forEachStatusChange(Consumer<StatusChange> consumer) {
     Optional.ofNullable(statusChanges)
         .ifPresent(list -> list.forEach(consumer));
   }

@@ -15,10 +15,8 @@
 
 package mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
-
+import lombok.AccessLevel;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -38,23 +36,19 @@ import javax.persistence.UniqueConstraint;
         name = "unq_trade_item_classifications_system",
         columnNames = {"tradeitemid", "classificationsystem"}))
 @NoArgsConstructor
-@JsonIgnoreProperties({"id"})
+@EqualsAndHashCode(callSuper = false, exclude = {"tradeItem"})
 public class TradeItemClassification extends BaseEntity {
 
   @ManyToOne
-  @Getter
-  @Setter
-  @JsonIgnore
+  @Getter(AccessLevel.PRIVATE)
   private TradeItem tradeItem;
 
   @Getter
   @Setter
-  @JsonProperty
   private String classificationSystem;
 
   @Getter
   @Setter
-  @JsonProperty
   private String classificationId;
 
   /**
@@ -64,9 +58,46 @@ public class TradeItemClassification extends BaseEntity {
    * @param classificationId the id of the classification system
    */
   TradeItemClassification(TradeItem tradeItem, String classificationSystem,
-                          String classificationId) {
+                                 String classificationId) {
     this.tradeItem = tradeItem;
     this.classificationSystem = classificationSystem;
     this.classificationId = classificationId;
+  }
+
+  /**
+   * Creates new instance based on data from {@link Importer}.
+   *
+   * @param importer instance of {@link Importer}.
+   * @param tradeItem instance of {@link TradeItem} to be associated with TradeItemClassification.
+   * @return new instance of TradeItemClassification.
+   */
+  public static TradeItemClassification newInstance(Importer importer, TradeItem tradeItem) {
+    TradeItemClassification classification = new TradeItemClassification();
+    classification.classificationSystem = importer.getClassificationSystem();
+    classification.classificationId = importer.getClassificationId();
+    classification.tradeItem = tradeItem;
+    return classification;
+  }
+
+  /**
+   * Export this object to the specified exporter (DTO).
+   *
+   * @param exporter exporter to export to.
+   */
+  public void export(Exporter exporter) {
+    exporter.setClassificationId(classificationId);
+    exporter.setClassificationSystem(classificationSystem);
+  }
+
+  public interface Exporter {
+    void setClassificationSystem(String classificationSystem);
+
+    void setClassificationId(String classificationId);
+  }
+
+  public interface Importer {
+    String getClassificationSystem();
+
+    String getClassificationId();
   }
 }

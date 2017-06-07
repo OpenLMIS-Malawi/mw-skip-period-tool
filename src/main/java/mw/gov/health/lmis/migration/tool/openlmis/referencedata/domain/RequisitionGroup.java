@@ -15,11 +15,10 @@
 
 package mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain;
 
-import mw.gov.health.lmis.migration.tool.openlmis.BaseEntity;
-
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import mw.gov.health.lmis.migration.tool.openlmis.BaseEntity;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -120,8 +119,10 @@ public class RequisitionGroup extends BaseEntity {
 
       for (RequisitionGroupProgramSchedule.Importer scheduleImporter :
           importer.getRequisitionGroupProgramSchedules()) {
-        requisitionGroupProgramSchedules.add(
-            RequisitionGroupProgramSchedule.newRequisitionGroupProgramSchedule(scheduleImporter));
+        RequisitionGroupProgramSchedule newRequisitionGroupProgramSchedule =
+            RequisitionGroupProgramSchedule.newRequisitionGroupProgramSchedule(scheduleImporter);
+        newRequisitionGroupProgramSchedule.setRequisitionGroup(newRequisitionGroup);
+        requisitionGroupProgramSchedules.add(newRequisitionGroupProgramSchedule);
       }
 
       newRequisitionGroup.requisitionGroupProgramSchedules = requisitionGroupProgramSchedules;

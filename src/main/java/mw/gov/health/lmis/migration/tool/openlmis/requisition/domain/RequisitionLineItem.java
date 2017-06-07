@@ -368,7 +368,7 @@ public class RequisitionLineItem extends BaseEntity {
   /**
    * Sets appropriate value for Average Consumption field in {@link RequisitionLineItem}.
    */
-  public void calculateAndSetAverageConsumption() {
+  void calculateAndSetAverageConsumption() {
     List<Integer> previous = new ArrayList<>(getPreviousAdjustedConsumptions());
     previous.add(getAdjustedConsumption());
     Integer calculated = calculateAverageConsumption(previous);
@@ -384,7 +384,7 @@ public class RequisitionLineItem extends BaseEntity {
       calculateAndSetAverageConsumption();
 
       if (averageConsumptionPassed != null
-          && !Objects.equals(averageConsumptionPassed, getAdjustedConsumption())) {
+          && !Objects.equals(averageConsumptionPassed, getAverageConsumption())) {
         LOGGER.warn("Passed Average Consumption does not match calculated one.");
       }
     }
@@ -396,7 +396,12 @@ public class RequisitionLineItem extends BaseEntity {
   private void calculateAndSetTotalConsumedQuantity(RequisitionTemplate template) {
     if (template.isColumnDisplayed(TOTAL_CONSUMED_QUANTITY)) {
       if (template.isColumnCalculated(TOTAL_CONSUMED_QUANTITY)) {
-        setTotalConsumedQuantity(calculateTotalConsumedQuantity(this));
+        int calculated = calculateTotalConsumedQuantity(this);
+        if (getTotalConsumedQuantity() != null
+            && !Objects.equals(getTotalConsumedQuantity(), calculated)) {
+          LOGGER.warn("Passed TotalConsumedQuantity does not match calculated one.");
+        }
+        setTotalConsumedQuantity(calculated);
       }
     } else {
       setTotalConsumedQuantity(null);
@@ -408,7 +413,12 @@ public class RequisitionLineItem extends BaseEntity {
    */
   private void calculateAndSetTotal(RequisitionTemplate template) {
     if (template.isColumnDisplayed(TOTAL_COLUMN)) {
-      setTotal(calculateTotal(this));
+      int calculated = calculateTotal(this);
+      if (getTotal() != null
+          && !Objects.equals(getTotal(), calculated)) {
+        LOGGER.warn("Passed Total does not match calculated one.");
+      }
+      setTotal(calculated);
     }
   }
 
@@ -418,7 +428,12 @@ public class RequisitionLineItem extends BaseEntity {
   private void calculateAndSetStockOnHand(RequisitionTemplate template) {
     if (template.isColumnDisplayed(STOCK_ON_HAND)) {
       if (template.isColumnCalculated(STOCK_ON_HAND)) {
-        setStockOnHand(calculateStockOnHand(this));
+        int calculated = calculateStockOnHand(this);
+        if (getStockOnHand() != null
+            && !Objects.equals(getStockOnHand(), calculated)) {
+          LOGGER.warn("Passed StockOnHand does not match calculated one.");
+        }
+        setStockOnHand(calculated);
       }
     } else {
       setStockOnHand(null);
@@ -430,7 +445,12 @@ public class RequisitionLineItem extends BaseEntity {
    */
   private void calculateAndSetTotalLossesAndAdjustments(
       Collection<StockAdjustmentReason> reasons) {
-    setTotalLossesAndAdjustments(calculateTotalLossesAndAdjustments(this, reasons));
+    int calculated = calculateTotalLossesAndAdjustments(this, reasons);
+    if (getTotalLossesAndAdjustments() != null
+        && !Objects.equals(getTotalLossesAndAdjustments(), calculated)) {
+      LOGGER.warn("Passed TotalLossesAndAdjustments does not match calculated one.");
+    }
+    setTotalLossesAndAdjustments(calculated);
   }
 
   /**
@@ -441,10 +461,10 @@ public class RequisitionLineItem extends BaseEntity {
     if (template.isColumnInTemplate(ADJUSTED_CONSUMPTION)) {
       int calculated = calculateAdjustedConsumption(this, monthsInThePeriod);
 
-      if (!Objects.equals(calculated, getAdjustedConsumption())) {
+      if (getAdjustedConsumption() != null
+          && !Objects.equals(getAdjustedConsumption(), calculated)) {
         LOGGER.warn("Passed Adjusted Consumption does not match calculated one.");
       }
-
       setAdjustedConsumption(calculated);
     }
   }
@@ -454,7 +474,12 @@ public class RequisitionLineItem extends BaseEntity {
    */
   private void calculateAndSetMaximumStockQuantity(RequisitionTemplate template) {
     if (template.isColumnDisplayed(MAXIMUM_STOCK_QUANTITY)) {
-      setMaximumStockQuantity(calculateMaximumStockQuantity(this, template));
+      int calculated = calculateMaximumStockQuantity(this, template);
+      if (getMaximumStockQuantity() != null
+          && !Objects.equals(getMaximumStockQuantity(), calculated)) {
+        LOGGER.warn("Passed MaximumStockQuantity does not match calculated one.");
+      }
+      setMaximumStockQuantity(calculated);
     }
   }
 
@@ -463,7 +488,12 @@ public class RequisitionLineItem extends BaseEntity {
    */
   private void calculateAndSetCalculatedOrderQuantity(RequisitionTemplate template) {
     if (template.isColumnDisplayed(CALCULATED_ORDER_QUANTITY)) {
-      setCalculatedOrderQuantity(calculateCalculatedOrderQuantity(this, template));
+      int calculated = calculateCalculatedOrderQuantity(this, template);
+      if (getCalculatedOrderQuantity() != null
+          && !Objects.equals(getCalculatedOrderQuantity(), calculated)) {
+        LOGGER.warn("Passed CalculatedOrderQuantity does not match calculated one.");
+      }
+      setCalculatedOrderQuantity(calculated);
     }
   }
 

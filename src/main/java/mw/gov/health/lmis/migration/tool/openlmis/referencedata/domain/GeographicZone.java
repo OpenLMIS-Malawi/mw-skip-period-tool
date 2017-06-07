@@ -15,11 +15,14 @@
 
 package mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain;
 
-import mw.gov.health.lmis.migration.tool.openlmis.BaseEntity;
+import com.vividsolutions.jts.geom.Polygon;
+
+import org.hibernate.annotations.Type;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import mw.gov.health.lmis.migration.tool.openlmis.BaseEntity;
 
 import java.util.Objects;
 import java.util.UUID;
@@ -71,6 +74,11 @@ public class GeographicZone extends BaseEntity {
   @Setter
   private Double longitude;
 
+  @Type(type = "jts_geometry")
+  @Getter
+  @Setter
+  private Polygon boundary;
+
   public GeographicZone(String code, GeographicLevel level) {
     this.code = code;
     this.level = level;
@@ -116,6 +124,8 @@ public class GeographicZone extends BaseEntity {
     geographicZone.setCatchmentPopulation(importer.getCatchmentPopulation());
     geographicZone.setLatitude(importer.getLatitude());
     geographicZone.setLongitude(importer.getLongitude());
+    
+    geographicZone.setBoundary(importer.getBoundary());
 
     return geographicZone;
   }
@@ -141,6 +151,7 @@ public class GeographicZone extends BaseEntity {
     exporter.setCatchmentPopulation(catchmentPopulation);
     exporter.setLatitude(latitude);
     exporter.setLongitude(longitude);
+    exporter.setBoundary(boundary);
   }
 
   public interface Exporter {
@@ -158,6 +169,8 @@ public class GeographicZone extends BaseEntity {
     void setLatitude(Double latitude);
 
     void setLongitude(Double longitude);
+    
+    void setBoundary(Polygon boundary);
 
     void setParent(GeographicZone parent);
 
@@ -178,6 +191,8 @@ public class GeographicZone extends BaseEntity {
     Double getLatitude();
 
     Double getLongitude();
+    
+    Polygon getBoundary();
 
     Importer getParent();
 

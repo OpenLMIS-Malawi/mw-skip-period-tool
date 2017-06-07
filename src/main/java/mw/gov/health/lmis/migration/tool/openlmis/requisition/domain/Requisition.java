@@ -16,6 +16,7 @@
 package mw.gov.health.lmis.migration.tool.openlmis.requisition.domain;
 
 import static java.util.Objects.isNull;
+import static mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.RequisitionLineItem.ADJUSTED_CONSUMPTION;
 
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
@@ -36,6 +37,7 @@ import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.Orderable
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.StockAdjustmentReason;
 import mw.gov.health.lmis.migration.tool.openlmis.requisition.RequisitionHelper;
 
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -61,7 +63,7 @@ import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
-@SuppressWarnings({"PMD.TooManyMethods", "PMD.AvoidDuplicateLiterals"})
+@SuppressWarnings("PMD.TooManyMethods")
 @Entity
 @Table(name = "requisitions", schema = "requisition")
 @NoArgsConstructor
@@ -211,7 +213,8 @@ public class Requisition extends BaseTimestampedEntity {
       throw new IllegalStateException();
     }
 
-    updateConsumptionsAndTotalCost(products);
+    updateConsumptions();
+    updateTotalCostAndPacksToShip(products);
 
     status = ExternalStatus.SUBMITTED;
 
@@ -228,7 +231,8 @@ public class Requisition extends BaseTimestampedEntity {
       throw new IllegalStateException();
     }
 
-    updateConsumptionsAndTotalCost(products);
+    updateConsumptions();
+    updateTotalCostAndPacksToShip(products);
     populateApprovedQuantity();
 
     status = ExternalStatus.AUTHORIZED;
@@ -239,6 +243,7 @@ public class Requisition extends BaseTimestampedEntity {
 
   /**
    * Check if the requisition is approvable.
+   *
    */
   public boolean isApprovable() {
     return status.duringApproval();
@@ -247,10 +252,8 @@ public class Requisition extends BaseTimestampedEntity {
   /**
    * Approves given requisition.
    *
-   * @param parentNodeId supervisoryNodeDto parent node of the supervisoryNode for this
-   *                     requisition.
-   * @param products     orderable products that will be used by line items to update packs to
-   *                     ship.
+   * @param parentNodeId supervisoryNodeDto parent node of the supervisoryNode for this requisition.
+   * @param products orderable products that will be used by line items to update packs to ship.
    */
   public void approve(UUID parentNodeId, Collection<Orderable> products, UUID approver) {
     if (parentNodeId == null) {
@@ -260,7 +263,8 @@ public class Requisition extends BaseTimestampedEntity {
       supervisoryNodeId = parentNodeId;
     }
 
-    updateConsumptionsAndTotalCost(products);
+    updateConsumptions();
+    updateTotalCostAndPacksToShip(products);
 
     statusChanges.add(StatusChange.newStatusChange(this, approver));
   }
@@ -270,7 +274,8 @@ public class Requisition extends BaseTimestampedEntity {
    */
   public void reject(Collection<Orderable> products, UUID rejector) {
     status = ExternalStatus.INITIATED;
-    updateConsumptionsAndTotalCost(products);
+    updateConsumptions();
+    updateTotalCostAndPacksToShip(products);
 
     statusChanges.add(StatusChange.newStatusChange(this, rejector));
   }
@@ -282,7 +287,7 @@ public class Requisition extends BaseTimestampedEntity {
     status = ExternalStatus.RELEASED;
     statusChanges.add(StatusChange.newStatusChange(this, releaser));
   }
-
+  
   /**
    * Finds first RequisitionLineItem that have productId property equals to the given productId
    * argument.
@@ -432,19 +437,23 @@ public class Requisition extends BaseTimestampedEntity {
             numberOfMonthsInPeriod));
   }
 
-  private void updateConsumptionsAndTotalCost(Collection<Orderable> products) {
-    getNonSkippedRequisitionLineItems().forEach(line -> line.updatePacksToShip(products));
+  private void updateConsumptions() {
 
-    if (template.isColumnInTemplate(RequisitionLineItem.ADJUSTED_CONSUMPTION)) {
+
+    if (template.isColumnInTemplateAndDisplayed(ADJUSTED_CONSUMPTION)) {
       getNonSkippedFullSupplyRequisitionLineItems().forEach(line -> line.setAdjustedConsumption(
           LineItemFieldsCalculator.calculateAdjustedConsumption(line, numberOfMonthsInPeriod)
       ));
     }
 
-    if (template.isColumnInTemplate(RequisitionLineItem.AVERAGE_CONSUMPTION)) {
+    if (template.isColumnInTemplateAndDisplayed(RequisitionLineItem.AVERAGE_CONSUMPTION)) {
       getNonSkippedFullSupplyRequisitionLineItems().forEach(
           RequisitionLineItem::calculateAndSetAverageConsumption);
     }
+  }
+
+  private void updateTotalCostAndPacksToShip(Collection<Orderable> products) {
+    getNonSkippedRequisitionLineItems().forEach(line -> line.updatePacksToShip(products));
 
     getNonSkippedRequisitionLineItems().forEach(line -> line.setTotalCost(
         LineItemFieldsCalculator.calculateTotalCost(line,

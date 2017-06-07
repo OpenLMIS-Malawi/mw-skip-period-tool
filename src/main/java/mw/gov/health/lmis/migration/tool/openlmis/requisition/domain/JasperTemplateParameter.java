@@ -15,20 +15,24 @@
 
 package mw.gov.health.lmis.migration.tool.openlmis.requisition.domain;
 
-import mw.gov.health.lmis.migration.tool.openlmis.BaseEntity;
-
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import mw.gov.health.lmis.migration.tool.openlmis.BaseEntity;
 
-import java.util.UUID;
+import java.util.List;
 
 import javax.persistence.CascadeType;
+import javax.persistence.CollectionTable;
 import javax.persistence.Column;
+import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
+import javax.persistence.PrePersist;
+import javax.persistence.PreUpdate;
 import javax.persistence.Table;
 
 /**
@@ -42,7 +46,6 @@ import javax.persistence.Table;
 @Entity
 @Table(name = "template_parameters", schema = "requisition")
 @NoArgsConstructor
-@AllArgsConstructor
 public class JasperTemplateParameter extends BaseEntity {
 
   @ManyToOne(cascade = CascadeType.REFRESH)
@@ -91,94 +94,36 @@ public class JasperTemplateParameter extends BaseEntity {
   @Setter
   private String description;
 
+  @ElementCollection
+  @CollectionTable(
+      name = "JasperTemplateParameter_options",
+      schema = "requisition",
+      joinColumns = @JoinColumn(name = "jaspertemplateparameterid"))
+  @Column(name = "options")
+  @Setter
+  @Getter
+  private List<String> options;
+
+  @OneToMany(
+      mappedBy = "parameter",
+      cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.REMOVE},
+      fetch = FetchType.EAGER,
+      orphanRemoval = true)
+  @Getter
+  @Setter
+  private List<JasperTemplateParameterDependency> dependencies;
+
   @Column
   @Getter
   @Setter
   private Boolean required;
 
-  /**
-   * Create new instance of JasperTemplateParameter based on given
-   * {@link JasperTemplateParameter.Importer}
-   *
-   * @param importer instance of {@link JasperTemplateParameter.Importer}
-   * @return instance of JasperTemplateParameter.
-   */
-  public static JasperTemplateParameter newInstance(Importer importer) {
-    JasperTemplateParameter jasperTemplateParameter = new JasperTemplateParameter();
-    jasperTemplateParameter.setId(importer.getId());
-    jasperTemplateParameter.setName(importer.getName());
-    jasperTemplateParameter.setDisplayName(importer.getDisplayName());
-    jasperTemplateParameter.setDefaultValue(importer.getDefaultValue());
-    jasperTemplateParameter.setSelectExpression(importer.getSelectExpression());
-    jasperTemplateParameter.setDescription(importer.getDescription());
-    jasperTemplateParameter.setDataType(importer.getDataType());
-    jasperTemplateParameter.setSelectProperty(importer.getSelectProperty());
-    jasperTemplateParameter.setDisplayProperty(importer.getDisplayProperty());
-    jasperTemplateParameter.setRequired(importer.getRequired());
-    return jasperTemplateParameter;
+  @PrePersist
+  @PreUpdate
+  private void preSave() {
+    if (dependencies != null) {
+      dependencies.forEach(dependency -> dependency.setParameter(this));
+    }
   }
 
-  /**
-   * Export this object to the specified exporter (DTO).
-   *
-   * @param exporter exporter to export to
-   */
-  public void export(Exporter exporter) {
-    exporter.setId(id);
-    exporter.setName(name);
-    exporter.setDescription(description);
-    exporter.setDataType(dataType);
-    exporter.setDefaultValue(defaultValue);
-    exporter.setDisplayName(displayName);
-    exporter.setSelectExpression(selectExpression);
-    exporter.setSelectProperty(selectProperty);
-    exporter.setDisplayProperty(displayProperty);
-    exporter.setRequired(required);
-  }
-
-  public interface Exporter {
-    void setId(UUID id);
-
-    void setName(String name);
-
-    void setDisplayName(String displayName);
-
-    void setDefaultValue(String defaultValue);
-
-    void setDataType(String dataType);
-
-    void setSelectExpression(String selectExpression);
-
-    void setDescription(String description);
-
-    void setSelectProperty(String selectProperty);
-
-    void setDisplayProperty(String displayProperty);
-
-    void setRequired(Boolean required);
-
-  }
-
-  public interface Importer {
-    UUID getId();
-
-    String getName();
-
-    String getDisplayName();
-
-    String getDefaultValue();
-
-    String getDataType();
-
-    String getSelectExpression();
-
-    String getDescription();
-
-    String getSelectProperty();
-
-    String getDisplayProperty();
-
-    Boolean getRequired();
-
-  }
 }

@@ -19,15 +19,17 @@ import org.hibernate.annotations.Parameter;
 import org.hibernate.annotations.Type;
 import org.joda.money.CurrencyUnit;
 import org.joda.money.Money;
-import mw.gov.health.lmis.migration.tool.openlmis.BaseEntity;
-import mw.gov.health.lmis.migration.tool.openlmis.CurrencyConfig;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import mw.gov.health.lmis.migration.tool.openlmis.BaseEntity;
+import mw.gov.health.lmis.migration.tool.openlmis.CurrencyConfig;
 
 import java.math.BigDecimal;
 import java.util.Objects;
+import java.util.UUID;
 
 import javax.persistence.Entity;
 import javax.persistence.JoinColumn;
@@ -37,6 +39,7 @@ import javax.persistence.Table;
 @Entity
 @Table(name = "program_orderables", schema = "referencedata")
 @NoArgsConstructor
+@AllArgsConstructor
 @Getter
 @Setter
 public class ProgramOrderable extends BaseEntity {
@@ -78,7 +81,6 @@ public class ProgramOrderable extends BaseEntity {
 
   /**
    * Returns true if this association is for given Program.
-   *
    * @param program the {@link Program} to ask about
    * @return true if this association is for the given Program, false otherwise.
    */
@@ -89,19 +91,18 @@ public class ProgramOrderable extends BaseEntity {
   /**
    * Create program orderable association.
    * See {@link #createNew(Program,
-   * OrderableDisplayCategory,
-   * Orderable,
-   * Integer,
-   * boolean,
-   * boolean,
-   * int,
-   * Money,
-   * CurrencyUnit)}.
+   *  OrderableDisplayCategory,
+   *  Orderable,
+   *  Integer,
+   *  boolean,
+   *  boolean,
+   *  int,
+   *  Money,
+   *  CurrencyUnit)}.
    * Uses sensible defaults.
-   *
-   * @param program  see other
+   * @param program see other
    * @param category see other
-   * @param product  see other
+   * @param product see other
    * @return see other
    */
   public static final ProgramOrderable createNew(Program program,
@@ -115,14 +116,13 @@ public class ProgramOrderable extends BaseEntity {
 
   /**
    * Create program orderable.
-   *
-   * @param program         The Program this Product will be in.
-   * @param category        the category this Product will be in, in this Program.
-   * @param product         the Product.
+   * @param program The Program this Product will be in.
+   * @param category the category this Product will be in, in this Program.
+   * @param product the Product.
    * @param dosesPerPatient the number of doses a patient needs of this orderable.
-   * @param active          weather this orderable is active in this program at this time.
-   * @param displayOrder    the display order of this Product in this category of this Program.
-   * @param pricePerPack    the price of one pack.
+   * @param active weather this orderable is active in this program at this time.
+   * @param displayOrder the display order of this Product in this category of this Program.
+   * @param pricePerPack the price of one pack.
    * @return a new ProgramOrderable.
    */
   public static final ProgramOrderable createNew(Program program,
@@ -148,7 +148,6 @@ public class ProgramOrderable extends BaseEntity {
   /**
    * Equal if both represent association between same Program and Product.  e.g. Ibuprofen in the
    * Essential Meds Program is always the same association regardless of the other properties.
-   *
    * @param other the other ProgramOrderable
    * @return true if for same Program-Orderable association, false otherwise.
    */
@@ -167,4 +166,84 @@ public class ProgramOrderable extends BaseEntity {
     return Objects.hash(program, product);
   }
 
+  /**
+   * Creates new instance based on data from {@link Importer}
+   *
+   * @param importer instance of {@link Importer}
+   * @return new instance of ProgramOrderable.
+   */
+  public static ProgramOrderable newInstance(Importer importer, Orderable orderable) {
+    ProgramOrderable programOrderable = new ProgramOrderable();
+    programOrderable.orderableDisplayCategory =
+        new OrderableDisplayCategory(importer.getOrderableDisplayCategoryId());
+    programOrderable.active = importer.isActive();
+    programOrderable.fullSupply = importer.isFullSupply();
+    programOrderable.displayOrder = importer.getDisplayOrder();
+    programOrderable.dosesPerPatient = importer.getDosesPerPatient();
+    programOrderable.pricePerPack = importer.getPricePerPack();
+    programOrderable.program = new Program(importer.getProgramId());
+    programOrderable.product = orderable;
+    return programOrderable;
+  }
+
+  /**
+   * Export this object to the specified exporter (DTO).
+   *
+   * @param exporter exporter to export to
+   */
+  public void export(Exporter exporter) {
+    exporter.setOrderableDisplayCategoryId(
+        orderableDisplayCategory.getId());
+    if (orderableDisplayCategory.getOrderedDisplayValue() != null) {
+      exporter.setOrderableCategoryDisplayName(
+          orderableDisplayCategory.getOrderedDisplayValue().getDisplayName());
+      exporter.setOrderableCategoryDisplayOrder(
+          orderableDisplayCategory.getOrderedDisplayValue().getDisplayOrder());
+    }
+    exporter.setProgramId(program.getId());
+    exporter.setActive(active);
+    exporter.setFullSupply(fullSupply);
+    exporter.setDisplayOrder(displayOrder);
+    exporter.setDosesPerPatient(dosesPerPatient);
+    if (pricePerPack != null) {
+      exporter.setPricePerPack(pricePerPack);
+    }
+
+  }
+
+  public interface Exporter {
+    void setProgramId(UUID program);
+
+    void setOrderableDisplayCategoryId(UUID category);
+
+    void setOrderableCategoryDisplayName(String name);
+
+    void setOrderableCategoryDisplayOrder(Integer displayOrder);
+
+    void setActive(boolean active);
+
+    void setFullSupply(boolean fullSupply);
+
+    void setDisplayOrder(int displayOrder);
+
+    void setDosesPerPatient(Integer dosesPerPatient);
+
+    void setPricePerPack(Money pricePerPack);
+  }
+
+  public interface Importer {
+    UUID getProgramId();
+
+    UUID getOrderableDisplayCategoryId();
+
+    boolean isActive();
+
+    boolean isFullSupply();
+
+    int getDisplayOrder();
+
+    Integer getDosesPerPatient();
+
+    Money getPricePerPack();
+  }
 }

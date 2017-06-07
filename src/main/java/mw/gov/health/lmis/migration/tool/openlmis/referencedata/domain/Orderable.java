@@ -5,34 +5,36 @@
  * This program is free software: you can redistribute it and/or modify it under the terms
  * of the GNU Affero General Public License as published by the Free Software Foundation, either
  * version 3 of the License, or (at your option) any later version.
- *
+ *  
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
- * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
  * See the GNU Affero General Public License for more details. You should have received a copy of
  * the GNU Affero General Public License along with this program. If not, see
- * http://www.gnu.org/licenses.  For additional information contact info@OpenLMIS.org.
+ * http://www.gnu.org/licenses.  For additional information contact info@OpenLMIS.org. 
  */
 
 package mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-
 import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import mw.gov.health.lmis.migration.tool.openlmis.BaseEntity;
 
-import java.util.LinkedHashSet;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 import javax.persistence.CascadeType;
-import javax.persistence.DiscriminatorColumn;
+import javax.persistence.CollectionTable;
+import javax.persistence.Column;
+import javax.persistence.ElementCollection;
 import javax.persistence.Embedded;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
-import javax.persistence.Inheritance;
-import javax.persistence.InheritanceType;
+import javax.persistence.JoinColumn;
+import javax.persistence.MapKeyColumn;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
@@ -41,87 +43,52 @@ import javax.persistence.Table;
  * that may be ordered/requisitioned, typically by a {@link Program}.
  */
 @Entity
-@DiscriminatorColumn(name = "Type")
-@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 @Table(name = "orderables", schema = "referencedata")
 @NoArgsConstructor
-@Getter
-@Setter
-public abstract class Orderable extends BaseEntity {
+@AllArgsConstructor
+public class Orderable extends BaseEntity {
+
   @Embedded
+  @Getter
+  @Setter
   private Code productCode;
 
   @Embedded
+  @Getter(AccessLevel.PACKAGE)
   private Dispensable dispensable;
 
+  @Getter
   @Setter
   private String fullProductName;
 
-  @JsonProperty
+  @Getter
+  private String description;
+
   @Getter(AccessLevel.PACKAGE)
   private long netContent;
 
-  @JsonProperty
+  @Getter(AccessLevel.PACKAGE)
   private long packRoundingThreshold;
 
-  @JsonProperty
+  @Getter(AccessLevel.PACKAGE)
   private boolean roundToZero;
 
   @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true,
       fetch = FetchType.EAGER)
   private Set<ProgramOrderable> programOrderables;
 
-  protected Orderable(Code productCode, Dispensable dispensable, String fullProductName,
-                      long netContent, long packRoundingThreshold, boolean roundToZero) {
-    this.productCode = productCode;
-    this.dispensable = dispensable;
-    this.fullProductName = fullProductName;
-    this.netContent = netContent;
-    this.packRoundingThreshold = packRoundingThreshold;
-    this.roundToZero = roundToZero;
-    this.programOrderables = new LinkedHashSet<>();
-  }
-
-  public boolean hasProgram() {
-    return null != programOrderables && 0 < programOrderables.size();
-  }
-
-  /**
-   * Return this orderable product's unique product code.
-   * @return a copy of this product's unique product code.
-   */
-  @JsonProperty
-  public final Code getProductCode() {
-    return productCode;
-  }
-
-  @JsonProperty
-  public final Dispensable getDispensable() {
-    return dispensable;
-  }
-
-  /**
-   * Adds product for ordering within a program.
-   * @param programOrderable the association to a {@link Program}
-   * @return true if successful, false otherwise.
-   */
-  public final boolean addToProgram(ProgramOrderable programOrderable) {
-    if (programOrderables.contains(programOrderable)) {
-      programOrderables.remove(programOrderable);
-    }
-
-    return programOrderables.add(programOrderable);
-  }
-
-  @JsonProperty
-  protected final Set<ProgramOrderable> getPrograms() {
-    return programOrderables;
-  }
+  @ElementCollection(fetch = FetchType.EAGER)
+  @MapKeyColumn(name = "key")
+  @Column(name = "value")
+  @CollectionTable(
+      name = "orderable_identifiers",
+      joinColumns = @JoinColumn(name = "orderableId"))
+  private Map<String, String> identifiers;
 
   /**
    * Get the association to a {@link Program}.
    * @param program the Program this product is (maybe) in.
-   * @return the asssociation to the given {@link Program}, or null if this product is not in the
+   * @return the association to the given {@link Program}, or null if this product is not in the
    *        given program.
    */
   public ProgramOrderable getProgramOrderable(Program program) {
@@ -133,9 +100,6 @@ public abstract class Orderable extends BaseEntity {
 
     return null;
   }
-
-  @JsonProperty
-  public abstract String getDescription();
 
   /**
    * Returns the number of packs to order. For this Orderable given a desired number of
@@ -163,32 +127,19 @@ public abstract class Orderable extends BaseEntity {
   }
 
   /**
-   * Determines if product may be used to fulfill for the given product.
-   * @param product the product we'd like to fulfill for.
-   * @return true if this product can fulfill for the given product.  False otherwise.
-   */
-  public abstract boolean canFulfill(Orderable product);
-
-  /**
    * Determines equality based on product codes.
    * @param object another Orderable, ideally.
    * @return true if the two are semantically equal.  False otherwise.
    */
   @Override
   public final boolean equals(Object object) {
-    if (null == object) {
-      return false;
-    }
-
-    if (!(object instanceof Orderable)) {
-      return false;
-    }
-
-    return ((Orderable) object).productCode.equals(this.productCode);
+    return null != object
+        && object instanceof Orderable
+        && Objects.equals(productCode, ((Orderable) object).productCode);
   }
 
   @Override
   public final int hashCode() {
-    return productCode.hashCode();
+    return Objects.hashCode(productCode);
   }
 }

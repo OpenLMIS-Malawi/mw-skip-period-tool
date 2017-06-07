@@ -15,11 +15,13 @@
 
 package mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain;
 
-import mw.gov.health.lmis.migration.tool.openlmis.BaseEntity;
+import static org.apache.commons.lang3.BooleanUtils.isFalse;
 
 import lombok.Getter;
 import lombok.Setter;
+import mw.gov.health.lmis.migration.tool.openlmis.BaseEntity;
 
+import java.util.Objects;
 import java.util.UUID;
 
 import javax.persistence.Column;
@@ -66,6 +68,15 @@ public class Program extends BaseEntity {
   }
 
   /**
+   * Creates a new Program with given id.
+   *
+   * @param id the program id
+   */
+  public Program(UUID id) {
+    this.id = id;
+  }
+
+  /**
    * Creates a new Program with given code.
    *
    * @param programCode the program code
@@ -99,7 +110,7 @@ public class Program extends BaseEntity {
 
   @Override
   public int hashCode() {
-    return code.hashCode();
+    return Objects.hashCode(code);
   }
 
   /**
@@ -128,7 +139,10 @@ public class Program extends BaseEntity {
    */
   public void export(Exporter exporter) {
     exporter.setId(id);
-    exporter.setCode(code.toString());
+    String codeString = this.code.toString();
+    if (isFalse(codeString.isEmpty())) {
+      exporter.setCode(codeString);
+    }
     exporter.setName(name);
     exporter.setDescription(description);
     exporter.setActive(active);

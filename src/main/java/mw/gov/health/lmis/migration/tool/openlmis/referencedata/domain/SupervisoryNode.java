@@ -15,16 +15,16 @@
 
 package mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain;
 
-import mw.gov.health.lmis.migration.tool.openlmis.BaseEntity;
-
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import mw.gov.health.lmis.migration.tool.openlmis.BaseEntity;
 
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -153,7 +153,12 @@ public class SupervisoryNode extends BaseEntity {
     Set<Facility> supervisedFacilities = new HashSet<>();
 
     if (requisitionGroup != null && requisitionGroup.supports(program)) {
-      supervisedFacilities.addAll(requisitionGroup.getMemberFacilities());
+      Set<Facility> facilities = requisitionGroup
+          .getMemberFacilities()
+          .stream()
+          .filter(member -> member.supports(program))
+          .collect(Collectors.toSet());
+      supervisedFacilities.addAll(facilities);
     }
 
     if (childNodes != null) {
@@ -248,9 +253,9 @@ public class SupervisoryNode extends BaseEntity {
 
     Facility.Importer getFacility();
 
-    Importer getParentNode();
+    SupervisoryNode.Importer getParentNode();
 
-    Set<Importer> getChildNodes();
+    Set<SupervisoryNode.Importer> getChildNodes();
 
     RequisitionGroup.Importer getRequisitionGroup();
   }

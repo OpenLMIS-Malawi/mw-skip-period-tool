@@ -15,7 +15,6 @@ import org.springframework.stereotype.Component;
 
 import mw.gov.health.lmis.migration.tool.config.ToolProperties;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.Code;
-import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.CommodityType;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.Facility;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.FacilityType;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.GeographicLevel;
@@ -73,7 +72,7 @@ public class ReferenceDataCreator {
   public Orderable orderable(Product product) {
     LOGGER.info("Create orderable: {}", product.getName());
 
-    Orderable orderable = new CommodityType();
+    Orderable orderable = new Orderable();
     orderable.setId(UUID.randomUUID());
     orderable.setProductCode(new Code(product.getProductId().trim()));
     orderable.setFullProductName(product.getName().trim());

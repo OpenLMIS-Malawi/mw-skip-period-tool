@@ -18,12 +18,12 @@ package mw.gov.health.lmis.migration.tool.openlmis.requisition.domain;
 
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
-import mw.gov.health.lmis.migration.tool.openlmis.BaseEntity;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import mw.gov.health.lmis.migration.tool.openlmis.BaseEntity;
 
 import java.util.List;
 import java.util.Optional;
@@ -34,6 +34,8 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.OneToMany;
+import javax.persistence.PrePersist;
+import javax.persistence.PreUpdate;
 import javax.persistence.Table;
 
 @Entity
@@ -71,6 +73,16 @@ public class JasperTemplate extends BaseEntity {
   @Getter
   @Setter
   private String description;
+
+  @PrePersist
+  private void prePersist() {
+    forEachParameter(line -> line.setTemplate(this));
+  }
+
+  @PreUpdate
+  private void preUpdate() {
+    forEachParameter(line -> line.setTemplate(this));
+  }
 
   /**
    * Copy values of attributes into new or updated Template.

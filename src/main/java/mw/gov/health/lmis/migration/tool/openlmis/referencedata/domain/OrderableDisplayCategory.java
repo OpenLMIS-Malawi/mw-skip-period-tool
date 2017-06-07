@@ -15,15 +15,14 @@
 
 package mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain;
 
-import com.fasterxml.jackson.annotation.JsonUnwrapped;
-
-import mw.gov.health.lmis.migration.tool.openlmis.BaseEntity;
+import static org.apache.commons.lang3.BooleanUtils.isFalse;
 
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
+import mw.gov.health.lmis.migration.tool.openlmis.BaseEntity;
 
 import java.util.Objects;
+import java.util.UUID;
 
 import javax.persistence.Embedded;
 import javax.persistence.Entity;
@@ -34,26 +33,76 @@ import javax.persistence.Table;
  */
 @Entity
 @Table(name = "orderable_display_categories", schema = "referencedata")
-@Getter
-@Setter
-@NoArgsConstructor
 public class OrderableDisplayCategory extends BaseEntity {
 
   @Embedded
+  @Getter
+  @Setter
   private Code code;
 
   @Embedded
-  @JsonUnwrapped
+  @Getter
+  @Setter
   private OrderedDisplayValue orderedDisplayValue;
 
+  public OrderableDisplayCategory() {
+  }
+
   /**
-   * Update this from another.  Copies display values from the other OrderableDisplayCategory
+   * Creates a new OrderableDisplayCategory with given id.
+   */
+  public OrderableDisplayCategory(UUID id) {
+    this.id = id;
+  }
+
+  /**
+   * Creates a new OrderableDisplayCategory.
+   *
+   * @param code         this OrderableDisplayCategory's unique implementation code
+   *                     (never {@code null})
+   * @param displayValue the display values of this OrderableDisplayCategory (never {@code null})
+   */
+  protected OrderableDisplayCategory(Code code, OrderedDisplayValue displayValue) {
+    Objects.requireNonNull(code);
+    Objects.requireNonNull(displayValue);
+    this.code = code;
+    this.orderedDisplayValue = displayValue;
+  }
+
+  /**
+   * Update this from another. Copies display values from the other OrderableDisplayCategory
    * into this one.
    *
    * @param orderableDisplayCategory OrderableDisplayCategory to update from.
    */
   public void updateFrom(OrderableDisplayCategory orderableDisplayCategory) {
     this.orderedDisplayValue = orderableDisplayCategory.orderedDisplayValue;
+  }
+
+  /**
+   * Creates a new OrderableDisplayCategory.
+   *
+   * @param orderableDisplayCategoryCode this OrderableDisplayCategory's unique implementation code
+   *                                     (never {@code null})
+   * @return a new OrderableDisplayCategory using default display value and order
+   */
+  public static OrderableDisplayCategory createNew(Code orderableDisplayCategoryCode) {
+    return OrderableDisplayCategory.createNew(orderableDisplayCategoryCode,
+        new OrderedDisplayValue(orderableDisplayCategoryCode.toString(), 1));
+  }
+
+  /**
+   * Creates a new OrderableDisplayCategory.
+   *
+   * @param orderableDisplayCategoryCode this OrderableDisplayCategory's unique implementation code
+   *                                     (never {@code null})
+   * @param displayValue        the display values of this OrderableDisplayCategory
+   *                            (never {@code null})
+   * @return a new OrderableDisplayCategory.
+   */
+  public static OrderableDisplayCategory createNew(Code orderableDisplayCategoryCode,
+                                                   OrderedDisplayValue displayValue) {
+    return new OrderableDisplayCategory(orderableDisplayCategoryCode, displayValue);
   }
 
   @Override
@@ -72,4 +121,49 @@ public class OrderableDisplayCategory extends BaseEntity {
   public int hashCode() {
     return Objects.hash(code);
   }
+
+  /**
+   * Creates new instance of OrderableDisplayCategory.
+   */
+  public static OrderableDisplayCategory newInstance(Importer importer) {
+    OrderableDisplayCategory category = OrderableDisplayCategory.createNew(
+        Code.code(importer.getCode()),
+        new OrderedDisplayValue(importer.getDisplayName(), importer.getDisplayOrder()));
+    category.setId(importer.getId());
+    return category;
+  }
+
+  /**
+   * Exports domain object to dto.
+   */
+  public void export(Exporter exporter) {
+    exporter.setId(id);
+    String codeString = code.toString();
+    if (isFalse(codeString.isEmpty())) {
+      exporter.setCode(codeString);
+    }
+    exporter.setDisplayName(orderedDisplayValue.getDisplayName());
+    exporter.setDisplayOrder(orderedDisplayValue.getDisplayOrder());
+  }
+
+  public interface Exporter {
+    void setId(UUID id);
+
+    void setCode(String code);
+
+    void setDisplayName(String name);
+
+    void setDisplayOrder(Integer displayOrder);
+  }
+
+  public interface Importer {
+    UUID getId();
+
+    String getCode();
+
+    String getDisplayName();
+
+    Integer getDisplayOrder();
+  }
+
 }

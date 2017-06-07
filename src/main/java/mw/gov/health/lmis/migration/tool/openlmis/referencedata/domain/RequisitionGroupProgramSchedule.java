@@ -15,11 +15,10 @@
 
 package mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain;
 
-import mw.gov.health.lmis.migration.tool.openlmis.BaseEntity;
-
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import mw.gov.health.lmis.migration.tool.openlmis.BaseEntity;
 
 import java.util.Objects;
 import java.util.UUID;
@@ -76,7 +75,7 @@ public class RequisitionGroupProgramSchedule extends BaseEntity {
 
   private RequisitionGroupProgramSchedule(RequisitionGroup requisitionGroup, Program program,
                                           ProcessingSchedule schedule, boolean directDelivery) {
-    this.requisitionGroup = Objects.requireNonNull(requisitionGroup);
+    this.requisitionGroup = requisitionGroup;
     this.program = Objects.requireNonNull(program);
     this.processingSchedule = Objects.requireNonNull(schedule);
     this.directDelivery = directDelivery;
@@ -95,7 +94,7 @@ public class RequisitionGroupProgramSchedule extends BaseEntity {
    * @return new RequisitionGroupProgramSchedule
    */
   public static RequisitionGroupProgramSchedule newRequisitionGroupProgramSchedule(
-      Importer importer) {
+      RequisitionGroupProgramSchedule.Importer importer) {
     RequisitionGroup requisitionGroup = null;
 
     if (importer.getRequisitionGroup() != null) {
@@ -127,7 +126,7 @@ public class RequisitionGroupProgramSchedule extends BaseEntity {
    *
    * @param exporter exporter to export to
    */
-  public void export(Exporter exporter) {
+  public void export(RequisitionGroupProgramSchedule.Exporter exporter) {
     exporter.setId(id);
     exporter.setRequisitionGroup(requisitionGroup);
     exporter.setProcessingSchedule(processingSchedule);

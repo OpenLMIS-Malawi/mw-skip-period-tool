@@ -15,12 +15,9 @@
 
 package mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain;
 
-import com.google.common.base.Strings;
-
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 
 import java.util.Objects;
 
@@ -31,28 +28,23 @@ import javax.persistence.Embeddable;
  * a simple immutable value meant to be used in fuller entities.
  */
 @Embeddable
-@NoArgsConstructor
 public class OrderedDisplayValue {
   @JsonProperty
   @Getter
   private String displayName;
   @JsonProperty
   @Getter
-  private int displayOrder;
+  private Integer displayOrder;
+
+  private OrderedDisplayValue() {}
 
   /**
    * Create a new ordered display value.
-   *
-   * @param displayName  a name for end-user display.
+   * @param displayName a name for end-user display.
    * @param displayOrder the order of which to display this.
    */
-  public OrderedDisplayValue(String displayName, int displayOrder) {
-    displayName = displayName.trim();
-    if (Strings.isNullOrEmpty(displayName)) {
-      throw new IllegalArgumentException();
-    }
-
-    this.displayName = displayName;
+  public OrderedDisplayValue(String displayName, Integer displayOrder) {
+    this.displayName = displayName != null ? displayName.trim() : null;
     this.displayOrder = displayOrder;
   }
 

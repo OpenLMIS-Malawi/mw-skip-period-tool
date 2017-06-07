@@ -1,19 +1,35 @@
+/*
+ * This program is part of the OpenLMIS logistics management information system platform software.
+ * Copyright © 2017 VillageReach
+ *
+ * This program is free software: you can redistribute it and/or modify it under the terms
+ * of the GNU Affero General Public License as published by the Free Software Foundation, either
+ * version 3 of the License, or (at your option) any later version.
+ *  
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
+ * See the GNU Affero General Public License for more details. You should have received a copy of
+ * the GNU Affero General Public License along with this program. If not, see
+ * http://www.gnu.org/licenses.  For additional information contact info@OpenLMIS.org. 
+ */
+
 package mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonInclude;
-
+import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import mw.gov.health.lmis.migration.tool.openlmis.BaseEntity;
 
 import java.util.List;
 
-import javax.persistence.DiscriminatorValue;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
+import javax.persistence.Table;
 
 /**
  * CommodityTypes are generic commodities to simplify ordering and use.  A CommodityType doesn't
@@ -21,17 +37,21 @@ import javax.persistence.OneToMany;
  * refined categorization of products that may typically be ordered / exchanged for one another.
  */
 @Entity
-@DiscriminatorValue("COMMODITY_TYPE")
+@Table(name = "commodity_types", schema = "referencedata")
 @NoArgsConstructor
-@JsonInclude(JsonInclude.Include.NON_NULL)
-public final class CommodityType extends Orderable {
+@AllArgsConstructor
+@EqualsAndHashCode(of = "name", callSuper = false)
+public final class CommodityType extends BaseEntity {
 
-  private String description;
+  @Column(nullable = false)
+  private String name;
 
   @Getter
+  @Column(nullable = false)
   private String classificationSystem;
 
   @Getter
+  @Column(nullable = false)
   private String classificationId;
 
   @Getter
@@ -42,16 +62,28 @@ public final class CommodityType extends Orderable {
   @Getter
   @Setter
   @OneToMany(mappedBy = "parent")
-  @JsonIgnore
   private List<CommodityType> children;
 
-  @Override
-  public String getDescription() {
-    return description;
+  /**
+   * Validates and assigns a parent to this commodity type.
+   * No cycles in the hierarchy are allowed.
+   *
+   * @param parent the parent to assign
+   */
+  public void assignParent(CommodityType parent) {
+    validateIsNotDescendant(parent);
+
+    this.parent = parent;
+    parent.children.add(this);
   }
 
-  @Override
-  public boolean canFulfill(Orderable product) {
-    return this.equals(product);
+  private void validateIsNotDescendant(CommodityType commodityType) {
+    for (CommodityType child : children) {
+      if (child.equals(commodityType)) {
+        throw new IllegalArgumentException();
+      }
+      child.validateIsNotDescendant(commodityType);
+    }
   }
+
 }

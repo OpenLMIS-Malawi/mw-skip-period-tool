@@ -15,12 +15,14 @@
 
 package mw.gov.health.lmis.migration.tool.openlmis.requisition.domain;
 
+import static mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.AvailableRequisitionColumnOption.DEFAULT;
+import static mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.OpenLmisNumberUtils.zeroIfNull;
 import static org.apache.commons.lang.BooleanUtils.isTrue;
 import static org.apache.commons.lang.StringUtils.defaultIfBlank;
-import static mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.OpenLmisNumberUtils.zeroIfNull;
 
 import org.joda.money.CurrencyUnit;
 import org.joda.money.Money;
+
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.StockAdjustmentReason;
 
 import java.math.BigDecimal;
@@ -45,8 +47,7 @@ public final class LineItemFieldsCalculator {
    */
   public static int calculateBeginningBalance(RequisitionLineItem previous) {
     if (null != previous) {
-      return zeroIfNull(previous.getStockOnHand())
-          + zeroIfNull(previous.getApprovedQuantity());
+      return zeroIfNull(previous.getStockOnHand());
     }
     return 0;
   }
@@ -166,10 +167,9 @@ public final class LineItemFieldsCalculator {
     BigDecimal divide = new BigDecimal(totalDays)
         .divide(new BigDecimal(nonStockoutDays), 1000, BigDecimal.ROUND_HALF_UP);
 
-    // in OpenLMIS Core is RoundingMode.CEILING
     BigDecimal adjustedConsumption = new BigDecimal(consumedQuantity)
         .multiply(divide)
-        .setScale(0, RoundingMode.HALF_UP);
+        .setScale(0, RoundingMode.CEILING);
 
     return adjustedConsumption.intValue();
   }
@@ -198,7 +198,7 @@ public final class LineItemFieldsCalculator {
 
     int sum = adjustedConsumptions.stream().reduce(0, Integer::sum);
 
-    return (int) Math.ceil((double) sum / numberOfPeriods);
+    return (int) Math.ceil((double)sum / numberOfPeriods);
   }
 
   /**
@@ -217,12 +217,12 @@ public final class LineItemFieldsCalculator {
         .findColumn(RequisitionLineItem.MAXIMUM_STOCK_QUANTITY);
     AvailableRequisitionColumnOption option = column.getOption();
     String optionName = null != option
-        ? defaultIfBlank(option.getOptionName(), AvailableRequisitionColumnOption.DEFAULT)
-        : AvailableRequisitionColumnOption.DEFAULT;
+        ? defaultIfBlank(option.getOptionName(), DEFAULT)
+        : DEFAULT;
 
     // currently we only support default option for this column. When new option will be added
     // this condition should be removed/updated
-    if (!AvailableRequisitionColumnOption.DEFAULT.equalsIgnoreCase(optionName)) {
+    if (!DEFAULT.equalsIgnoreCase(optionName)) {
       throw new IllegalArgumentException(
           "Unsupported option for maximum stock quantity: " + optionName
       );

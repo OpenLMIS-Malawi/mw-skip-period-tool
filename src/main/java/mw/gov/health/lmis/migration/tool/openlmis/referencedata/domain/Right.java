@@ -15,11 +15,10 @@
 
 package mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain;
 
-import mw.gov.health.lmis.migration.tool.openlmis.BaseEntity;
-
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import mw.gov.health.lmis.migration.tool.openlmis.BaseEntity;
 
 import java.util.HashSet;
 import java.util.Objects;
@@ -95,7 +94,7 @@ public class Right extends BaseEntity {
     Right newRight = new Right(importer.getName(), importer.getType());
     newRight.id = importer.getId();
     newRight.description = importer.getDescription();
-    for (Importer attachmentImporter : importer.getAttachments()) {
+    for (Right.Importer attachmentImporter : importer.getAttachments()) {
       Right newAttachment = newRight(attachmentImporter);
       newRight.attach(newAttachment);
     }
@@ -183,6 +182,6 @@ public class Right extends BaseEntity {
 
     String getDescription();
 
-    Set<Importer> getAttachments();
+    Set<Right.Importer> getAttachments();
   }
 }

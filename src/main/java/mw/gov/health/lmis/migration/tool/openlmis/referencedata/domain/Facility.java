@@ -17,20 +17,24 @@ package mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain;
 
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
+import com.vividsolutions.jts.geom.Point;
 
-import mw.gov.health.lmis.migration.tool.openlmis.BaseEntity;
+import org.hibernate.annotations.Type;
 
 import lombok.Getter;
 import lombok.Setter;
+import mw.gov.health.lmis.migration.tool.openlmis.BaseEntity;
 
 import java.time.LocalDate;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
+import javax.persistence.Convert;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
@@ -44,6 +48,7 @@ import javax.persistence.Table;
 public class Facility extends BaseEntity {
 
   public static final String TEXT = "text";
+  public static final String WAREHOUSE_CODE = "warehouse";
 
   @Column(nullable = false, unique = true, columnDefinition = TEXT)
   @Getter
@@ -111,7 +116,19 @@ public class Facility extends BaseEntity {
   @Setter
   private Set<SupportedProgram> supportedPrograms = new HashSet<>();
 
+  @Type(type = "jts_geometry")
+  @Getter
+  @Setter
+  private Point location;
+
+  @Column(name = "extradata", columnDefinition = "jsonb")
+  @Convert(converter = ExtraDataConverter.class)
+  @Getter
+  @Setter
+  private Map<String, String> extraData;
+
   public Facility() {
+
   }
 
   public Facility(String code) {
@@ -164,12 +181,15 @@ public class Facility extends BaseEntity {
       facility.setOperator(FacilityOperator.newFacilityOperator(importer.getOperator()));
     }
 
+    facility.setExtraData(importer.getExtraData());
     facility.setActive(importer.getActive());
     facility.setGoLiveDate(importer.getGoLiveDate());
     facility.setGoDownDate(importer.getGoDownDate());
     facility.setComment(importer.getComment());
     facility.setEnabled(importer.getEnabled());
     facility.setOpenLmisAccessible(importer.getOpenLmisAccessible());
+    
+    facility.setLocation(importer.getLocation());
 
     return facility;
   }
@@ -211,6 +231,23 @@ public class Facility extends BaseEntity {
     if (null != supportedPrograms) {
       exporter.setSupportedPrograms(supportedPrograms);
     }
+    
+    exporter.setLocation(location);
+
+    exporter.setExtraData(extraData);
+  }
+
+  public boolean isWarehouse() {
+    return WAREHOUSE_CODE.equalsIgnoreCase(type.getCode());
+  }
+
+  /**
+   * Check to see if this facility supports the specified program.
+   */
+  public boolean supports(Program program) {
+    return supportedPrograms
+        .stream()
+        .anyMatch(supported -> supported.getProgram().equals(program));
   }
 
   public interface Exporter {
@@ -242,7 +279,10 @@ public class Facility extends BaseEntity {
     void setOpenLmisAccessible(Boolean openLmisAccessible);
 
     void setSupportedPrograms(Set<SupportedProgram> supportedPrograms);
+    
+    void setLocation(Point location);
 
+    void setExtraData(Map<String, String> extraData);
   }
 
   public interface Importer {
@@ -272,5 +312,9 @@ public class Facility extends BaseEntity {
     Boolean getEnabled();
 
     Boolean getOpenLmisAccessible();
+    
+    Point getLocation();
+    
+    Map<String, String> getExtraData();
   }
 }

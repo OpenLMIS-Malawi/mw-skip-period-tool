@@ -53,7 +53,7 @@ public class FulfillmentRoleAssignment extends RoleAssignment {
   public FulfillmentRoleAssignment(Role role, User user, Facility warehouse) {
     this(role, user);
 
-    if (!warehouse.getType().getCode().equalsIgnoreCase("warehouse")) {
+    if (!warehouse.isWarehouse()) {
       throw new IllegalArgumentException();
     }
 
@@ -65,11 +65,11 @@ public class FulfillmentRoleAssignment extends RoleAssignment {
     return singleton(RightType.ORDER_FULFILLMENT);
   }
 
-  @Override
   /**
    * Check if this role assignment has a right based on specified criteria. For fulfillment, check
    * also that the warehouse matches.
    */
+  @Override
   public boolean hasRight(RightQuery rightQuery) {
     boolean roleMatches = role.contains(rightQuery.getRight());
     boolean warehouseMatches = warehouse.equals(rightQuery.getWarehouse());

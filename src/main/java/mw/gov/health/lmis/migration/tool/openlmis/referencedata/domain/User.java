@@ -17,12 +17,12 @@ package mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain;
 
 import com.fasterxml.jackson.annotation.JsonView;
 
-import mw.gov.health.lmis.migration.tool.openlmis.BaseEntity;
 import org.openlmis.util.View;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import mw.gov.health.lmis.migration.tool.openlmis.BaseEntity;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -64,7 +64,7 @@ public class User extends BaseEntity {
   @Setter
   private String lastName;
 
-  @Column(nullable = false, unique = true)
+  @Column(unique = true)
   @Getter
   @Setter
   private String email;

@@ -15,28 +15,26 @@
 
 package mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain;
 
-import mw.gov.health.lmis.migration.tool.openlmis.BaseEntity;
-
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import mw.gov.health.lmis.migration.tool.openlmis.BaseEntity;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
+import javax.persistence.UniqueConstraint;
 
 @Entity
-@Table(name = "facility_type_approved_products", schema = "referencedata")
+@Table(name = "facility_type_approved_products", schema = "referencedata",
+    uniqueConstraints = @UniqueConstraint(name = "unq_ftap",
+        columnNames = { "orderableId", "programId", "facilityTypeId" }))
 @NoArgsConstructor
+@EqualsAndHashCode(callSuper = false)
 public class FacilityTypeApprovedProduct extends BaseEntity {
-
-  @ManyToOne
-  @JoinColumn(name = "facilityTypeId", nullable = false)
-  @Getter
-  @Setter
-  private FacilityType facilityType;
 
   @ManyToOne
   @JoinColumn(name = "orderableId", nullable = false)
@@ -50,63 +48,23 @@ public class FacilityTypeApprovedProduct extends BaseEntity {
   @Setter
   private Program program;
 
+  @ManyToOne
+  @JoinColumn(name = "facilityTypeId", nullable = false)
+  @Getter
+  @Setter
+  private FacilityType facilityType;
+
   @Column(nullable = false)
   @Getter
   @Setter
   private Double maxPeriodsOfStock;
 
-  @Column
   @Getter
   @Setter
   private Double minPeriodsOfStock;
 
-  @Column
   @Getter
   @Setter
   private Double emergencyOrderPoint;
 
-  @Override
-  @SuppressWarnings("PMD.CyclomaticComplexity")
-  public boolean equals(Object other) {
-
-    if (this == other) {
-      return true;
-    }
-    if (other == null || getClass() != other.getClass()) {
-      return false;
-    }
-
-    FacilityTypeApprovedProduct otherFacility = (FacilityTypeApprovedProduct) other;
-
-    if (!facilityType.equals(otherFacility.facilityType)) {
-      return false;
-    }
-    if (!program.equals(otherFacility.program)) {
-      return false;
-    }
-    if (!orderable.equals(otherFacility.orderable)) {
-      return false;
-    }
-    if (!maxPeriodsOfStock.equals(otherFacility.maxPeriodsOfStock)) {
-      return false;
-    }
-    if (minPeriodsOfStock != null ? !minPeriodsOfStock.equals(otherFacility.minPeriodsOfStock) :
-        otherFacility.minPeriodsOfStock != null) {
-      return false;
-    }
-    return emergencyOrderPoint != null ? emergencyOrderPoint.equals(
-        otherFacility.emergencyOrderPoint) : otherFacility.emergencyOrderPoint == null;
-
-  }
-
-  @Override
-  public int hashCode() {
-    int result = facilityType.hashCode();
-    result = 31 * result + program.hashCode();
-    result = 31 * result + orderable.hashCode();
-    result = 31 * result + maxPeriodsOfStock.hashCode();
-    result = 31 * result + (minPeriodsOfStock != null ? minPeriodsOfStock.hashCode() : 0);
-    result = 31 * result + (emergencyOrderPoint != null ? emergencyOrderPoint.hashCode() : 0);
-    return result;
-  }
 }
