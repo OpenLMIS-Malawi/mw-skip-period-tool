@@ -37,7 +37,6 @@ import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.Orderable
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.StockAdjustmentReason;
 import mw.gov.health.lmis.migration.tool.openlmis.requisition.RequisitionHelper;
 
-import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -79,9 +78,10 @@ public class Requisition extends BaseTimestampedEntity {
   public static final String EMERGENCY = "emergency";
   public static final String MODIFIED_DATE = "modifiedDate";
   public static final String STATUS = "status";
+  public static final String REQUISITION = "requisition";
 
   @OneToMany(
-      mappedBy = "requisition",
+      mappedBy = REQUISITION,
       cascade = {CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REFRESH, CascadeType.REMOVE},
       fetch = FetchType.EAGER,
       orphanRemoval = true)
@@ -129,7 +129,7 @@ public class Requisition extends BaseTimestampedEntity {
   private ExternalStatus status;
 
   @OneToMany(
-      mappedBy = "requisition",
+      mappedBy = REQUISITION,
       cascade = CascadeType.ALL)
   @Getter
   @Setter
@@ -152,7 +152,7 @@ public class Requisition extends BaseTimestampedEntity {
 
   @ManyToMany
   @JoinTable(name = "requisitions_previous_requisitions",
-      schema = "requisition",
+      schema = REQUISITION,
       joinColumns = {@JoinColumn(name = "requisitionId")},
       inverseJoinColumns = {@JoinColumn(name = "previousRequisitionId")})
   @Getter
@@ -163,7 +163,7 @@ public class Requisition extends BaseTimestampedEntity {
   @Column(name = "value")
   @CollectionTable(
       name = "available_non_full_supply_products",
-      schema = "requisition",
+      schema = REQUISITION,
       joinColumns = @JoinColumn(name = "requisitionId"))
   @Getter
   @Setter
@@ -171,7 +171,7 @@ public class Requisition extends BaseTimestampedEntity {
   private Set<UUID> availableNonFullSupplyProducts;
 
   @OneToMany(
-      mappedBy = "requisition",
+      mappedBy = REQUISITION,
       cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.REMOVE},
       fetch = FetchType.EAGER,
       orphanRemoval = true)
@@ -243,7 +243,6 @@ public class Requisition extends BaseTimestampedEntity {
 
   /**
    * Check if the requisition is approvable.
-   *
    */
   public boolean isApprovable() {
     return status.duringApproval();
@@ -252,8 +251,10 @@ public class Requisition extends BaseTimestampedEntity {
   /**
    * Approves given requisition.
    *
-   * @param parentNodeId supervisoryNodeDto parent node of the supervisoryNode for this requisition.
-   * @param products orderable products that will be used by line items to update packs to ship.
+   * @param parentNodeId supervisoryNodeDto parent node of the supervisoryNode for this
+   *                     requisition.
+   * @param products     orderable products that will be used by line items to update packs to
+   *                     ship.
    */
   public void approve(UUID parentNodeId, Collection<Orderable> products, UUID approver) {
     if (parentNodeId == null) {
@@ -287,7 +288,7 @@ public class Requisition extends BaseTimestampedEntity {
     status = ExternalStatus.RELEASED;
     statusChanges.add(StatusChange.newStatusChange(this, releaser));
   }
-  
+
   /**
    * Finds first RequisitionLineItem that have productId property equals to the given productId
    * argument.
