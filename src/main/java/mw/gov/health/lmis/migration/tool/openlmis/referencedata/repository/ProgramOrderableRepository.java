@@ -10,7 +10,7 @@ import org.springframework.data.repository.query.Param;
 
 import java.util.UUID;
 
-public interface OlmisProgramOrderableRepository
+public interface ProgramOrderableRepository
     extends CrudRepository<ProgramOrderable, UUID> {
 
   @Query("FROM ProgramOrderable "

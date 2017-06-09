@@ -5,5 +5,5 @@ import org.springframework.data.repository.CrudRepository;
 
 import java.util.UUID;
 
-public interface OlmisFacilityTypeRepository extends CrudRepository<FacilityType, UUID> {
+public interface FacilityTypeRepository extends CrudRepository<FacilityType, UUID> {
 }

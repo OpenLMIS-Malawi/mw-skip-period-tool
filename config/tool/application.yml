@@ -29,9 +29,7 @@ tool:
             includeProgramCode: false
             includeTypeSuffix: false
     configuration:
-        insertDemoData:
-            referenceData: false
-            requisition: true
+        createRequisitionTemplate: true
         accessFile: "data.mdb"
         olmis:
             dialect: "org.hibernate.spatial.dialect.postgis.PostgisDialect"

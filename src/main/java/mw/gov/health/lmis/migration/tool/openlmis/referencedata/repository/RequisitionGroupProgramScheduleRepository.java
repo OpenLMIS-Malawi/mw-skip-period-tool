@@ -9,7 +9,7 @@ import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.Requisiti
 import java.util.List;
 import java.util.UUID;
 
-public interface OlmisRequisitionGroupProgramScheduleRepository
+public interface RequisitionGroupProgramScheduleRepository
     extends CrudRepository<RequisitionGroupProgramSchedule, UUID> {
 
   @Query("SELECT rgps FROM RequisitionGroupProgramSchedule rgps "

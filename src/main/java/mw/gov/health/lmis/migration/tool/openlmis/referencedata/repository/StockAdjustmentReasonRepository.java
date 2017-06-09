@@ -6,7 +6,7 @@ import org.springframework.data.repository.CrudRepository;
 
 import java.util.UUID;
 
-public interface OlmisStockAdjustmentReasonRepository
+public interface StockAdjustmentReasonRepository
     extends CrudRepository<StockAdjustmentReason, UUID> {
 
   StockAdjustmentReason findByProgramAndName(Program program, String name);

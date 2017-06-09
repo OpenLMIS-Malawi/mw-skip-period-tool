@@ -21,6 +21,6 @@ import mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.AvailableRe
 
 import java.util.UUID;
 
-public interface OlmisAvailableRequisitionColumnRepository
+public interface AvailableRequisitionColumnRepository
     extends CrudRepository<AvailableRequisitionColumn, UUID> {
 }

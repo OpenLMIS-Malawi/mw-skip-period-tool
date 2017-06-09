@@ -36,24 +36,33 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import mw.gov.health.lmis.migration.tool.config.ToolProperties;
+import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.Program;
+import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.ProgramRepository;
 import mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.AvailableRequisitionColumn;
 import mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.RequisitionTemplate;
 import mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.RequisitionTemplateColumn;
 import mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.SourceType;
-import mw.gov.health.lmis.migration.tool.openlmis.requisition.repository.OlmisAvailableRequisitionColumnRepository;
+import mw.gov.health.lmis.migration.tool.openlmis.requisition.repository.AvailableRequisitionColumnRepository;
+import mw.gov.health.lmis.migration.tool.openlmis.requisition.repository.RequisitionTemplateRepository;
 
 import java.time.ZonedDateTime;
 import java.util.Map;
 import java.util.UUID;
 
 @Component
-public class RequsitionUtil {
-  private static final Logger LOGGER = LoggerFactory.getLogger(RequsitionUtil.class);
+public class RequisitionTemplateCreator {
+  private static final Logger LOGGER = LoggerFactory.getLogger(RequisitionTemplateCreator.class);
 
   private final Integer numberOfPeriodsToAverage;
 
   @Autowired
-  private OlmisAvailableRequisitionColumnRepository olmisAvailableRequisitionColumnRepository;
+  private AvailableRequisitionColumnRepository availableRequisitionColumnRepository;
+
+  @Autowired
+  private RequisitionTemplateRepository requisitionTemplateRepository;
+
+  @Autowired
+  private ProgramRepository programRepository;
 
   @Autowired
   private ToolProperties toolProperties;
@@ -62,18 +71,28 @@ public class RequsitionUtil {
    * Creates new instance of this class.
    */
   @Autowired
-  public RequsitionUtil(ToolProperties properties) {
+  public RequisitionTemplateCreator(ToolProperties properties) {
     this.numberOfPeriodsToAverage = properties.getParameters().getNumberOfPeriodsToAverage();
   }
 
   /**
-   * Creates new template for the givne program.
+   * Creates new templates for all available programs.
    */
-  public RequisitionTemplate createTemplate(UUID programId) {
+  public void createTemplates() {
+    if (toolProperties.getConfiguration().isCreateRequisitionTemplate()) {
+      Iterable<Program> programs = programRepository.findAll();
+
+      for (Program program : programs) {
+        requisitionTemplateRepository.save(createTemplate(program.getId()));
+      }
+    }
+  }
+
+  private RequisitionTemplate createTemplate(UUID programId) {
     LOGGER.info("Create requisition template for program: {}", programId);
 
     ZonedDateTime createdDate = toolProperties.getParameters().getStartDate();
-    
+
     RequisitionTemplate template = new RequisitionTemplate();
     template.setProgramId(programId);
     template.setNumberOfPeriodsToAverage(numberOfPeriodsToAverage);
@@ -255,7 +274,7 @@ public class RequsitionUtil {
   private RequisitionTemplateColumn create(String name, String label, SourceType source,
                                            boolean displayed, String columnDefinitionId,
                                            int displayOrder) {
-    AvailableRequisitionColumn columnDefinition = olmisAvailableRequisitionColumnRepository
+    AvailableRequisitionColumn columnDefinition = availableRequisitionColumnRepository
         .findOne(UUID.fromString(columnDefinitionId));
 
     RequisitionTemplateColumn requisitionTemplateColumn = new RequisitionTemplateColumn();

@@ -19,15 +19,15 @@ import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.Facility;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.ProcessingPeriod;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.Program;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.User;
-import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.OlmisFacilityRepository;
-import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.OlmisProcessingPeriodRepository;
-import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.OlmisProgramRepository;
-import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.OlmisUserRepository;
+import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.FacilityRepository;
+import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.ProcessingPeriodRepository;
+import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.ProgramRepository;
+import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.UserRepository;
 import mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.Requisition;
 import mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.RequisitionTemplate;
 import mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.StatusChange;
-import mw.gov.health.lmis.migration.tool.openlmis.requisition.repository.OlmisRequisitionRepository;
-import mw.gov.health.lmis.migration.tool.openlmis.requisition.repository.OlmisRequisitionTemplateRepository;
+import mw.gov.health.lmis.migration.tool.openlmis.requisition.repository.RequisitionRepository;
+import mw.gov.health.lmis.migration.tool.openlmis.requisition.repository.RequisitionTemplateRepository;
 
 import java.time.ZoneId;
 import java.util.List;
@@ -39,22 +39,22 @@ public class SkipPeriodsProcessor
   private static final Logger LOGGER = LoggerFactory.getLogger(SkipPeriodsProcessor.class);
 
   @Autowired
-  private OlmisFacilityRepository facilityRepository;
+  private FacilityRepository facilityRepository;
 
   @Autowired
-  private OlmisProcessingPeriodRepository periodRepository;
+  private ProcessingPeriodRepository periodRepository;
 
   @Autowired
-  private OlmisProgramRepository programRepository;
+  private ProgramRepository programRepository;
 
   @Autowired
-  private OlmisRequisitionTemplateRepository requisitionTemplateRepository;
+  private RequisitionTemplateRepository requisitionTemplateRepository;
 
   @Autowired
-  private OlmisRequisitionRepository requisitionRepository;
+  private RequisitionRepository requisitionRepository;
 
   @Autowired
-  private OlmisUserRepository userRepository;
+  private UserRepository userRepository;
 
   @Autowired
   private ToolProperties toolProperties;

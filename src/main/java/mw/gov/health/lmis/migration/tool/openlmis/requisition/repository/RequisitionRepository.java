@@ -7,7 +7,7 @@ import mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.Requisition
 import java.util.List;
 import java.util.UUID;
 
-public interface OlmisRequisitionRepository extends CrudRepository<Requisition, UUID> {
+public interface RequisitionRepository extends CrudRepository<Requisition, UUID> {
 
   List<Requisition> findByFacilityIdAndProgramIdAndProcessingPeriodId(UUID facilityId,
                                                                       UUID programId,

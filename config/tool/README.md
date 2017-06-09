@@ -66,9 +66,7 @@ The following list explains all settings in the *parameters* section:
 ```
 tool:
     configuration:
-        insertDemoData:
-            referenceData: boolean
-            requisition: boolean
+        createRequisitionTemplate: boolean
         accessFile: string
         olmis:
             dialect: string
@@ -89,7 +87,7 @@ tool:
 ```
 Before the tool can migrate data from supply manager into OpenLMIS system, it needs to know where SCM database file is located and where is a OpenLMIS database. This section also contains addictional Spring Batch settings.
 
-* insertDemoData - decide if the tool should create demo data before migration process. By default the tool will create only requisition template. Those settings should be changed only if there are (no) data.
+* createRequisitionTemplate - decide if the tool should create requisition template before migration process. If the property is set to **false**, there must be templates in database.
 * accessFile - defaine where is SCMgr database file. You can set absolute path like ```/home/user/data.mdb``` or relate path like ```../../data.mdb```.
 * olmis - provide details about OpenLMIS database
   * dialect - select what dialect should by used by Hibernate

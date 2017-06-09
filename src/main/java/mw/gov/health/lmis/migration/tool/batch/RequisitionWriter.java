@@ -14,10 +14,10 @@ import mw.gov.health.lmis.migration.tool.openlmis.fulfillment.repository.OrderRe
 import mw.gov.health.lmis.migration.tool.openlmis.fulfillment.repository.ProofOfDeliveryRepository;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.Program;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.User;
-import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.OlmisProgramRepository;
-import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.OlmisUserRepository;
+import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.ProgramRepository;
+import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.UserRepository;
 import mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.Requisition;
-import mw.gov.health.lmis.migration.tool.openlmis.requisition.repository.OlmisRequisitionRepository;
+import mw.gov.health.lmis.migration.tool.openlmis.requisition.repository.RequisitionRepository;
 
 import java.util.Collection;
 import java.util.List;
@@ -26,16 +26,16 @@ import java.util.List;
 public class RequisitionWriter implements ItemWriter<List<Requisition>> {
 
   @Autowired
-  private OlmisRequisitionRepository olmisRequisitionRepository;
+  private RequisitionRepository requisitionRepository;
 
   @Autowired
   private OrderRepository orderRepository;
 
   @Autowired
-  private OlmisProgramRepository olmisProgramRepository;
+  private ProgramRepository programRepository;
 
   @Autowired
-  private OlmisUserRepository olmisUserRepository;
+  private UserRepository userRepository;
 
   @Autowired
   private ProofOfDeliveryRepository proofOfDeliveryRepository;
@@ -52,7 +52,7 @@ public class RequisitionWriter implements ItemWriter<List<Requisition>> {
         .stream()
         .flatMap(Collection::stream)
         .forEach(requisition -> {
-          olmisRequisitionRepository.save(requisition);
+          requisitionRepository.save(requisition);
 
           if (requisition.getStatus() == ExternalStatus.RELEASED) {
             createOrder(requisition);
@@ -61,10 +61,10 @@ public class RequisitionWriter implements ItemWriter<List<Requisition>> {
   }
 
   private void createOrder(Requisition requisition) {
-    Program program = olmisProgramRepository.findOne(requisition.getProgramId());
+    Program program = programRepository.findOne(requisition.getProgramId());
 
     String username = toolProperties.getParameters().getCreator();
-    User user = olmisUserRepository.findByUsername(username);
+    User user = userRepository.findByUsername(username);
 
     OrderNumberConfiguration config = toolProperties
         .getParameters()

@@ -6,7 +6,7 @@ import mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.Requisition
 
 import java.util.UUID;
 
-public interface OlmisRequisitionTemplateRepository
+public interface RequisitionTemplateRepository
     extends CrudRepository<RequisitionTemplate, UUID> {
 
   RequisitionTemplate findFirstByProgramIdOrderByCreatedDateDesc(UUID programId);

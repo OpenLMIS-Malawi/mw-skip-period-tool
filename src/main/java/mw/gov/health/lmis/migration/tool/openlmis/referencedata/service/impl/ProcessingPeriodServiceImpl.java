@@ -4,7 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.ProcessingPeriod;
-import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.OlmisProcessingPeriodRepository;
+import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.ProcessingPeriodRepository;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.service.ProcessingPeriodService;
 
 import java.util.ArrayList;
@@ -18,17 +18,17 @@ import java.util.UUID;
 public class ProcessingPeriodServiceImpl implements ProcessingPeriodService {
 
   @Autowired
-  private OlmisProcessingPeriodRepository olmisProcessingPeriodRepository;
+  private ProcessingPeriodRepository processingPeriodRepository;
 
   @Override
   public List<ProcessingPeriod> findPreviousPeriods(UUID periodId, int amount) {
-    ProcessingPeriod period = olmisProcessingPeriodRepository.findOne(periodId);
+    ProcessingPeriod period = processingPeriodRepository.findOne(periodId);
 
     if (null == period) {
       return Collections.emptyList();
     }
 
-    Collection<ProcessingPeriod> collection = olmisProcessingPeriodRepository
+    Collection<ProcessingPeriod> collection = processingPeriodRepository
         .findByProcessingScheduleAndStartDate(
             period.getProcessingSchedule(),
             period.getStartDate()

@@ -6,6 +6,6 @@ import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.Requisiti
 
 import java.util.UUID;
 
-public interface OlmisRequisitionGroupRepository
+public interface RequisitionGroupRepository
     extends CrudRepository<RequisitionGroup, UUID> {
 }

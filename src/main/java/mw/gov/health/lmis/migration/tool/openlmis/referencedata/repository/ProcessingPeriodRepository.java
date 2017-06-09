@@ -11,7 +11,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
-public interface OlmisProcessingPeriodRepository extends CrudRepository<ProcessingPeriod, UUID> {
+public interface ProcessingPeriodRepository extends CrudRepository<ProcessingPeriod, UUID> {
 
   @Query("SELECT p FROM ProcessingPeriod p WHERE :value BETWEEN p.startDate AND p.endDate")
   ProcessingPeriod findPeriod(@Param("value") LocalDate date);

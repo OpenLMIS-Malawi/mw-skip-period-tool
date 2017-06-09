@@ -6,6 +6,6 @@ import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.Processin
 
 import java.util.UUID;
 
-public interface OlmisProcessingScheduleRepository
+public interface ProcessingScheduleRepository
     extends CrudRepository<ProcessingSchedule, UUID> {
 }

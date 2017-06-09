@@ -6,6 +6,6 @@ import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.Geographi
 
 import java.util.UUID;
 
-public interface OlmisGeographicZoneRepository
+public interface GeographicZoneRepository
     extends CrudRepository<GeographicZone, UUID> {
 }

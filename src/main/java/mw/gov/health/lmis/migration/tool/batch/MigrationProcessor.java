@@ -23,16 +23,16 @@ import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.Program;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.RequisitionGroup;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.RequisitionGroupProgramSchedule;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.User;
-import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.OlmisFacilityRepository;
-import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.OlmisProcessingPeriodRepository;
-import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.OlmisProgramRepository;
-import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.OlmisRequisitionGroupProgramScheduleRepository;
-import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.OlmisUserRepository;
+import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.FacilityRepository;
+import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.ProcessingPeriodRepository;
+import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.ProgramRepository;
+import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.RequisitionGroupProgramScheduleRepository;
+import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.UserRepository;
 import mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.Requisition;
 import mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.RequisitionTemplate;
 import mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.StatusChange;
-import mw.gov.health.lmis.migration.tool.openlmis.requisition.repository.OlmisRequisitionRepository;
-import mw.gov.health.lmis.migration.tool.openlmis.requisition.repository.OlmisRequisitionTemplateRepository;
+import mw.gov.health.lmis.migration.tool.openlmis.requisition.repository.RequisitionRepository;
+import mw.gov.health.lmis.migration.tool.openlmis.requisition.repository.RequisitionTemplateRepository;
 import mw.gov.health.lmis.migration.tool.openlmis.requisition.service.RequisitionService;
 import mw.gov.health.lmis.migration.tool.scm.domain.Item;
 import mw.gov.health.lmis.migration.tool.scm.domain.Main;
@@ -54,23 +54,23 @@ public class MigrationProcessor implements ItemProcessor<Main, List<Requisition>
   private static final Logger LOGGER = LoggerFactory.getLogger(MigrationProcessor.class);
 
   @Autowired
-  private OlmisFacilityRepository olmisFacilityRepository;
+  private FacilityRepository facilityRepository;
 
   @Autowired
-  private OlmisProgramRepository olmisProgramRepository;
+  private ProgramRepository programRepository;
 
   @Autowired
-  private OlmisProcessingPeriodRepository olmisProcessingPeriodRepository;
+  private ProcessingPeriodRepository processingPeriodRepository;
 
   @Autowired
-  private OlmisRequisitionTemplateRepository olmisRequisitionTemplateRepository;
+  private RequisitionTemplateRepository requisitionTemplateRepository;
 
   @Autowired
-  private OlmisUserRepository olmisUserRepository;
+  private UserRepository userRepository;
 
   @Autowired
-  private OlmisRequisitionGroupProgramScheduleRepository
-      olmisRequisitionGroupProgramScheduleRepository;
+  private RequisitionGroupProgramScheduleRepository
+      requisitionGroupProgramScheduleRepository;
 
   @Autowired
   private ItemConverter itemConverter;
@@ -85,7 +85,7 @@ public class MigrationProcessor implements ItemProcessor<Main, List<Requisition>
   private RequisitionService requisitionService;
 
   @Autowired
-  private OlmisRequisitionRepository olmisRequisitionRepository;
+  private RequisitionRepository requisitionRepository;
 
   @Autowired
   private ToolProperties toolProperties;
@@ -96,7 +96,7 @@ public class MigrationProcessor implements ItemProcessor<Main, List<Requisition>
   @Override
   public List<Requisition> process(Main item) {
     String code = MappingHelper.getFacilityCode(toolProperties, item.getFacility());
-    Facility facility = olmisFacilityRepository.findByCode(code);
+    Facility facility = facilityRepository.findByCode(code);
 
     if (null == facility) {
       LOGGER.error("Can't find facility with code {}", code);
@@ -110,7 +110,7 @@ public class MigrationProcessor implements ItemProcessor<Main, List<Requisition>
       return Lists.newArrayList();
     }
 
-    ProcessingPeriod period = olmisProcessingPeriodRepository.findPeriod(processingDate);
+    ProcessingPeriod period = processingPeriodRepository.findPeriod(processingDate);
 
     if (null == period) {
       LOGGER.error("Can't find period for processing date {}", processingDate);
@@ -118,7 +118,7 @@ public class MigrationProcessor implements ItemProcessor<Main, List<Requisition>
     }
 
     String username = toolProperties.getParameters().getCreator();
-    User user = olmisUserRepository.findByUsername(username);
+    User user = userRepository.findByUsername(username);
 
     if (null == user) {
       LOGGER.error("Can't find user with username {}", username);
@@ -138,14 +138,14 @@ public class MigrationProcessor implements ItemProcessor<Main, List<Requisition>
 
   private Requisition create(String programCode, Collection<Item> items, Main main,
                              Facility facility, ProcessingPeriod period, User user) {
-    Program program = olmisProgramRepository.findByCode(new Code(programCode));
+    Program program = programRepository.findByCode(new Code(programCode));
 
     if (null == program) {
       LOGGER.error("Can't find program with code {}", programCode);
       return null;
     }
 
-    boolean database = olmisRequisitionRepository
+    boolean database = requisitionRepository
         .existsByFacilityIdAndProgramIdAndProcessingPeriodId(
             facility.getId(), program.getId(), period.getId()
         );
@@ -165,7 +165,7 @@ public class MigrationProcessor implements ItemProcessor<Main, List<Requisition>
     requisition.setEmergency(false);
     requisition.setNumberOfMonthsInPeriod(period.getDurationInMonths());
 
-    RequisitionTemplate template = olmisRequisitionTemplateRepository
+    RequisitionTemplate template = requisitionTemplateRepository
         .findFirstByProgramIdOrderByCreatedDateDesc(program.getId());
 
     requisition.setTemplate(template);
@@ -176,7 +176,7 @@ public class MigrationProcessor implements ItemProcessor<Main, List<Requisition>
     requisition.setStatus(APPROVED);
     requisition.setRequisitionLineItems(itemConverter.convert(items, requisition));
 
-    List<RequisitionGroupProgramSchedule> schedule = olmisRequisitionGroupProgramScheduleRepository
+    List<RequisitionGroupProgramSchedule> schedule = requisitionGroupProgramScheduleRepository
         .findByProgramAndFacility(program.getId(), facility.getId());
 
     if (!schedule.isEmpty()) {

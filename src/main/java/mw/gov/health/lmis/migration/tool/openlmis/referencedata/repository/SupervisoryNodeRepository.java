@@ -6,6 +6,6 @@ import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.Superviso
 
 import java.util.UUID;
 
-public interface OlmisSupervisoryNodeRepository
+public interface SupervisoryNodeRepository
     extends CrudRepository<SupervisoryNode, UUID> {
 }

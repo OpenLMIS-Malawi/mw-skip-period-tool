@@ -9,6 +9,8 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
 
+import mw.gov.health.lmis.migration.tool.openlmis.requisition.util.RequisitionTemplateCreator;
+
 @SpringBootApplication
 @EnableCaching
 public class App {
@@ -24,9 +26,10 @@ public class App {
   }
 
   @Bean
-  CommandLineRunner commandLineRunner(JobLauncher launcher, Job job, DemoCreator demoCreator) {
+  CommandLineRunner commandLineRunner(JobLauncher launcher, Job job,
+                                      RequisitionTemplateCreator templateCreator) {
     return args -> {
-      demoCreator.createDemoData();
+      templateCreator.createTemplates();
       launcher.run(job, new JobParameters());
     };
   }

@@ -8,7 +8,7 @@ import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.Orderable
 
 import java.util.UUID;
 
-public interface OlmisOrderableDisplayCategoryRepository
+public interface OrderableDisplayCategoryRepository
     extends CrudRepository<OrderableDisplayCategory, UUID> {
 
   @Query("FROM OrderableDisplayCategory WHERE orderedDisplayValue.displayName = :displayName")

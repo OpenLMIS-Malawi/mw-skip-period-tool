@@ -19,11 +19,11 @@ import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.Geographi
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.ProcessingPeriod;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.Program;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.User;
-import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.OlmisFacilityRepository;
+import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.FacilityRepository;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.service.ProcessingPeriodService;
 import mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.Requisition;
 import mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.StatusMessage;
-import mw.gov.health.lmis.migration.tool.openlmis.requisition.repository.OlmisRequisitionRepository;
+import mw.gov.health.lmis.migration.tool.openlmis.requisition.repository.RequisitionRepository;
 import mw.gov.health.lmis.migration.tool.openlmis.requisition.service.RequisitionService;
 
 import java.util.ArrayList;
@@ -37,10 +37,10 @@ public class RequisitionServiceImpl implements RequisitionService {
   private ProcessingPeriodService processingPeriodService;
 
   @Autowired
-  private OlmisRequisitionRepository olmisRequisitionRepository;
+  private RequisitionRepository requisitionRepository;
 
   @Autowired
-  private OlmisFacilityRepository olmisFacilityRepository;
+  private FacilityRepository facilityRepository;
 
   @Autowired
   private ToolProperties toolProperties;
@@ -105,7 +105,7 @@ public class RequisitionServiceImpl implements RequisitionService {
       for (ToolProgramWarehouseMapping supplying : warehouses) {
         if (null == supplying.getGeographicZone()
             || containsIgnoreCase(zoneName, supplying.getGeographicZone())) {
-          warehouse = olmisFacilityRepository.findByCode(supplying.getCode());
+          warehouse = facilityRepository.findByCode(supplying.getCode());
           break;
         }
       }
@@ -133,7 +133,7 @@ public class RequisitionServiceImpl implements RequisitionService {
 
   private List<Requisition> getRequisitionsByPeriod(Requisition requisition,
                                                     ProcessingPeriod period) {
-    return olmisRequisitionRepository.findByFacilityIdAndProgramIdAndProcessingPeriodId(
+    return requisitionRepository.findByFacilityIdAndProgramIdAndProcessingPeriodId(
         requisition.getFacilityId(), requisition.getProgramId(), period.getId()
     );
   }

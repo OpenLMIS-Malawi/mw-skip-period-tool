@@ -21,9 +21,9 @@ import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.Code;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.Orderable;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.Program;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.StockAdjustmentReason;
-import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.OlmisOrderableRepository;
-import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.OlmisProgramRepository;
-import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.OlmisStockAdjustmentReasonRepository;
+import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.OrderableRepository;
+import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.ProgramRepository;
+import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.StockAdjustmentReasonRepository;
 import mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.Requisition;
 import mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.RequisitionLineItem;
 import mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.StockAdjustment;
@@ -49,7 +49,7 @@ public class ItemConverter {
   private static final Logger LOGGER = LoggerFactory.getLogger(ItemConverter.class);
 
   @Autowired
-  private OlmisProgramRepository olmisProgramRepository;
+  private ProgramRepository programRepository;
 
   @Autowired
   private AdjustmentRepository adjustmentRepository;
@@ -58,10 +58,10 @@ public class ItemConverter {
   private AdjustmentTypeRepository adjustmentTypeRepository;
 
   @Autowired
-  private OlmisStockAdjustmentReasonRepository olmisStockAdjustmentReasonRepository;
+  private StockAdjustmentReasonRepository stockAdjustmentReasonRepository;
 
   @Autowired
-  private OlmisOrderableRepository olmisOrderableRepository;
+  private OrderableRepository orderableRepository;
 
   @Autowired
   private ProductService productService;
@@ -88,7 +88,7 @@ public class ItemConverter {
   private RequisitionLineItem convert(Item item, Requisition requisition,
                                       List<Adjustment> adjustments) {
     String productCode = productService.getProductCode(item.getProduct());
-    Orderable orderable = olmisOrderableRepository.findFirstByProductCode(new Code(productCode));
+    Orderable orderable = orderableRepository.findFirstByProductCode(new Code(productCode));
 
     RequisitionLineItem requisitionLineItem = new RequisitionLineItem();
     requisitionLineItem.setStockAdjustments(Lists.newArrayList());
@@ -104,7 +104,7 @@ public class ItemConverter {
     requisitionLineItem.setTotalReceivedQuantity(item.getReceipts());
     requisitionLineItem.setTotalConsumedQuantity(item.getDispensedQuantity());
 
-    Program program = olmisProgramRepository.findOne(requisition.getProgramId());
+    Program program = programRepository.findOne(requisition.getProgramId());
 
     Optional
         .ofNullable(adjustments)
@@ -116,7 +116,7 @@ public class ItemConverter {
                   String name = MappingHelper.getAdjustmentName(toolProperties, type.getName());
 
                   StockAdjustmentReason stockAdjustmentReason =
-                      olmisStockAdjustmentReasonRepository.findByProgramAndName(program, name);
+                      stockAdjustmentReasonRepository.findByProgramAndName(program, name);
 
                   if (null == stockAdjustmentReason) {
                     LOGGER.error(
@@ -139,7 +139,7 @@ public class ItemConverter {
     requisitionLineItem.setTotalLossesAndAdjustments(
         calculateTotalLossesAndAdjustments(
             requisitionLineItem,
-            Lists.newArrayList(olmisStockAdjustmentReasonRepository.findAll())
+            Lists.newArrayList(stockAdjustmentReasonRepository.findAll())
         )
     );
     requisitionLineItem.setTotalStockoutDays((int) zeroIfNull(item.getStockedOutDays()));
