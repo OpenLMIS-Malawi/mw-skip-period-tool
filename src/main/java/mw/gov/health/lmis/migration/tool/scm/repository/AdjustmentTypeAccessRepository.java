@@ -8,7 +8,7 @@ import org.springframework.stereotype.Repository;
 import mw.gov.health.lmis.migration.tool.scm.domain.AdjustmentType;
 
 @Repository
-public class AdjustmentTypeRepository extends BaseRepository<AdjustmentType> {
+public class AdjustmentTypeAccessRepository extends BaseAccessRepository<AdjustmentType> {
 
   @Override
   String getTableName() {

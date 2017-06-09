@@ -13,7 +13,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @Repository
-public class AdjustmentRepository extends BaseRepository<Adjustment> {
+public class AdjustmentAccessRepository extends BaseAccessRepository<Adjustment> {
 
   /**
    * Finds all adjustments for the given item.

@@ -11,7 +11,7 @@ import mw.gov.health.lmis.migration.tool.scm.domain.Comment;
 import java.util.List;
 
 @Repository
-public class CommentRepository extends BaseRepository<Comment> {
+public class CommentAccessRepository extends BaseAccessRepository<Comment> {
 
   @Override
   String getTableName() {

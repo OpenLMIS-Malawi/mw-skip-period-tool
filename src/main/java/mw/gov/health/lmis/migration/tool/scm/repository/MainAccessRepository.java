@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.function.Predicate;
 
 @Repository
-public class MainRepository extends BaseRepository<Main> {
+public class MainAccessRepository extends BaseAccessRepository<Main> {
   private final SearchInPeriodPredicate searchInPeriodPredicate = new SearchInPeriodPredicate();
 
   private Instant startDate;
@@ -23,7 +23,7 @@ public class MainRepository extends BaseRepository<Main> {
    * Creates new instance with passing tool properties.
    */
   @Autowired
-  public MainRepository(ToolProperties toolProperties) {
+  public MainAccessRepository(ToolProperties toolProperties) {
     startDate = toolProperties.getParameters().getStartDate().toInstant();
     endDate = toolProperties.getParameters().getEndDate().toInstant();
   }

@@ -18,10 +18,10 @@ import mw.gov.health.lmis.migration.tool.scm.domain.CategoryProductJoin;
 import mw.gov.health.lmis.migration.tool.scm.domain.Comment;
 import mw.gov.health.lmis.migration.tool.scm.domain.Item;
 import mw.gov.health.lmis.migration.tool.scm.domain.Program;
-import mw.gov.health.lmis.migration.tool.scm.repository.CategoryProductJoinRepository;
-import mw.gov.health.lmis.migration.tool.scm.repository.CommentRepository;
-import mw.gov.health.lmis.migration.tool.scm.repository.ItemRepository;
-import mw.gov.health.lmis.migration.tool.scm.repository.ProgramRepository;
+import mw.gov.health.lmis.migration.tool.scm.repository.CategoryProductJoinAccessRepository;
+import mw.gov.health.lmis.migration.tool.scm.repository.CommentAccessRepository;
+import mw.gov.health.lmis.migration.tool.scm.repository.ItemAccessRepository;
+import mw.gov.health.lmis.migration.tool.scm.repository.ProgramAccessRepository;
 import mw.gov.health.lmis.migration.tool.scm.service.ItemService;
 
 import java.util.Collection;
@@ -35,16 +35,16 @@ public class ItemServiceImpl implements ItemService {
   private static final Logger LOGGER = LoggerFactory.getLogger(ItemServiceImpl.class);
 
   @Autowired
-  private CategoryProductJoinRepository categoryProductJoinRepository;
+  private CategoryProductJoinAccessRepository categoryProductJoinRepository;
 
   @Autowired
-  private ProgramRepository programRepository;
+  private ProgramAccessRepository programRepository;
 
   @Autowired
-  private ItemRepository itemRepository;
+  private ItemAccessRepository itemRepository;
 
   @Autowired
-  private CommentRepository commentRepository;
+  private CommentAccessRepository commentRepository;
 
   @Autowired
   private ToolProperties toolProperties;

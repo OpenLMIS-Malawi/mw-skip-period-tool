@@ -10,7 +10,7 @@ import mw.gov.health.lmis.migration.tool.scm.domain.Item;
 import java.util.List;
 
 @Repository
-public class ItemRepository extends BaseRepository<Item> {
+public class ItemAccessRepository extends BaseAccessRepository<Item> {
 
   /**
    * Find items with the given processing date and facility.

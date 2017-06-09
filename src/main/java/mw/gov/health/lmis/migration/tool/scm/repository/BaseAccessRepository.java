@@ -21,7 +21,7 @@ import java.util.Map;
 import java.util.function.Predicate;
 
 
-public abstract class BaseRepository<T> {
+public abstract class BaseAccessRepository<T> {
 
   @Autowired
   private ScmDatabaseHandler handler;

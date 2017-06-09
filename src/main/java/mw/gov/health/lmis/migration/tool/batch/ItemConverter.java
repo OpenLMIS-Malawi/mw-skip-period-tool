@@ -30,8 +30,8 @@ import mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.StockAdjust
 import mw.gov.health.lmis.migration.tool.scm.domain.Adjustment;
 import mw.gov.health.lmis.migration.tool.scm.domain.AdjustmentType;
 import mw.gov.health.lmis.migration.tool.scm.domain.Item;
-import mw.gov.health.lmis.migration.tool.scm.repository.AdjustmentRepository;
-import mw.gov.health.lmis.migration.tool.scm.repository.AdjustmentTypeRepository;
+import mw.gov.health.lmis.migration.tool.scm.repository.AdjustmentAccessRepository;
+import mw.gov.health.lmis.migration.tool.scm.repository.AdjustmentTypeAccessRepository;
 import mw.gov.health.lmis.migration.tool.scm.service.ItemService;
 import mw.gov.health.lmis.migration.tool.scm.service.ProductService;
 
@@ -52,10 +52,10 @@ public class ItemConverter {
   private ProgramRepository programRepository;
 
   @Autowired
-  private AdjustmentRepository adjustmentRepository;
+  private AdjustmentAccessRepository adjustmentRepository;
 
   @Autowired
-  private AdjustmentTypeRepository adjustmentTypeRepository;
+  private AdjustmentTypeAccessRepository adjustmentTypeRepository;
 
   @Autowired
   private StockAdjustmentReasonRepository stockAdjustmentReasonRepository;

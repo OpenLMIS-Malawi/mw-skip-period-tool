@@ -8,7 +8,7 @@ import org.springframework.stereotype.Repository;
 import mw.gov.health.lmis.migration.tool.scm.domain.Product;
 
 @Repository
-public class ProductRepository extends BaseRepository<Product> {
+public class ProductAccessRepository extends BaseAccessRepository<Product> {
 
   @Override
   public String getTableName() {

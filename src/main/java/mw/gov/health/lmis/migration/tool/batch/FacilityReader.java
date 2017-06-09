@@ -5,7 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import mw.gov.health.lmis.migration.tool.scm.domain.Facility;
-import mw.gov.health.lmis.migration.tool.scm.repository.FacilityRepository;
+import mw.gov.health.lmis.migration.tool.scm.repository.FacilityAccessRepository;
 
 import java.util.LinkedList;
 
@@ -14,7 +14,7 @@ public class FacilityReader implements ItemReader<String> {
   private static LinkedList<Facility> facilities = null;
 
   @Autowired
-  private FacilityRepository facilityRepository;
+  private FacilityAccessRepository facilityRepository;
 
   @Override
   public synchronized String read() {

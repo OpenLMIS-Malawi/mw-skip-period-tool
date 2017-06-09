@@ -8,7 +8,7 @@ import org.springframework.stereotype.Repository;
 import mw.gov.health.lmis.migration.tool.scm.domain.CategoryProductJoin;
 
 @Repository
-public class CategoryProductJoinRepository extends BaseRepository<CategoryProductJoin> {
+public class CategoryProductJoinAccessRepository extends BaseAccessRepository<CategoryProductJoin> {
 
   @Override
   String getTableName() {

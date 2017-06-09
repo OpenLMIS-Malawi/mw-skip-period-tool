@@ -6,14 +6,14 @@ import org.springframework.stereotype.Service;
 import mw.gov.health.lmis.migration.tool.config.MappingHelper;
 import mw.gov.health.lmis.migration.tool.config.ToolProperties;
 import mw.gov.health.lmis.migration.tool.scm.domain.Product;
-import mw.gov.health.lmis.migration.tool.scm.repository.ProductRepository;
+import mw.gov.health.lmis.migration.tool.scm.repository.ProductAccessRepository;
 import mw.gov.health.lmis.migration.tool.scm.service.ProductService;
 
 @Service
 public class ProductServiceImpl implements ProductService {
 
   @Autowired
-  private ProductRepository productRepository;
+  private ProductAccessRepository productRepository;
 
   @Autowired
   private ToolProperties toolProperties;
