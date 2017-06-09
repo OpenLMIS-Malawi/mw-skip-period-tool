@@ -11,6 +11,5 @@ import lombok.Setter;
 public class ToolOlmisConfiguration {
   private Class<? extends Dialect> dialect = PostgreSQL94Dialect.class;
   private boolean showSql = false;
-  private String hbm2ddl = "validate";
   private ToolOlmisDataSourceConfiguration dataSource = new ToolOlmisDataSourceConfiguration();
 }

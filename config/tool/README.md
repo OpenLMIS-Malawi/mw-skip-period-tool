@@ -71,7 +71,6 @@ tool:
         olmis:
             dialect: string
             showSql: boolean
-            hbm2ddl: string
             dataSource:
                 connectionProperties:
                     string: string
@@ -92,7 +91,6 @@ Before the tool can migrate data from supply manager into OpenLMIS system, it ne
 * olmis - provide details about OpenLMIS database
   * dialect - select what dialect should by used by Hibernate
   * showSql - define if SQL statements should be visible on output
-  * hbm2ddl - define what Hibernate should do with the database schema. By default it will check if database and entity classes defines the same database.
   * dataSource - define settings of OpenLMIS database like address, port, name of database and so on.
 * batch - this small configuration sections contains addictional Spring Batch settings
   * chunk - after how much requisitions the Spring Batch should execute the commit command.

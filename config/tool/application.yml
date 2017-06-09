@@ -34,7 +34,6 @@ tool:
         olmis:
             dialect: "org.hibernate.spatial.dialect.postgis.PostgisDialect"
             showSql: false
-            hbm2ddl: "validate"
             dataSource:
                 connectionProperties:
                     stringtype: "unspecified"

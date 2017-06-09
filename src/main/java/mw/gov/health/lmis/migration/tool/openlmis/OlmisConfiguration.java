@@ -74,7 +74,7 @@ public class OlmisConfiguration {
 
     jpaProperties.setProperty(DIALECT, olmis.getDialect().getName());
     jpaProperties.setProperty(SHOW_SQL, String.valueOf(olmis.isShowSql()));
-    jpaProperties.setProperty("hibernate.hbm2ddl.auto", olmis.getHbm2ddl());
+    jpaProperties.setProperty("hibernate.hbm2ddl.auto", "validate");
 
     entityManagerFactory.setJpaProperties(jpaProperties);
 
