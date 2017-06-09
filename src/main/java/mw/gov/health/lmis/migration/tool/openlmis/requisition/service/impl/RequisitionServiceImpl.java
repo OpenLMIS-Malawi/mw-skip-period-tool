@@ -21,7 +21,6 @@ import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.User;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.FacilityRepository;
 import mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.Requisition;
 import mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.StatusMessage;
-import mw.gov.health.lmis.migration.tool.openlmis.requisition.repository.RequisitionRepository;
 import mw.gov.health.lmis.migration.tool.openlmis.requisition.service.RequisitionService;
 
 import java.util.List;
@@ -29,9 +28,6 @@ import java.util.List;
 @Service
 public class RequisitionServiceImpl implements RequisitionService {
   private static final Logger LOGGER = LoggerFactory.getLogger(RequisitionServiceImpl.class);
-
-  @Autowired
-  private RequisitionRepository requisitionRepository;
 
   @Autowired
   private FacilityRepository facilityRepository;

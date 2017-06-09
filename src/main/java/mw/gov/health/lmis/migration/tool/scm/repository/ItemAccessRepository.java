@@ -22,6 +22,9 @@ import java.util.List;
 public class ItemAccessRepository extends BaseAccessRepository<Item> {
   private Table<String, Date, ItemDetails> table = HashBasedTable.create();
 
+  /**
+   * Prepare data that would speed up search process.
+   */
   public void init() {
     Database database = getDatabase();
 
