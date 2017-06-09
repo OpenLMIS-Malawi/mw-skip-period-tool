@@ -32,7 +32,7 @@ public class MainAccessRepository extends BaseAccessRepository<Main> {
    * Find mains that have processing date in the given period.
    */
   public List<Main> searchInPeriod() {
-    return search(searchInPeriodPredicate);
+    return findAll(searchInPeriodPredicate);
   }
 
   @Override

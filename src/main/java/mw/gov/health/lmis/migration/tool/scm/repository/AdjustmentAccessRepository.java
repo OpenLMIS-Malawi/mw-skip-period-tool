@@ -19,7 +19,7 @@ public class AdjustmentAccessRepository extends BaseAccessRepository<Adjustment>
    * Finds all adjustments for the given item.
    */
   public Map<Integer, List<Adjustment>> search(List<Integer> itemIds) {
-    return search(elem -> isNotZero(elem.getQuantity()) && itemIds.contains(elem.getItem()))
+    return findAll(elem -> isNotZero(elem.getQuantity()) && itemIds.contains(elem.getItem()))
         .stream()
         .collect(Collectors.groupingBy(Adjustment::getItem));
   }

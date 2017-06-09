@@ -27,6 +27,6 @@ public class CommentAccessRepository extends BaseAccessRepository<Comment> {
    * Retrieves all comments for the given item.
    */
   public List<Comment> search(Integer itemId) {
-    return search(elem -> itemId.equals(elem.getItem()) && isNotBlank(elem.getComment()));
+    return findAll(elem -> itemId.equals(elem.getItem()) && isNotBlank(elem.getComment()));
   }
 }

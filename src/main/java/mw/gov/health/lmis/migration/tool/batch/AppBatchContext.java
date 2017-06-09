@@ -16,6 +16,7 @@ import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.User;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.ProcessingPeriodRepository;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.ProgramRepository;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.UserRepository;
+import mw.gov.health.lmis.migration.tool.scm.repository.ItemAccessRepository;
 
 import java.util.List;
 
@@ -46,6 +47,9 @@ public abstract class AppBatchContext implements InitializingBean {
   @Autowired
   private ToolProperties toolProperties;
 
+  @Autowired
+  private ItemAccessRepository itemRepository;
+
   @Override
   public void afterPropertiesSet() throws Exception {
     if (!initialized) {
@@ -60,6 +64,8 @@ public abstract class AppBatchContext implements InitializingBean {
 
           String username = toolProperties.getParameters().getCreator();
           user = userRepository.findByUsername(username);
+
+          itemRepository.init();
 
           initialized = true;
           LOGGER.info("Initialized batch context...");

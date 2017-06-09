@@ -10,6 +10,8 @@ import com.healthmarketscience.jackcess.Row;
 import com.healthmarketscience.jackcess.Table;
 
 import org.apache.commons.io.IOUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import mw.gov.health.lmis.migration.tool.config.ToolProperties;
@@ -18,10 +20,12 @@ import mw.gov.health.lmis.migration.tool.scm.ScmDatabaseHandler;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Predicate;
 
 
 public abstract class BaseAccessRepository<T> {
+  private final Logger logger = LoggerFactory.getLogger(getClass());
 
   @Autowired
   private ScmDatabaseHandler handler;
@@ -33,7 +37,7 @@ public abstract class BaseAccessRepository<T> {
    * Find all rows from the given table.
    */
   public List<T> findAll() {
-    Database database = handler.getDatabase();
+    Database database = getDatabase();
 
     try {
       Table table = getTable(database);
@@ -49,11 +53,20 @@ public abstract class BaseAccessRepository<T> {
     }
   }
 
-  List<T> search(Predicate<T> predicate) {
-    Database database = handler.getDatabase();
+  List<T> findAll(Predicate<T> predicate) {
+    return findAll(predicate, null, null);
+  }
+
+  List<T> findAll(Predicate<T> predicate, Integer first, Integer count) {
+    Database database = getDatabase();
 
     try {
       Cursor cursor = getCursor(database);
+
+      if (null != first) {
+        cursor.moveNextRows(first);
+      }
+
       List<T> list = Lists.newArrayList();
       Row row;
 
@@ -63,6 +76,14 @@ public abstract class BaseAccessRepository<T> {
         if (predicate.test(element)) {
           list.add(element);
         }
+
+        if (Objects.equals(list.size(), count)) {
+          break;
+        }
+      }
+
+      if (null != count && !Objects.equals(list.size(), count)) {
+        logger.warn("List contains less elements ({}) than required: {}", list.size(), count);
       }
 
       return list;
@@ -77,7 +98,7 @@ public abstract class BaseAccessRepository<T> {
    * Find a row by field and value.
    */
   T find(String field, Object value) {
-    Database database = handler.getDatabase();
+    Database database = getDatabase();
 
     try {
       Row row = findRow(database, ImmutableMap.of(field, value));
@@ -91,6 +112,10 @@ public abstract class BaseAccessRepository<T> {
 
   abstract T mapRow(Row row);
 
+  Database getDatabase() {
+    return handler.getDatabase();
+  }
+
   private Table getTable(Database database) {
     try {
       return database.getTable(getTableName());
@@ -99,7 +124,7 @@ public abstract class BaseAccessRepository<T> {
     }
   }
 
-  private Cursor getCursor(Database database) {
+  Cursor getCursor(Database database) {
     try {
       return CursorBuilder.createCursor(getTable(database));
     } catch (IOException exp) {
