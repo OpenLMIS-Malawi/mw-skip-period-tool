@@ -8,8 +8,6 @@ import com.google.common.collect.Sets;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.batch.item.ItemProcessor;
-import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -18,11 +16,7 @@ import mw.gov.health.lmis.migration.tool.config.ToolProperties;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.Facility;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.ProcessingPeriod;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.Program;
-import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.User;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.FacilityRepository;
-import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.ProcessingPeriodRepository;
-import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.ProgramRepository;
-import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.UserRepository;
 import mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.Requisition;
 import mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.RequisitionTemplate;
 import mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.StatusChange;
@@ -34,18 +28,11 @@ import java.util.List;
 import java.util.TimeZone;
 
 @Component
-public class SkipPeriodsProcessor
-    implements ItemProcessor<String, List<Requisition>>, InitializingBean {
+public class SkipPeriodsProcessor extends BaseItemProcessor<String, List<Requisition>> {
   private static final Logger LOGGER = LoggerFactory.getLogger(SkipPeriodsProcessor.class);
 
   @Autowired
   private FacilityRepository facilityRepository;
-
-  @Autowired
-  private ProcessingPeriodRepository periodRepository;
-
-  @Autowired
-  private ProgramRepository programRepository;
 
   @Autowired
   private RequisitionTemplateRepository requisitionTemplateRepository;
@@ -54,26 +41,7 @@ public class SkipPeriodsProcessor
   private RequisitionRepository requisitionRepository;
 
   @Autowired
-  private UserRepository userRepository;
-
-  @Autowired
   private ToolProperties toolProperties;
-
-  private List<Program> programs;
-  private List<ProcessingPeriod> periods;
-  private User user;
-
-  @Override
-  public void afterPropertiesSet() throws Exception {
-    programs = Lists.newArrayList(programRepository.findAll());
-    periods = periodRepository.findInPeriod(
-        toolProperties.getParameters().getStartDate().toLocalDate(),
-        toolProperties.getParameters().getEndDate().toLocalDate()
-    );
-
-    String username = toolProperties.getParameters().getCreator();
-    user = userRepository.findByUsername(username);
-  }
 
   @Override
   public List<Requisition> process(String item) throws Exception {
@@ -87,9 +55,9 @@ public class SkipPeriodsProcessor
       return requisitions;
     }
 
-    periods
+    getPeriods()
         .parallelStream()
-        .forEach(period -> programs
+        .forEach(period -> getPrograms()
             .parallelStream()
             .forEach(program -> execute(requisitions, facility, period, program)));
 
@@ -144,9 +112,9 @@ public class SkipPeriodsProcessor
     requisition.setRequisitionLineItems(Lists.newArrayList());
 
     requisition.getStatusChanges()
-        .add(StatusChange.newStatusChange(requisition, user.getId(), INITIATED));
+        .add(StatusChange.newStatusChange(requisition, getUser().getId(), INITIATED));
     requisition.getStatusChanges()
-        .add(StatusChange.newStatusChange(requisition, user.getId(), SKIPPED));
+        .add(StatusChange.newStatusChange(requisition, getUser().getId(), SKIPPED));
 
     return requisition;
   }

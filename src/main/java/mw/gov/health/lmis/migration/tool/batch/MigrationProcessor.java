@@ -10,24 +10,18 @@ import com.google.common.collect.Sets;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.batch.item.ItemProcessor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import mw.gov.health.lmis.migration.tool.config.MappingHelper;
 import mw.gov.health.lmis.migration.tool.config.ToolProperties;
-import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.Code;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.Facility;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.ProcessingPeriod;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.Program;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.RequisitionGroup;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.RequisitionGroupProgramSchedule;
-import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.User;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.FacilityRepository;
-import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.ProcessingPeriodRepository;
-import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.ProgramRepository;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.RequisitionGroupProgramScheduleRepository;
-import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.UserRepository;
 import mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.Requisition;
 import mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.RequisitionTemplate;
 import mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.StatusChange;
@@ -50,23 +44,14 @@ import java.util.TimeZone;
 import java.util.stream.Collectors;
 
 @Component
-public class MigrationProcessor implements ItemProcessor<Main, List<Requisition>> {
+public class MigrationProcessor extends BaseItemProcessor<Main, List<Requisition>> {
   private static final Logger LOGGER = LoggerFactory.getLogger(MigrationProcessor.class);
 
   @Autowired
   private FacilityRepository facilityRepository;
 
   @Autowired
-  private ProgramRepository programRepository;
-
-  @Autowired
-  private ProcessingPeriodRepository processingPeriodRepository;
-
-  @Autowired
   private RequisitionTemplateRepository requisitionTemplateRepository;
-
-  @Autowired
-  private UserRepository userRepository;
 
   @Autowired
   private RequisitionGroupProgramScheduleRepository
@@ -110,18 +95,15 @@ public class MigrationProcessor implements ItemProcessor<Main, List<Requisition>
       return Lists.newArrayList();
     }
 
-    ProcessingPeriod period = processingPeriodRepository.findPeriod(processingDate);
+    ProcessingPeriod period = getPeriods()
+        .stream()
+        .filter(elem -> !elem.getStartDate().isBefore(processingDate)
+            && !elem.getEndDate().isAfter(processingDate))
+        .findFirst()
+        .orElse(null);
 
     if (null == period) {
       LOGGER.error("Can't find period for processing date {}", processingDate);
-      return Lists.newArrayList();
-    }
-
-    String username = toolProperties.getParameters().getCreator();
-    User user = userRepository.findByUsername(username);
-
-    if (null == user) {
-      LOGGER.error("Can't find user with username {}", username);
       return Lists.newArrayList();
     }
 
@@ -131,14 +113,18 @@ public class MigrationProcessor implements ItemProcessor<Main, List<Requisition>
         .groupByCategory(items)
         .entrySet()
         .parallelStream()
-        .map(entry -> create(entry.getKey(), entry.getValue(), item, facility, period, user))
+        .map(entry -> create(entry.getKey(), entry.getValue(), item, facility, period))
         .filter(Objects::nonNull)
         .collect(Collectors.toList());
   }
 
   private Requisition create(String programCode, Collection<Item> items, Main main,
-                             Facility facility, ProcessingPeriod period, User user) {
-    Program program = programRepository.findByCode(new Code(programCode));
+                             Facility facility, ProcessingPeriod period) {
+    Program program = getPrograms()
+        .stream()
+        .filter(elem -> programCode.equals(elem.getCode().toString()))
+        .findFirst()
+        .orElse(null);
 
     if (null == program) {
       LOGGER.error("Can't find program with code {}", programCode);
@@ -190,17 +176,17 @@ public class MigrationProcessor implements ItemProcessor<Main, List<Requisition>
     }
 
     requisition.getStatusChanges()
-        .add(StatusChange.newStatusChange(requisition, user.getId(), INITIATED));
+        .add(StatusChange.newStatusChange(requisition, getUser().getId(), INITIATED));
     requisition.getStatusChanges()
-        .add(StatusChange.newStatusChange(requisition, user.getId(), SUBMITTED));
+        .add(StatusChange.newStatusChange(requisition, getUser().getId(), SUBMITTED));
     requisition.getStatusChanges()
-        .add(StatusChange.newStatusChange(requisition, user.getId(), AUTHORIZED));
+        .add(StatusChange.newStatusChange(requisition, getUser().getId(), AUTHORIZED));
     requisition.getStatusChanges()
-        .add(StatusChange.newStatusChange(requisition, user.getId(), APPROVED));
+        .add(StatusChange.newStatusChange(requisition, getUser().getId(), APPROVED));
 
-    requisitionService.addStatusMessage(requisition, user, main.getNotes());
+    requisitionService.addStatusMessage(requisition, getUser(), main.getNotes());
 
-    requisitionService.convertToOrder(requisition, user, program, facility);
+    requisitionService.convertToOrder(requisition, getUser(), program, facility);
 
     return requisition;
   }
