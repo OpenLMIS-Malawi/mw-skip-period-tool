@@ -4,7 +4,6 @@ import static mw.gov.health.lmis.migration.tool.openlmis.ExternalStatus.APPROVED
 import static mw.gov.health.lmis.migration.tool.openlmis.ExternalStatus.AUTHORIZED;
 import static mw.gov.health.lmis.migration.tool.openlmis.ExternalStatus.INITIATED;
 import static mw.gov.health.lmis.migration.tool.openlmis.ExternalStatus.SUBMITTED;
-import static org.springframework.util.CollectionUtils.isEmpty;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -111,7 +110,7 @@ public class Transformer implements ItemProcessor<Main, List<Requisition>> {
       return Lists.newArrayList();
     }
 
-    ProcessingPeriod period = olmisProcessingPeriodRepository.findInPeriod(processingDate);
+    ProcessingPeriod period = olmisProcessingPeriodRepository.findPeriod(processingDate);
 
     if (null == period) {
       LOGGER.error("Can't find period for processing date {}", processingDate);
@@ -146,12 +145,12 @@ public class Transformer implements ItemProcessor<Main, List<Requisition>> {
       return null;
     }
 
-    List<Requisition> requisitions = olmisRequisitionRepository
-        .findByFacilityIdAndProgramIdAndProcessingPeriodId(
+    boolean database = olmisRequisitionRepository
+        .existsByFacilityIdAndProgramIdAndProcessingPeriodId(
             facility.getId(), program.getId(), period.getId()
         );
 
-    if (!isEmpty(requisitions)) {
+    if (database) {
       LOGGER.warn(
           "Requisition for facility {}, program {} and period {} exists. Skipping...",
           facility.getCode(), program.getCode(), period.getName()

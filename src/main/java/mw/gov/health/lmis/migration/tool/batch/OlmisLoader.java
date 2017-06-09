@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import mw.gov.health.lmis.migration.tool.config.ToolProperties;
+import mw.gov.health.lmis.migration.tool.openlmis.ExternalStatus;
 import mw.gov.health.lmis.migration.tool.openlmis.fulfillment.domain.Order;
 import mw.gov.health.lmis.migration.tool.openlmis.fulfillment.domain.OrderNumberConfiguration;
 import mw.gov.health.lmis.migration.tool.openlmis.fulfillment.domain.OrderStatus;
@@ -53,21 +54,29 @@ public class OlmisLoader implements ItemWriter<List<Requisition>> {
         .forEach(requisition -> {
           olmisRequisitionRepository.save(requisition);
 
-          Program program = olmisProgramRepository.findOne(requisition.getProgramId());
-          User user = olmisUserRepository
-              .findByUsername(toolProperties.getParameters().getCreator());
-          OrderNumberConfiguration config = toolProperties
-              .getParameters()
-              .getOrderNumberConfiguration();
-
-          Order order = Order.newOrder(requisition, user);
-          order.setStatus(OrderStatus.RECEIVED);
-          order.setOrderCode(config.generateOrderNumber(order, program));
-
-          order = orderRepository.save(order);
-
-          proofOfDeliveryRepository.save(new ProofOfDelivery(order));
+          if (requisition.getStatus() == ExternalStatus.RELEASED) {
+            createOrder(requisition);
+          }
         });
+  }
+
+  private void createOrder(Requisition requisition) {
+    Program program = olmisProgramRepository.findOne(requisition.getProgramId());
+
+    String username = toolProperties.getParameters().getCreator();
+    User user = olmisUserRepository.findByUsername(username);
+
+    OrderNumberConfiguration config = toolProperties
+        .getParameters()
+        .getOrderNumberConfiguration();
+
+    Order order = Order.newOrder(requisition, user);
+    order.setStatus(OrderStatus.RECEIVED);
+    order.setOrderCode(config.generateOrderNumber(order, program));
+
+    order = orderRepository.save(order);
+
+    proofOfDeliveryRepository.save(new ProofOfDelivery(order));
   }
 
 }

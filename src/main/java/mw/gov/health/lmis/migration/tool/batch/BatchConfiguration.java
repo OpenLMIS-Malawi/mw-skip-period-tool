@@ -74,15 +74,49 @@ public class BatchConfiguration {
   }
 
   /**
-   * Configure Spring Batch Job that will transform {@link Main} object into {@link Requisition}.
+   * Configure Spring Batch Step that will create skipped requisitions.
    */
   @Bean
-  public Job migrationJob(JobBuilderFactory jobBuilderFactory, Step migrationStep) {
+  public Step skippedPeriods(StepBuilderFactory stepBuilderFactory,
+                             FacilityReader reader,
+                             FacilityReaderListener readerListener,
+                             OlmisLoader writer,
+                             OlmisLoadListener writerListener,
+                             SkippedRequisitionCreator processor,
+                             SkippedRequisitionCreatorListener processorListener,
+                             ToolProperties toolProperties)
+      throws IllegalAccessException, InstantiationException {
+    ToolBatchConfiguration batchProperties = toolProperties
+        .getConfiguration()
+        .getBatch();
+
+    return stepBuilderFactory
+        .get("skippedPeriods")
+        .<String, List<Requisition>>chunk(batchProperties.getChunk())
+        .reader(reader)
+        .listener(readerListener)
+        .processor(processor)
+        .listener(processorListener)
+        .writer(writer)
+        .listener(writerListener)
+        .faultTolerant()
+        .skipPolicy(batchProperties.getSkipPolicy().newInstance())
+        .taskExecutor(new SimpleAsyncTaskExecutor())
+        .throttleLimit(max(DEFAULT_THROTTLE_LIMIT, getRuntime().availableProcessors() - 1))
+        .build();
+  }
+
+  /**
+   * Configure Spring Batch Migration Job.
+   */
+  @Bean
+  public Job migrationJob(JobBuilderFactory jobBuilderFactory, Step migrationStep,
+                          Step skippedPeriods) {
     return jobBuilderFactory
         .get("migrationJob")
         .incrementer(new RunIdIncrementer())
-        .flow(migrationStep)
-        .end()
+        .start(migrationStep)
+        .next(skippedPeriods)
         .build();
   }
 
