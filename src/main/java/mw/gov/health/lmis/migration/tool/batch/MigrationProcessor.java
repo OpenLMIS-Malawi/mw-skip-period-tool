@@ -97,8 +97,8 @@ public class MigrationProcessor extends BaseItemProcessor<Main, List<Requisition
 
     ProcessingPeriod period = getPeriods()
         .stream()
-        .filter(elem -> !elem.getStartDate().isBefore(processingDate)
-            && !elem.getEndDate().isAfter(processingDate))
+        .filter(elem -> !elem.getStartDate().isAfter(processingDate)
+            && !elem.getEndDate().isBefore(processingDate))
         .findFirst()
         .orElse(null);
 
