@@ -50,8 +50,8 @@ import java.util.TimeZone;
 import java.util.stream.Collectors;
 
 @Component
-public class Transformer implements ItemProcessor<Main, List<Requisition>> {
-  private static final Logger LOGGER = LoggerFactory.getLogger(Transformer.class);
+public class MigrationProcessor implements ItemProcessor<Main, List<Requisition>> {
+  private static final Logger LOGGER = LoggerFactory.getLogger(MigrationProcessor.class);
 
   @Autowired
   private OlmisFacilityRepository olmisFacilityRepository;

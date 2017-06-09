@@ -23,7 +23,7 @@ import java.util.Collection;
 import java.util.List;
 
 @Component
-public class OlmisLoader implements ItemWriter<List<Requisition>> {
+public class RequisitionWriter implements ItemWriter<List<Requisition>> {
 
   @Autowired
   private OlmisRequisitionRepository olmisRequisitionRepository;

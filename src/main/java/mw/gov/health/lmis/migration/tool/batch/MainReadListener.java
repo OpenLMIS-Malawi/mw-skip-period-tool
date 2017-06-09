@@ -10,8 +10,8 @@ import mw.gov.health.lmis.migration.tool.scm.domain.Main;
 import mw.gov.health.lmis.migration.tool.scm.service.MainService;
 
 @Component
-public class SupplyManagerExtractListener implements ItemReadListener<Main> {
-  private static final Logger LOGGER = LoggerFactory.getLogger(SupplyManagerExtractListener.class);
+public class MainReadListener implements ItemReadListener<Main> {
+  private static final Logger LOGGER = LoggerFactory.getLogger(MainReadListener.class);
 
   @Autowired
   private MainService mainService;

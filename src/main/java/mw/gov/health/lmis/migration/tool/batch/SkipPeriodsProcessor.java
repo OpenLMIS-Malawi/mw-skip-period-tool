@@ -34,9 +34,9 @@ import java.util.List;
 import java.util.TimeZone;
 
 @Component
-public class SkippedRequisitionCreator
+public class SkipPeriodsProcessor
     implements ItemProcessor<String, List<Requisition>>, InitializingBean {
-  private static final Logger LOGGER = LoggerFactory.getLogger(SkippedRequisitionCreator.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(SkipPeriodsProcessor.class);
 
   @Autowired
   private OlmisFacilityRepository facilityRepository;

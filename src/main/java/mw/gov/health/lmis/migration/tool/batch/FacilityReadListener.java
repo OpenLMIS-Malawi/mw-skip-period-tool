@@ -6,8 +6,8 @@ import org.springframework.batch.core.ItemReadListener;
 import org.springframework.stereotype.Component;
 
 @Component
-public class FacilityReaderListener implements ItemReadListener<String> {
-  private static final Logger LOGGER = LoggerFactory.getLogger(FacilityReaderListener.class);
+public class FacilityReadListener implements ItemReadListener<String> {
+  private static final Logger LOGGER = LoggerFactory.getLogger(FacilityReadListener.class);
 
   @Override
   public void beforeRead() {

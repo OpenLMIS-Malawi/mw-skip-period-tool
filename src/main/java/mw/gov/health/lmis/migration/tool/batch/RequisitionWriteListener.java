@@ -11,8 +11,8 @@ import java.util.Collection;
 import java.util.List;
 
 @Component
-public class OlmisLoadListener implements ItemWriteListener<List<Requisition>> {
-  private static final Logger LOGGER = LoggerFactory.getLogger(OlmisLoadListener.class);
+public class RequisitionWriteListener implements ItemWriteListener<List<Requisition>> {
+  private static final Logger LOGGER = LoggerFactory.getLogger(RequisitionWriteListener.class);
 
   @Override
   public void beforeWrite(List<? extends List<Requisition>> items) {

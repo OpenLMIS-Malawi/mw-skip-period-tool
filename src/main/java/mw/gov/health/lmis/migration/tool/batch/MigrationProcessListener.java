@@ -15,9 +15,9 @@ import java.time.LocalTime;
 import java.util.List;
 
 @Component
-public class TransformListener
+public class MigrationProcessListener
     implements ItemProcessListener<Main, List<Requisition>> {
-  private static final Logger LOGGER = LoggerFactory.getLogger(TransformListener.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(MigrationProcessListener.class);
 
   @Autowired
   private MainService mainService;

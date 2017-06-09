@@ -45,12 +45,12 @@ public class BatchConfiguration {
    */
   @Bean
   public Step migrationStep(StepBuilderFactory stepBuilderFactory,
-                            SupplyManagerExtractor reader,
-                            SupplyManagerExtractListener readerListener,
-                            OlmisLoader writer,
-                            OlmisLoadListener writerListener,
-                            Transformer processor,
-                            TransformListener processorListener,
+                            MainReader reader,
+                            MainReadListener readerListener,
+                            RequisitionWriter writer,
+                            RequisitionWriteListener writerListener,
+                            MigrationProcessor processor,
+                            MigrationProcessListener processorListener,
                             ToolProperties toolProperties)
       throws IllegalAccessException, InstantiationException {
     ToolBatchConfiguration batchProperties = toolProperties
@@ -77,21 +77,21 @@ public class BatchConfiguration {
    * Configure Spring Batch Step that will create skipped requisitions.
    */
   @Bean
-  public Step skippedPeriods(StepBuilderFactory stepBuilderFactory,
-                             FacilityReader reader,
-                             FacilityReaderListener readerListener,
-                             OlmisLoader writer,
-                             OlmisLoadListener writerListener,
-                             SkippedRequisitionCreator processor,
-                             SkippedRequisitionCreatorListener processorListener,
-                             ToolProperties toolProperties)
+  public Step skipPeriodsStep(StepBuilderFactory stepBuilderFactory,
+                              FacilityReader reader,
+                              FacilityReadListener readerListener,
+                              RequisitionWriter writer,
+                              RequisitionWriteListener writerListener,
+                              SkipPeriodsProcessor processor,
+                              SkipPeriodsProcessListener processorListener,
+                              ToolProperties toolProperties)
       throws IllegalAccessException, InstantiationException {
     ToolBatchConfiguration batchProperties = toolProperties
         .getConfiguration()
         .getBatch();
 
     return stepBuilderFactory
-        .get("skippedPeriods")
+        .get("skipPeriodsStep")
         .<String, List<Requisition>>chunk(batchProperties.getChunk())
         .reader(reader)
         .listener(readerListener)
@@ -111,12 +111,12 @@ public class BatchConfiguration {
    */
   @Bean
   public Job migrationJob(JobBuilderFactory jobBuilderFactory, Step migrationStep,
-                          Step skippedPeriods) {
+                          Step skipPeriodsStep) {
     return jobBuilderFactory
         .get("migrationJob")
         .incrementer(new RunIdIncrementer())
         .start(migrationStep)
-        .next(skippedPeriods)
+        .next(skipPeriodsStep)
         .build();
   }
 

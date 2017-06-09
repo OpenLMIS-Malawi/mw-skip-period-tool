@@ -10,7 +10,7 @@ import mw.gov.health.lmis.migration.tool.scm.repository.MainRepository;
 import java.util.TreeSet;
 
 @Component
-public class SupplyManagerExtractor implements ItemReader<Main> {
+public class MainReader implements ItemReader<Main> {
   private static TreeSet<Main> mains = null;
 
   @Autowired
@@ -18,7 +18,7 @@ public class SupplyManagerExtractor implements ItemReader<Main> {
 
   @Override
   public synchronized Main read() {
-    synchronized (SupplyManagerExtractor.class) {
+    synchronized (MainReader.class) {
       if (null == mains) {
         mains = new TreeSet<>(mainRepository.searchInPeriod());
       }

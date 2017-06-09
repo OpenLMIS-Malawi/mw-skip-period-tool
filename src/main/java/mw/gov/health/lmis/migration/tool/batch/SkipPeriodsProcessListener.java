@@ -12,10 +12,10 @@ import java.time.LocalTime;
 import java.util.List;
 
 @Component
-public class SkippedRequisitionCreatorListener
+public class SkipPeriodsProcessListener
     implements ItemProcessListener<String, List<Requisition>> {
   private static final Logger LOGGER = LoggerFactory
-      .getLogger(SkippedRequisitionCreatorListener.class);
+      .getLogger(SkipPeriodsProcessListener.class);
 
   private ThreadLocal<LocalTime> startTime = new ThreadLocal<>();
 
