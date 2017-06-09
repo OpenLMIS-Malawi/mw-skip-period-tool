@@ -19,6 +19,9 @@ import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.UserR
 import java.util.List;
 
 public abstract class BaseItemProcessor<I, O> implements ItemProcessor<I, O>, InitializingBean {
+  private static final Object lock = new Object();
+  private static boolean initialized = false;
+
   @Getter(AccessLevel.PACKAGE)
   private static List<Program> programs;
 
@@ -42,15 +45,21 @@ public abstract class BaseItemProcessor<I, O> implements ItemProcessor<I, O>, In
 
   @Override
   public void afterPropertiesSet() throws Exception {
-    synchronized (BaseItemProcessor.class) {
-      programs = Lists.newArrayList(programRepository.findAll());
-      periods = periodRepository.findInPeriod(
-          toolProperties.getParameters().getStartDate().toLocalDate(),
-          toolProperties.getParameters().getEndDate().toLocalDate()
-      );
+    if (!initialized) {
+      synchronized (lock) {
+        if (!initialized) {
+          programs = Lists.newArrayList(programRepository.findAll());
+          periods = periodRepository.findInPeriod(
+              toolProperties.getParameters().getStartDate().toLocalDate(),
+              toolProperties.getParameters().getEndDate().toLocalDate()
+          );
 
-      String username = toolProperties.getParameters().getCreator();
-      user = userRepository.findByUsername(username);
+          String username = toolProperties.getParameters().getCreator();
+          user = userRepository.findByUsername(username);
+
+          initialized = true;
+        }
+      }
     }
   }
 
