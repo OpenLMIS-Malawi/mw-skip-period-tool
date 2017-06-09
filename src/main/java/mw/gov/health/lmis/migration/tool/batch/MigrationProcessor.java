@@ -4,12 +4,14 @@ import static mw.gov.health.lmis.migration.tool.openlmis.ExternalStatus.APPROVED
 import static mw.gov.health.lmis.migration.tool.openlmis.ExternalStatus.AUTHORIZED;
 import static mw.gov.health.lmis.migration.tool.openlmis.ExternalStatus.INITIATED;
 import static mw.gov.health.lmis.migration.tool.openlmis.ExternalStatus.SUBMITTED;
+import static org.springframework.util.CollectionUtils.isEmpty;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.batch.item.ItemProcessor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -44,7 +46,8 @@ import java.util.TimeZone;
 import java.util.stream.Collectors;
 
 @Component
-public class MigrationProcessor extends BaseItemProcessor<Main, List<Requisition>> {
+public class MigrationProcessor extends AppBatchContext
+    implements ItemProcessor<Main, List<Requisition>> {
   private static final Logger LOGGER = LoggerFactory.getLogger(MigrationProcessor.class);
 
   @Autowired
@@ -80,18 +83,28 @@ public class MigrationProcessor extends BaseItemProcessor<Main, List<Requisition
    */
   @Override
   public List<Requisition> process(Main item) {
+    LocalDate processingDate = mainService.getProcessingDate(item);
+
+    if (null == processingDate) {
+      LOGGER.error("Can't convert processing date to LocalDate instance");
+      return Lists.newArrayList();
+    }
+
+    List<Item> items = itemService.search(item.getProcessingDate(), item.getFacility());
+
+    if (isEmpty(items)) {
+      LOGGER.warn(
+          "No items for processing date: {} and facility: {}",
+          processingDate, item.getFacility()
+      );
+      return Lists.newArrayList();
+    }
+
     String code = MappingHelper.getFacilityCode(toolProperties, item.getFacility());
     Facility facility = facilityRepository.findByCode(code);
 
     if (null == facility) {
       LOGGER.error("Can't find facility with code {}", code);
-      return Lists.newArrayList();
-    }
-
-    LocalDate processingDate = mainService.getProcessingDate(item);
-
-    if (null == processingDate) {
-      LOGGER.error("Can't convert processing date to LocalDate instance");
       return Lists.newArrayList();
     }
 
@@ -106,8 +119,6 @@ public class MigrationProcessor extends BaseItemProcessor<Main, List<Requisition
       LOGGER.error("Can't find period for processing date {}", processingDate);
       return Lists.newArrayList();
     }
-
-    List<Item> items = itemService.search(item.getProcessingDate(), item.getFacility());
 
     return itemService
         .groupByCategory(items)

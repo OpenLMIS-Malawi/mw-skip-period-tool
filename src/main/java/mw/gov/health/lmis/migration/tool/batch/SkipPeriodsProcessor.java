@@ -8,6 +8,7 @@ import com.google.common.collect.Sets;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.batch.item.ItemProcessor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -28,7 +29,8 @@ import java.util.List;
 import java.util.TimeZone;
 
 @Component
-public class SkipPeriodsProcessor extends BaseItemProcessor<String, List<Requisition>> {
+public class SkipPeriodsProcessor extends AppBatchContext
+    implements ItemProcessor<String, List<Requisition>> {
   private static final Logger LOGGER = LoggerFactory.getLogger(SkipPeriodsProcessor.class);
 
   @Autowired

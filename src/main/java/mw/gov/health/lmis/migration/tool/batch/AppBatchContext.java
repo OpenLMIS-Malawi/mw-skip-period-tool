@@ -2,7 +2,8 @@ package mw.gov.health.lmis.migration.tool.batch;
 
 import com.google.common.collect.Lists;
 
-import org.springframework.batch.item.ItemProcessor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -18,7 +19,9 @@ import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.UserR
 
 import java.util.List;
 
-public abstract class BaseItemProcessor<I, O> implements ItemProcessor<I, O>, InitializingBean {
+public abstract class AppBatchContext implements InitializingBean {
+  private static final Logger LOGGER = LoggerFactory.getLogger(AppBatchContext.class);
+
   private static final Object lock = new Object();
   private static boolean initialized = false;
 
@@ -48,6 +51,7 @@ public abstract class BaseItemProcessor<I, O> implements ItemProcessor<I, O>, In
     if (!initialized) {
       synchronized (lock) {
         if (!initialized) {
+          LOGGER.info("Initialize batch context...");
           programs = Lists.newArrayList(programRepository.findAll());
           periods = periodRepository.findInPeriod(
               toolProperties.getParameters().getStartDate().toLocalDate(),
@@ -58,6 +62,7 @@ public abstract class BaseItemProcessor<I, O> implements ItemProcessor<I, O>, In
           user = userRepository.findByUsername(username);
 
           initialized = true;
+          LOGGER.info("Initialized batch context...");
         }
       }
     }

@@ -17,12 +17,11 @@ import org.springframework.stereotype.Component;
 
 import mw.gov.health.lmis.migration.tool.config.MappingHelper;
 import mw.gov.health.lmis.migration.tool.config.ToolProperties;
+import mw.gov.health.lmis.migration.tool.openlmis.OnlyId;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.Code;
-import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.Orderable;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.Program;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.StockAdjustmentReason;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.OrderableRepository;
-import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.ProgramRepository;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.StockAdjustmentReasonRepository;
 import mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.Requisition;
 import mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.RequisitionLineItem;
@@ -40,16 +39,11 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Component
-@SuppressWarnings("PMD")
-public class ItemConverter {
+public class ItemConverter extends AppBatchContext {
   private static final Logger LOGGER = LoggerFactory.getLogger(ItemConverter.class);
-
-  @Autowired
-  private ProgramRepository programRepository;
 
   @Autowired
   private AdjustmentAccessRepository adjustmentRepository;
@@ -88,7 +82,7 @@ public class ItemConverter {
   private RequisitionLineItem convert(Item item, Requisition requisition,
                                       List<Adjustment> adjustments) {
     String productCode = productService.getProductCode(item.getProduct());
-    Orderable orderable = orderableRepository.findFirstByProductCode(new Code(productCode));
+    OnlyId orderable = orderableRepository.findFirstByProductCode(new Code(productCode));
 
     RequisitionLineItem requisitionLineItem = new RequisitionLineItem();
     requisitionLineItem.setStockAdjustments(Lists.newArrayList());
@@ -104,43 +98,20 @@ public class ItemConverter {
     requisitionLineItem.setTotalReceivedQuantity(item.getReceipts());
     requisitionLineItem.setTotalConsumedQuantity(item.getDispensedQuantity());
 
-    Program program = programRepository.findOne(requisition.getProgramId());
+    List<StockAdjustmentReason> reasons = Lists.newArrayList();
 
-    Optional
-        .ofNullable(adjustments)
-        .ifPresent(list -> requisitionLineItem.setStockAdjustments(
-            list
-                .parallelStream()
-                .map(adjustment -> {
-                  AdjustmentType type = adjustmentTypeRepository.findByType(adjustment.getType());
-                  String name = MappingHelper.getAdjustmentName(toolProperties, type.getName());
-
-                  StockAdjustmentReason stockAdjustmentReason =
-                      stockAdjustmentReasonRepository.findByProgramAndName(program, name);
-
-                  if (null == stockAdjustmentReason) {
-                    LOGGER.error(
-                        "Can't find stock adjustment reason for program {} with name {}",
-                        program.getCode(), name
-                    );
-                    
-                    return null;
-                  }
-
-                  StockAdjustment stockAdjustment = new StockAdjustment();
-                  stockAdjustment.setReasonId(stockAdjustmentReason.getId());
-                  stockAdjustment.setQuantity(adjustment.getQuantity());
-
-                  return stockAdjustment;
-                })
-                .filter(Objects::nonNull)
-                .collect(Collectors.toList())));
+    if (null != adjustments) {
+      requisitionLineItem.setStockAdjustments(
+          adjustments
+              .parallelStream()
+              .map(adjustment -> map(adjustment, requisition, reasons))
+              .filter(Objects::nonNull)
+              .collect(Collectors.toList())
+      );
+    }
 
     requisitionLineItem.setTotalLossesAndAdjustments(
-        calculateTotalLossesAndAdjustments(
-            requisitionLineItem,
-            Lists.newArrayList(stockAdjustmentReasonRepository.findAll())
-        )
+        calculateTotalLossesAndAdjustments(requisitionLineItem, reasons)
     );
     requisitionLineItem.setTotalStockoutDays((int) zeroIfNull(item.getStockedOutDays()));
     requisitionLineItem.setStockOnHand(item.getClosingBalance());
@@ -164,6 +135,43 @@ public class ItemConverter {
     }
 
     return requisitionLineItem;
+  }
+
+  private StockAdjustment map(Adjustment adjustment, Requisition requisition,
+                              List<StockAdjustmentReason> reasons) {
+    AdjustmentType type = adjustmentTypeRepository.findByType(adjustment.getType());
+    String name = MappingHelper.getAdjustmentName(toolProperties, type.getName());
+
+    Program program = getPrograms()
+        .stream()
+        .filter(elem -> requisition.getProgramId().equals(elem.getId()))
+        .findFirst()
+        .orElse(null);
+
+    if (null == program) {
+      LOGGER.error("Can't find program with id {}", requisition.getProgramId());
+      return null;
+    }
+
+    StockAdjustmentReason stockAdjustmentReason =
+        stockAdjustmentReasonRepository.findByProgramAndName(program, name);
+
+    if (null == stockAdjustmentReason) {
+      LOGGER.error(
+          "Can't find stock adjustment reason for program {} with name {}",
+          program.getCode(), name
+      );
+
+      return null;
+    }
+
+    StockAdjustment stockAdjustment = new StockAdjustment();
+    stockAdjustment.setReasonId(stockAdjustmentReason.getId());
+    stockAdjustment.setQuantity(adjustment.getQuantity());
+
+    reasons.add(stockAdjustmentReason);
+
+    return stockAdjustment;
   }
 
   private BigDecimal getMonthsOfStock(RequisitionLineItem requisitionLineItem) {

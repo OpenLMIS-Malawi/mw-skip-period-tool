@@ -16,25 +16,19 @@ import mw.gov.health.lmis.migration.tool.config.ToolProperties;
 import mw.gov.health.lmis.migration.tool.openlmis.ExternalStatus;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.Facility;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.GeographicZone;
-import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.ProcessingPeriod;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.Program;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.User;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.FacilityRepository;
-import mw.gov.health.lmis.migration.tool.openlmis.referencedata.service.ProcessingPeriodService;
 import mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.Requisition;
 import mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.StatusMessage;
 import mw.gov.health.lmis.migration.tool.openlmis.requisition.repository.RequisitionRepository;
 import mw.gov.health.lmis.migration.tool.openlmis.requisition.service.RequisitionService;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @Service
 public class RequisitionServiceImpl implements RequisitionService {
   private static final Logger LOGGER = LoggerFactory.getLogger(RequisitionServiceImpl.class);
-
-  @Autowired
-  private ProcessingPeriodService processingPeriodService;
 
   @Autowired
   private RequisitionRepository requisitionRepository;
@@ -44,22 +38,6 @@ public class RequisitionServiceImpl implements RequisitionService {
 
   @Autowired
   private ToolProperties toolProperties;
-
-  @Override
-  public List<Requisition> getRecentRequisitions(Requisition requisition, int amount) {
-    List<ProcessingPeriod> previousPeriods = processingPeriodService
-        .findPreviousPeriods(requisition.getProcessingPeriodId(), amount);
-
-    List<Requisition> recentRequisitions = new ArrayList<>();
-    for (ProcessingPeriod period : previousPeriods) {
-      List<Requisition> requisitionsByPeriod = getRequisitionsByPeriod(requisition, period);
-      if (!requisitionsByPeriod.isEmpty()) {
-        Requisition requisitionByPeriod = requisitionsByPeriod.get(0);
-        recentRequisitions.add(requisitionByPeriod);
-      }
-    }
-    return recentRequisitions;
-  }
 
   @Override
   public void addStatusMessage(Requisition requisition, User user, String generalNote) {
@@ -129,13 +107,6 @@ public class RequisitionServiceImpl implements RequisitionService {
     }
 
     requisition.release(user.getId());
-  }
-
-  private List<Requisition> getRequisitionsByPeriod(Requisition requisition,
-                                                    ProcessingPeriod period) {
-    return requisitionRepository.findByFacilityIdAndProgramIdAndProcessingPeriodId(
-        requisition.getFacilityId(), requisition.getProgramId(), period.getId()
-    );
   }
 
 }
