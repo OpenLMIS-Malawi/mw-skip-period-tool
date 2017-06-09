@@ -82,6 +82,7 @@ public class Orderable extends BaseEntity {
   @Column(name = "value")
   @CollectionTable(
       name = "orderable_identifiers",
+      schema = "referencedata",
       joinColumns = @JoinColumn(name = "orderableId"))
   private Map<String, String> identifiers;
 
