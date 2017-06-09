@@ -192,45 +192,45 @@ public class RequisitionTemplateCreator {
             )
         )
         .put(
+            REMARKS_COLUMN,
+            create(
+                REMARKS_COLUMN, "Remarks", USER_INPUT, true,
+                "2ed8c74a-f424-4742-bd14-cfbe67b6e7be", 13
+            )
+        )
+        .put(
             SKIPPED_COLUMN,
             create(
                 SKIPPED_COLUMN, "Skip", USER_INPUT, false,
-                "c6dffdee-3813-40d9-8737-f531d5adf420", 13
+                "c6dffdee-3813-40d9-8737-f531d5adf420", 14
             )
         )
         .put(
             BEGINNING_BALANCE,
             create(
                 BEGINNING_BALANCE, "Beginning balance", USER_INPUT, false,
-                "33b2d2e9-3167-46b0-95d4-1295be9afc22", 14
+                "33b2d2e9-3167-46b0-95d4-1295be9afc22", 15
             )
         )
         .put(
             AVERAGE_CONSUMPTION,
             create(
                 AVERAGE_CONSUMPTION, "Average consumption", CALCULATED, false,
-                "89113ec3-40e9-4d81-9516-b56adba7f8cd", 15
+                "89113ec3-40e9-4d81-9516-b56adba7f8cd", 16
             )
         )
         .put(
             PRICE_PER_PACK,
             create(
                 PRICE_PER_PACK, "Price per pack", REFERENCE_DATA, false,
-                "df524868-9d0a-18e6-80f5-76304ded7ab9", 16
+                "df524868-9d0a-18e6-80f5-76304ded7ab9", 17
             )
         )
         .put(
             DISPENSING_UNIT,
             create(
                 "orderable.dispensable.dispensingUnit", "Dispensing Unit", REFERENCE_DATA, false,
-                "61e6d059-10ef-40c4-a6e3-fa7b9ad741ec", 17
-            )
-        )
-        .put(
-            REMARKS_COLUMN,
-            create(
-                REMARKS_COLUMN, "Remarks", USER_INPUT, false,
-                "2ed8c74a-f424-4742-bd14-cfbe67b6e7be", 18
+                "61e6d059-10ef-40c4-a6e3-fa7b9ad741ec", 18
             )
         )
         .put(
