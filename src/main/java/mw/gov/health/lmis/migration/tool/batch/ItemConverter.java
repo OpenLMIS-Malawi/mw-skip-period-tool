@@ -76,6 +76,7 @@ public class ItemConverter extends AppBatchContext {
     return items
         .parallelStream()
         .map(item -> convert(item, requisition, adjustments.get(item.getId())))
+        .filter(Objects::nonNull)
         .collect(Collectors.toList());
   }
 
@@ -83,6 +84,11 @@ public class ItemConverter extends AppBatchContext {
                                       List<Adjustment> adjustments) {
     String productCode = productService.getProductCode(item.getProduct());
     OnlyId orderable = orderableRepository.findFirstByProductCode(new Code(productCode));
+
+    if (null == orderable) {
+      LOGGER.error("Can't find orderable with code {}", productCode);
+      return null;
+    }
 
     RequisitionLineItem requisitionLineItem = new RequisitionLineItem();
     requisitionLineItem.setStockAdjustments(Lists.newArrayList());
