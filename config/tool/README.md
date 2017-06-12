@@ -83,6 +83,8 @@ tool:
         batch:
             chunk: integer
             skipPolicy: string
+            migration: boolean
+            skipPeriods: boolean
 ```
 Before the tool can migrate data from supply manager into OpenLMIS system, it needs to know where SCM database file is located and where is a OpenLMIS database. This section also contains addictional Spring Batch settings.
 
@@ -95,6 +97,8 @@ Before the tool can migrate data from supply manager into OpenLMIS system, it ne
 * batch - this small configuration sections contains addictional Spring Batch settings
   * chunk - after how much requisitions the Spring Batch should execute the commit command.
   * skipPolicy - set the skip policy. By default if there will be any issue with migrating a single Product Tracking form the appropriate error message will be displayed but the tool will continue the work. The class must implement the ```org.springframework.batch.core.step.skip.SkipPolicy``` interface.
+  * migration - set if the tool should migrate SCM forms into OpenLMIS.
+  * skipPeriods - set whether the tool should insert skipped requisitions if there is a gap between periods. For example for the given facility and program there are requisitions for Jan 2012 and March 2012, the tool will create skipped requisition for Feb 2012 to avoid problems.
   
 #### mapping section
 ```

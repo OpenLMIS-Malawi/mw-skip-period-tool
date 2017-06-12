@@ -9,6 +9,8 @@ import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing;
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
+import org.springframework.batch.core.job.builder.JobBuilder;
+import org.springframework.batch.core.job.builder.SimpleJobBuilder;
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
 import org.springframework.boot.autoconfigure.batch.BatchDatabaseInitializer;
 import org.springframework.boot.autoconfigure.batch.BatchProperties;
@@ -111,13 +113,22 @@ public class BatchConfiguration {
    */
   @Bean
   public Job migrationJob(JobBuilderFactory jobBuilderFactory, Step migrationStep,
-                          Step skipPeriodsStep) {
-    return jobBuilderFactory
+                          Step skipPeriodsStep, ToolProperties toolProperties) {
+    JobBuilder job = jobBuilderFactory
         .get("migrationJob")
-        .incrementer(new RunIdIncrementer())
-        .start(migrationStep)
-        .next(skipPeriodsStep)
-        .build();
+        .incrementer(new RunIdIncrementer());
+
+    SimpleJobBuilder builder = new SimpleJobBuilder(job);
+
+    if (toolProperties.getConfiguration().getBatch().isMigration()) {
+      builder.next(migrationStep);
+    }
+
+    if (toolProperties.getConfiguration().getBatch().isSkipPeriods()) {
+      builder.next(skipPeriodsStep);
+    }
+
+    return builder.build();
   }
 
 }
