@@ -1,7 +1,9 @@
 package mw.gov.health.lmis.migration.tool.scm.service;
 
+import java.util.Optional;
+
 public interface ProductService {
 
-  String getProductCode(Integer productId);
+  Optional<String> getProductCode(Integer id);
   
 }

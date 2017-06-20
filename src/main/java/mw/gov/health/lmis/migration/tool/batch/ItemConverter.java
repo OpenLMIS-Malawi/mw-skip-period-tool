@@ -39,6 +39,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Component
@@ -82,8 +83,15 @@ public class ItemConverter extends AppBatchContext {
 
   private RequisitionLineItem convert(Item item, Requisition requisition,
                                       List<Adjustment> adjustments) {
-    String productCode = productService.getProductCode(item.getProduct());
-    OnlyId orderable = orderableRepository.findFirstByProductCode(new Code(productCode));
+    Optional<String> productCode = productService.getProductCode(item.getProduct());
+
+    if (!productCode.isPresent()) {
+      return null;
+    }
+
+    String productCodeValue = productCode.get();
+    Code orderableCode = new Code(productCodeValue);
+    OnlyId orderable = orderableRepository.findFirstByProductCode(orderableCode);
 
     if (null == orderable) {
       LOGGER.error("Can't find orderable with code {}", productCode);
