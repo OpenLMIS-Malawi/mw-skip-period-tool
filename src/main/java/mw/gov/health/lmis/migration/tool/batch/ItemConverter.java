@@ -97,7 +97,7 @@ public class ItemConverter {
     OnlyId orderable = orderableRepository.findFirstByProductCode(orderableCode);
 
     if (null == orderable) {
-      LOGGER.error("Can't find orderable with code {}", productCode);
+      LOGGER.error("Can't find orderable with code {}", productCodeValue);
       return null;
     }
 
