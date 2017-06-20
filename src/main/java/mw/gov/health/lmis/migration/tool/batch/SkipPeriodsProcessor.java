@@ -28,8 +28,7 @@ import java.time.ZoneId;
 import java.util.List;
 
 @Component
-public class SkipPeriodsProcessor extends AppBatchContext
-    implements ItemProcessor<String, List<Requisition>> {
+public class SkipPeriodsProcessor implements ItemProcessor<String, List<Requisition>> {
   private static final Logger LOGGER = LoggerFactory.getLogger(SkipPeriodsProcessor.class);
 
   @Autowired
@@ -44,6 +43,9 @@ public class SkipPeriodsProcessor extends AppBatchContext
   @Autowired
   private ToolProperties toolProperties;
 
+  @Autowired
+  private AppBatchContext context;
+
   @Override
   public List<Requisition> process(String item) throws Exception {
     List<Requisition> requisitions = Lists.newArrayList();
@@ -56,9 +58,9 @@ public class SkipPeriodsProcessor extends AppBatchContext
       return requisitions;
     }
 
-    getPeriods()
+    context.getPeriods()
         .parallelStream()
-        .forEach(period -> getPrograms()
+        .forEach(period -> context.getPrograms()
             .parallelStream()
             .forEach(program -> execute(requisitions, facility, period, program)));
 
@@ -111,9 +113,9 @@ public class SkipPeriodsProcessor extends AppBatchContext
     requisition.setRequisitionLineItems(Lists.newArrayList());
 
     requisition.getStatusChanges()
-        .add(StatusChange.newStatusChange(requisition, getUser().getId(), INITIATED));
+        .add(StatusChange.newStatusChange(requisition, context.getUser().getId(), INITIATED));
     requisition.getStatusChanges()
-        .add(StatusChange.newStatusChange(requisition, getUser().getId(), SKIPPED));
+        .add(StatusChange.newStatusChange(requisition, context.getUser().getId(), SKIPPED));
 
     return requisition;
   }

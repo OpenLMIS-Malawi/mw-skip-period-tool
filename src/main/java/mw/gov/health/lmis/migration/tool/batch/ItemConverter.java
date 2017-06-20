@@ -43,7 +43,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Component
-public class ItemConverter extends AppBatchContext {
+public class ItemConverter {
   private static final Logger LOGGER = LoggerFactory.getLogger(ItemConverter.class);
 
   @Autowired
@@ -66,6 +66,9 @@ public class ItemConverter extends AppBatchContext {
 
   @Autowired
   private ToolProperties toolProperties;
+
+  @Autowired
+  private AppBatchContext context;
 
   /**
    * Converts {@link Item} object into {@link RequisitionLineItem} object.
@@ -156,7 +159,7 @@ public class ItemConverter extends AppBatchContext {
     AdjustmentType type = adjustmentTypeRepository.findByType(adjustment.getType());
     String name = MappingHelper.getAdjustmentName(toolProperties, type.getName());
 
-    Program program = getPrograms()
+    Program program = context.getPrograms()
         .stream()
         .filter(elem -> requisition.getProgramId().equals(elem.getId()))
         .findFirst()

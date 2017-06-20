@@ -22,7 +22,7 @@ import java.util.Collection;
 import java.util.List;
 
 @Component
-public class RequisitionWriter extends AppBatchContext implements ItemWriter<List<Requisition>> {
+public class RequisitionWriter implements ItemWriter<List<Requisition>> {
   private static final Logger LOGGER = LoggerFactory.getLogger(RequisitionWriter.class);
 
   @Autowired
@@ -36,6 +36,9 @@ public class RequisitionWriter extends AppBatchContext implements ItemWriter<Lis
 
   @Autowired
   private ToolProperties toolProperties;
+
+  @Autowired
+  private AppBatchContext context;
 
   /**
    * Writes Requisitions into OpenLMIS database.
@@ -55,7 +58,7 @@ public class RequisitionWriter extends AppBatchContext implements ItemWriter<Lis
   }
 
   private void createOrder(Requisition requisition) {
-    Program program = getPrograms()
+    Program program = context.getPrograms()
         .stream()
         .filter(elem -> requisition.getProgramId().equals(elem.getId()))
         .findFirst()
@@ -69,7 +72,7 @@ public class RequisitionWriter extends AppBatchContext implements ItemWriter<Lis
         .getParameters()
         .getOrderNumberConfiguration();
 
-    Order order = Order.newOrder(requisition, getUser());
+    Order order = Order.newOrder(requisition, context.getUser());
     order.setStatus(OrderStatus.RECEIVED);
     order.setOrderCode(config.generateOrderNumber(order, program));
 

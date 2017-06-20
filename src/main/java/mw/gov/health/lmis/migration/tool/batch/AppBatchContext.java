@@ -6,8 +6,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
-import lombok.AccessLevel;
 import lombok.Getter;
 import mw.gov.health.lmis.migration.tool.config.ToolProperties;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.ProcessingPeriod;
@@ -21,20 +21,9 @@ import mw.gov.health.lmis.migration.tool.scm.repository.ItemAccessRepository;
 import java.util.List;
 import java.util.TimeZone;
 
-public abstract class AppBatchContext implements InitializingBean {
+@Component
+final class AppBatchContext implements InitializingBean {
   private static final Logger LOGGER = LoggerFactory.getLogger(AppBatchContext.class);
-
-  private static final Object lock = new Object();
-  private static boolean initialized = false;
-
-  @Getter(AccessLevel.PACKAGE)
-  private static List<Program> programs;
-
-  @Getter(AccessLevel.PACKAGE)
-  private static List<ProcessingPeriod> periods;
-
-  @Getter(AccessLevel.PACKAGE)
-  private static User user;
 
   @Autowired
   private ProgramRepository programRepository;
@@ -51,30 +40,31 @@ public abstract class AppBatchContext implements InitializingBean {
   @Autowired
   private ItemAccessRepository itemRepository;
 
+  @Getter
+  private List<Program> programs;
+
+  @Getter
+  private List<ProcessingPeriod> periods;
+
+  @Getter
+  private User user;
+
   @Override
   public void afterPropertiesSet() throws Exception {
-    if (!initialized) {
-      synchronized (lock) {
-        if (!initialized) {
-          LOGGER.info("Initialize batch context...");
-          TimeZone.setDefault(toolProperties.getParameters().getTimeZone());
+    LOGGER.info("Initialize batch context...");
+    TimeZone.setDefault(toolProperties.getParameters().getTimeZone());
 
-          programs = Lists.newArrayList(programRepository.findAll());
-          periods = periodRepository.findInPeriod(
-              toolProperties.getParameters().getStartDate(),
-              toolProperties.getParameters().getEndDate()
-          );
+    programs = Lists.newArrayList(programRepository.findAll());
+    periods = periodRepository.findInPeriod(
+        toolProperties.getParameters().getStartDate(),
+        toolProperties.getParameters().getEndDate()
+    );
 
-          String username = toolProperties.getParameters().getCreator();
-          user = userRepository.findByUsername(username);
+    String username = toolProperties.getParameters().getCreator();
+    user = userRepository.findByUsername(username);
 
-          itemRepository.init();
+    itemRepository.init();
 
-          initialized = true;
-          LOGGER.info("Initialized batch context...");
-        }
-      }
-    }
+    LOGGER.info("Initialized batch context...");
   }
-
 }

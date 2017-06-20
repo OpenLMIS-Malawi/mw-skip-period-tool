@@ -22,6 +22,7 @@ import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.Processin
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.Program;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.RequisitionGroup;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.RequisitionGroupProgramSchedule;
+import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.User;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.FacilityRepository;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.RequisitionGroupProgramScheduleRepository;
 import mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.Requisition;
@@ -42,11 +43,11 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Component
-public class MigrationProcessor extends AppBatchContext
-    implements ItemProcessor<Main, List<Requisition>> {
+public class MigrationProcessor implements ItemProcessor<Main, List<Requisition>> {
   private static final Logger LOGGER = LoggerFactory.getLogger(MigrationProcessor.class);
 
   @Autowired
@@ -76,6 +77,9 @@ public class MigrationProcessor extends AppBatchContext
 
   @Autowired
   private ToolProperties toolProperties;
+
+  @Autowired
+  private AppBatchContext context;
 
   /**
    * Converts the given {@link Main} object into {@link Requisition} object.
@@ -107,7 +111,7 @@ public class MigrationProcessor extends AppBatchContext
       return Lists.newArrayList();
     }
 
-    ProcessingPeriod period = getPeriods()
+    ProcessingPeriod period = context.getPeriods()
         .stream()
         .filter(elem -> !elem.getStartDate().isAfter(processingDate)
             && !elem.getEndDate().isBefore(processingDate))
@@ -130,7 +134,7 @@ public class MigrationProcessor extends AppBatchContext
 
   private Requisition create(String programCode, Collection<Item> items, Main main,
                              Facility facility, ProcessingPeriod period) {
-    Program program = getPrograms()
+    Program program = context.getPrograms()
         .stream()
         .filter(elem -> programCode.equals(elem.getCode().toString()))
         .findFirst()
@@ -185,18 +189,21 @@ public class MigrationProcessor extends AppBatchContext
       );
     }
 
+    User author = context.getUser();
+    UUID authorId = author.getId();
+    
     requisition.getStatusChanges()
-        .add(StatusChange.newStatusChange(requisition, getUser().getId(), INITIATED));
+        .add(StatusChange.newStatusChange(requisition, authorId, INITIATED));
     requisition.getStatusChanges()
-        .add(StatusChange.newStatusChange(requisition, getUser().getId(), SUBMITTED));
+        .add(StatusChange.newStatusChange(requisition, authorId, SUBMITTED));
     requisition.getStatusChanges()
-        .add(StatusChange.newStatusChange(requisition, getUser().getId(), AUTHORIZED));
+        .add(StatusChange.newStatusChange(requisition, authorId, AUTHORIZED));
     requisition.getStatusChanges()
-        .add(StatusChange.newStatusChange(requisition, getUser().getId(), APPROVED));
+        .add(StatusChange.newStatusChange(requisition, authorId, APPROVED));
 
-    requisitionService.addStatusMessage(requisition, getUser(), main.getNotes());
+    requisitionService.addStatusMessage(requisition, author, main.getNotes());
 
-    requisitionService.convertToOrder(requisition, getUser(), program, facility);
+    requisitionService.convertToOrder(requisition, author, program, facility);
 
     return requisition;
   }
