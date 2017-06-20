@@ -18,6 +18,7 @@ import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.Progr
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.UserRepository;
 import mw.gov.health.lmis.migration.tool.scm.repository.ItemAccessRepository;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.TimeZone;
 
@@ -50,18 +51,26 @@ final class AppBatchContext implements InitializingBean {
   private User user;
 
   @Override
-  public void afterPropertiesSet() throws Exception {
+  public void afterPropertiesSet() {
     LOGGER.info("Initialize batch context...");
     TimeZone.setDefault(toolProperties.getParameters().getTimeZone());
 
     programs = Lists.newArrayList(programRepository.findAll());
-    periods = periodRepository.findInPeriod(
-        toolProperties.getParameters().getStartDate(),
-        toolProperties.getParameters().getEndDate()
-    );
+    LOGGER.info("Found {} programs", programs.size());
+
+    LocalDate startDate = toolProperties.getParameters().getStartDate();
+    LocalDate endDate = toolProperties.getParameters().getEndDate();
+    periods = periodRepository.findInPeriod(startDate, endDate);
+    LOGGER.info("Found {} periods between {} and {}", periods.size(), startDate, endDate);
 
     String username = toolProperties.getParameters().getCreator();
     user = userRepository.findByUsername(username);
+
+    if (null == user) {
+      throw new IllegalStateException("Can't find user with username: " + username);
+    } else {
+      LOGGER.info("Found user with username: {}", username);
+    }
 
     itemRepository.init();
 
