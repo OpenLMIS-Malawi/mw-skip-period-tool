@@ -26,7 +26,6 @@ import mw.gov.health.lmis.migration.tool.openlmis.requisition.repository.Requisi
 
 import java.time.ZoneId;
 import java.util.List;
-import java.util.TimeZone;
 
 @Component
 public class SkipPeriodsProcessor extends AppBatchContext
@@ -104,9 +103,7 @@ public class SkipPeriodsProcessor extends AppBatchContext
     requisition.setPreviousRequisitions(Lists.newArrayList());
     requisition.setAvailableNonFullSupplyProducts(Sets.newHashSet());
 
-    String timeZoneName = toolProperties.getParameters().getTimeZone();
-    TimeZone timeZone = TimeZone.getTimeZone(timeZoneName);
-    ZoneId zoneId = timeZone.toZoneId();
+    ZoneId zoneId = toolProperties.getParameters().getTimeZone().toZoneId();
 
     requisition.setCreatedDate(period.getStartDate().atStartOfDay(zoneId));
     requisition.setModifiedDate(requisition.getCreatedDate());

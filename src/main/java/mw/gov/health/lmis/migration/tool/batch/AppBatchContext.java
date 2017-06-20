@@ -19,6 +19,7 @@ import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.UserR
 import mw.gov.health.lmis.migration.tool.scm.repository.ItemAccessRepository;
 
 import java.util.List;
+import java.util.TimeZone;
 
 public abstract class AppBatchContext implements InitializingBean {
   private static final Logger LOGGER = LoggerFactory.getLogger(AppBatchContext.class);
@@ -56,10 +57,12 @@ public abstract class AppBatchContext implements InitializingBean {
       synchronized (lock) {
         if (!initialized) {
           LOGGER.info("Initialize batch context...");
+          TimeZone.setDefault(toolProperties.getParameters().getTimeZone());
+
           programs = Lists.newArrayList(programRepository.findAll());
           periods = periodRepository.findInPeriod(
-              toolProperties.getParameters().getStartDate().toLocalDate(),
-              toolProperties.getParameters().getEndDate().toLocalDate()
+              toolProperties.getParameters().getStartDate(),
+              toolProperties.getParameters().getEndDate()
           );
 
           String username = toolProperties.getParameters().getCreator();

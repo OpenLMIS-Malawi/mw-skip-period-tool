@@ -5,10 +5,12 @@ import com.healthmarketscience.jackcess.Row;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
+import mw.gov.health.lmis.migration.tool.config.ToolParameters;
 import mw.gov.health.lmis.migration.tool.config.ToolProperties;
 import mw.gov.health.lmis.migration.tool.scm.domain.Main;
 
 import java.time.Instant;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.function.Predicate;
 
@@ -24,8 +26,11 @@ public class MainAccessRepository extends BaseAccessRepository<Main> {
    */
   @Autowired
   public MainAccessRepository(ToolProperties toolProperties) {
-    startDate = toolProperties.getParameters().getStartDate().toInstant();
-    endDate = toolProperties.getParameters().getEndDate().toInstant();
+    ToolParameters parameters = toolProperties.getParameters();
+    ZoneId zoneId = parameters.getTimeZone().toZoneId();
+
+    startDate = parameters.getStartDate().atStartOfDay(zoneId).toInstant();
+    endDate = parameters.getEndDate().atTime(23,59,59).atZone(zoneId).toInstant();
   }
 
   /**
@@ -50,8 +55,7 @@ public class MainAccessRepository extends BaseAccessRepository<Main> {
     @Override
     public boolean test(Main main) {
       Instant processingDate = main.getProcessingDate().toInstant();
-
-      return processingDate.isAfter(startDate) && processingDate.isBefore(endDate);
+      return !processingDate.isBefore(startDate) && !processingDate.isAfter(endDate);
     }
 
   }

@@ -45,6 +45,7 @@ import mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.SourceType;
 import mw.gov.health.lmis.migration.tool.openlmis.requisition.repository.AvailableRequisitionColumnRepository;
 import mw.gov.health.lmis.migration.tool.openlmis.requisition.repository.RequisitionTemplateRepository;
 
+import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.Map;
 import java.util.UUID;
@@ -91,7 +92,8 @@ public class RequisitionTemplateCreator {
   private RequisitionTemplate createTemplate(UUID programId) {
     LOGGER.info("Create requisition template for program: {}", programId);
 
-    ZonedDateTime createdDate = toolProperties.getParameters().getStartDate();
+    ZoneId zoneId = toolProperties.getParameters().getTimeZone().toZoneId();
+    ZonedDateTime createdDate = toolProperties.getParameters().getStartDate().atStartOfDay(zoneId);
 
     RequisitionTemplate template = new RequisitionTemplate();
     template.setProgramId(programId);

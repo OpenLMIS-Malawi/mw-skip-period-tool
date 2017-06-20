@@ -42,7 +42,6 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
-import java.util.TimeZone;
 import java.util.stream.Collectors;
 
 @Component
@@ -203,9 +202,7 @@ public class MigrationProcessor extends AppBatchContext
   }
 
   private ZonedDateTime convert(Date date, LocalDate localDate) {
-    String timeZoneName = toolProperties.getParameters().getTimeZone();
-    TimeZone timeZone = TimeZone.getTimeZone(timeZoneName);
-    ZoneId zoneId = timeZone.toZoneId();
+    ZoneId zoneId = toolProperties.getParameters().getTimeZone().toZoneId();
 
     if (null != date) {
       return date.toInstant().atZone(zoneId);

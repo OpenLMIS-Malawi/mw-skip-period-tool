@@ -23,9 +23,7 @@ public class ScmDatabaseHandler {
    */
   public Database getDatabase() {
     File accessFile = toolProperties.getConfiguration().getAccessFile();
-
-    String timeZoneId = toolProperties.getParameters().getTimeZone();
-    TimeZone timeZone = TimeZone.getTimeZone(timeZoneId);
+    TimeZone timeZone = toolProperties.getParameters().getTimeZone();
 
     try {
       return new DatabaseBuilder()
