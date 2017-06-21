@@ -16,7 +16,7 @@ public class RequisitionWriteListener implements ItemWriteListener<List<Requisit
 
   @Override
   public void beforeWrite(List<? extends List<Requisition>> items) {
-    LOGGER.debug(
+    LOGGER.info(
         "Save {} requisitions to database",
         items.stream().mapToLong(Collection::size).sum()
     );

@@ -28,33 +28,27 @@ public class MigrationProcessListener
   public void beforeProcess(Main item) {
     startTime.set(LocalTime.now());
 
-    if (LOGGER.isDebugEnabled()) {
-      LOGGER.debug(
-          "Convert Product Tracking form ({};{}) to OpenLMIS requisitions",
-          item.getFacility(), mainService.getProcessingDate(item)
-      );
-    }
+    LOGGER.info(
+        "Convert Product Tracking form ({};{}) to OpenLMIS requisitions",
+        item.getFacility(), mainService.getProcessingDate(item)
+    );
   }
 
   @Override
   public void afterProcess(Main item, List<Requisition> result) {
-    if (LOGGER.isInfoEnabled()) {
-      LOGGER.info(
-          "Converted Product Tracking form ({};{}) to {} OpenLMIS requisitions in {}s",
-          item.getFacility(), mainService.getProcessingDate(item), result.size(),
-          Duration.between(startTime.get(), LocalTime.now()).getSeconds()
-      );
-    }
+    LOGGER.info(
+        "Converted Product Tracking form ({};{}) to {} OpenLMIS requisitions in {}s",
+        item.getFacility(), mainService.getProcessingDate(item), result.size(),
+        Duration.between(startTime.get(), LocalTime.now()).getSeconds()
+    );
   }
 
   @Override
   public void onProcessError(Main item, Exception exp) {
-    if (LOGGER.isErrorEnabled()) {
-      LOGGER.error(
-          "Cannot convert Product Tracking form ({};{}) to OpenLMIS requisitions",
-          item.getFacility(), mainService.getProcessingDate(item), exp
-      );
-    }
+    LOGGER.error(
+        "Cannot convert Product Tracking form ({};{}) to OpenLMIS requisitions",
+        item.getFacility(), mainService.getProcessingDate(item), exp
+    );
   }
 
 }

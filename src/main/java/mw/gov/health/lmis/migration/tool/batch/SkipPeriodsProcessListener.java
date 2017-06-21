@@ -22,17 +22,15 @@ public class SkipPeriodsProcessListener
   @Override
   public void beforeProcess(String item) {
     startTime.set(LocalTime.now());
-    LOGGER.debug("Create skipped requisitions for facility: {}", item);
+    LOGGER.info("Create skipped requisitions for facility: {}", item);
   }
 
   @Override
   public void afterProcess(String item, List<Requisition> result) {
-    if (LOGGER.isInfoEnabled()) {
-      LOGGER.info(
-          "Created {} skipped requisitions for facility: {} in {}s",
-          result.size(), item, Duration.between(startTime.get(), LocalTime.now()).getSeconds()
-      );
-    }
+    LOGGER.info(
+        "Created {} skipped requisitions for facility: {} in {}s",
+        result.size(), item, Duration.between(startTime.get(), LocalTime.now()).getSeconds()
+    );
   }
 
   @Override

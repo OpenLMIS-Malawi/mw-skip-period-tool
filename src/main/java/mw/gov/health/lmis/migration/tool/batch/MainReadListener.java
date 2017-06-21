@@ -23,17 +23,15 @@ public class MainReadListener implements ItemReadListener<Main> {
 
   @Override
   public void afterRead(Main item) {
-    if (LOGGER.isInfoEnabled()) {
-      LOGGER.info(
-          "Read Product Tracking form ({};{})",
-          item.getFacility(), mainService.getProcessingDate(item)
-      );
-    }
+    LOGGER.info(
+        "Read Product Tracking form ({};{})",
+        item.getFacility(), mainService.getProcessingDate(item)
+    );
   }
 
   @Override
   public void onReadError(Exception exp) {
     LOGGER.error("Cannot read Product Tracking form", exp);
   }
-  
+
 }
