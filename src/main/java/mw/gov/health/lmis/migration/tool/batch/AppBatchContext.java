@@ -21,6 +21,8 @@ import mw.gov.health.lmis.migration.tool.scm.repository.ItemAccessRepository;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.TimeZone;
+import java.util.UUID;
+import java.util.function.Predicate;
 
 @Component
 final class AppBatchContext implements InitializingBean {
@@ -75,5 +77,29 @@ final class AppBatchContext implements InitializingBean {
     itemRepository.init();
 
     LOGGER.info("Initialized batch context...");
+  }
+
+  Program findProgram(Predicate<Program> predicate) {
+    return programs.stream().filter(predicate).findFirst().orElse(null);
+  }
+
+  Program findProgramById(UUID id) {
+    return programs.stream().filter(elem -> id.equals(elem.getId())).findFirst().orElse(null);
+  }
+
+  Program findProgramByCode(String code) {
+    return programs
+        .stream()
+        .filter(elem -> code.equals(elem.getCode().toString()))
+        .findFirst()
+        .orElse(null);
+  }
+
+  ProcessingPeriod findPeriod(Predicate<ProcessingPeriod> predicate) {
+    return periods.stream().filter(predicate).findFirst().orElse(null);
+  }
+
+  ProcessingPeriod findPeriodById(UUID id) {
+    return periods.stream().filter(elem -> id.equals(elem.getId())).findFirst().orElse(null);
   }
 }
