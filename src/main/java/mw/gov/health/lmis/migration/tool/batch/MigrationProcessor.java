@@ -111,12 +111,10 @@ public class MigrationProcessor implements ItemProcessor<Main, List<Requisition>
       return Lists.newArrayList();
     }
 
-    ProcessingPeriod period = context.getPeriods()
-        .stream()
-        .filter(elem -> !elem.getStartDate().isAfter(processingDate)
-            && !elem.getEndDate().isBefore(processingDate))
-        .findFirst()
-        .orElse(null);
+    ProcessingPeriod period = context.findPeriod(
+        elem -> !elem.getStartDate().isAfter(processingDate)
+            && !elem.getEndDate().isBefore(processingDate)
+    );
 
     if (null == period) {
       LOGGER.error("Can't find period for processing date {}", processingDate);
@@ -134,11 +132,7 @@ public class MigrationProcessor implements ItemProcessor<Main, List<Requisition>
 
   private Requisition create(String programCode, Collection<Item> items, Main main,
                              Facility facility, ProcessingPeriod period) {
-    Program program = context.getPrograms()
-        .stream()
-        .filter(elem -> programCode.equals(elem.getCode().toString()))
-        .findFirst()
-        .orElse(null);
+    Program program = context.findProgramByCode(programCode);
 
     if (null == program) {
       LOGGER.error("Can't find program with code {}", programCode);
@@ -191,7 +185,7 @@ public class MigrationProcessor implements ItemProcessor<Main, List<Requisition>
 
     User author = context.getUser();
     UUID authorId = author.getId();
-    
+
     requisition.getStatusChanges()
         .add(StatusChange.newStatusChange(requisition, authorId, INITIATED));
     requisition.getStatusChanges()

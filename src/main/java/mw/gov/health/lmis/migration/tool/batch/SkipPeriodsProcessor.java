@@ -26,6 +26,7 @@ import mw.gov.health.lmis.migration.tool.openlmis.requisition.repository.Requisi
 
 import java.time.ZoneId;
 import java.util.List;
+import java.util.UUID;
 
 @Component
 public class SkipPeriodsProcessor implements ItemProcessor<String, List<Requisition>> {
@@ -112,10 +113,12 @@ public class SkipPeriodsProcessor implements ItemProcessor<String, List<Requisit
     requisition.setStatus(SKIPPED);
     requisition.setRequisitionLineItems(Lists.newArrayList());
 
+    UUID authorId = context.getUser().getId();
+    
     requisition.getStatusChanges()
-        .add(StatusChange.newStatusChange(requisition, context.getUser().getId(), INITIATED));
+        .add(StatusChange.newStatusChange(requisition, authorId, INITIATED));
     requisition.getStatusChanges()
-        .add(StatusChange.newStatusChange(requisition, context.getUser().getId(), SKIPPED));
+        .add(StatusChange.newStatusChange(requisition, authorId, SKIPPED));
 
     return requisition;
   }

@@ -159,11 +159,7 @@ public class ItemConverter {
     AdjustmentType type = adjustmentTypeRepository.findByType(adjustment.getType());
     String name = MappingHelper.getAdjustmentName(toolProperties, type.getName());
 
-    Program program = context.getPrograms()
-        .stream()
-        .filter(elem -> requisition.getProgramId().equals(elem.getId()))
-        .findFirst()
-        .orElse(null);
+    Program program = context.findProgramById(requisition.getProgramId());
 
     if (null == program) {
       LOGGER.error("Can't find program with id {}", requisition.getProgramId());
