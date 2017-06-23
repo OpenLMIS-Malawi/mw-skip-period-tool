@@ -122,6 +122,19 @@ public class RequisitionGroupProgramSchedule extends BaseEntity {
   }
 
   /**
+   * Copy properties from the given instance.
+   *
+   * @param instance an instance whose properties will be applied to this object
+   */
+  public void updateFrom(RequisitionGroupProgramSchedule instance) {
+    requisitionGroup = instance.getRequisitionGroup();
+    program = instance.getProgram();
+    processingSchedule = instance.getProcessingSchedule();
+    directDelivery = instance.isDirectDelivery();
+    dropOffFacility = instance.getDropOffFacility();
+  }
+
+  /**
    * Export this object to the specified exporter (DTO).
    *
    * @param exporter exporter to export to

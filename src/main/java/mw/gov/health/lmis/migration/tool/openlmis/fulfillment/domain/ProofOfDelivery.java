@@ -18,19 +18,17 @@ package mw.gov.health.lmis.migration.tool.openlmis.fulfillment.domain;
 
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
-import mw.gov.health.lmis.migration.tool.openlmis.BaseEntity;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import mw.gov.health.lmis.migration.tool.openlmis.BaseEntity;
 
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
-import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -64,7 +62,7 @@ public class ProofOfDelivery extends BaseEntity {
   @OneToMany(
       mappedBy = "proofOfDelivery",
       cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.REMOVE},
-      fetch = FetchType.EAGER,
+      fetch = FetchType.LAZY,
       orphanRemoval = true)
   @Fetch(FetchMode.SELECT)
   @Getter
@@ -149,26 +147,6 @@ public class ProofOfDelivery extends BaseEntity {
         existing.updateFrom(item);
       }
     }
-  }
-
-  public boolean isSubmitted() {
-    return null != order && OrderStatus.RECEIVED == order.getStatus();
-  }
-
-  /**
-   * Finds a correct line item based on product id.
-   */
-  public ProofOfDeliveryLineItem findLineByProductId(UUID productId) {
-    if (null == proofOfDeliveryLineItems) {
-      return null;
-    }
-
-    return proofOfDeliveryLineItems
-        .stream()
-        .filter(e -> null != e.getOrderLineItem() && null != e.getOrderLineItem().getOrderableId())
-        .filter(e -> Objects.equals(productId, e.getOrderLineItem().getOrderableId()))
-        .findFirst()
-        .orElse(null);
   }
 
 }

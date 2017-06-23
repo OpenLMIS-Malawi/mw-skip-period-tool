@@ -17,10 +17,10 @@ package mw.gov.health.lmis.migration.tool.openlmis.requisition.domain;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
-import mw.gov.health.lmis.migration.tool.openlmis.BaseEntity;
 
 import lombok.Getter;
 import lombok.Setter;
+import mw.gov.health.lmis.migration.tool.openlmis.BaseEntity;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -45,7 +45,7 @@ public class AvailableRequisitionColumn extends BaseEntity {
 
   private String name;
 
-  @ElementCollection(fetch = FetchType.EAGER, targetClass = SourceType.class)
+  @ElementCollection(fetch = FetchType.LAZY, targetClass = SourceType.class)
   @Enumerated(EnumType.STRING)
   @Column(name = "value")
   @CollectionTable(
@@ -58,7 +58,7 @@ public class AvailableRequisitionColumn extends BaseEntity {
   @OneToMany(
       mappedBy = "requisitionColumn",
       cascade = {CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REFRESH, CascadeType.REMOVE},
-      fetch = FetchType.EAGER)
+      fetch = FetchType.LAZY)
   private Set<AvailableRequisitionColumnOption> options;
 
   private String label;

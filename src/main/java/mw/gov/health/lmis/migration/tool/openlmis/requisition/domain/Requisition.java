@@ -17,12 +17,12 @@ package mw.gov.health.lmis.migration.tool.openlmis.requisition.domain;
 
 import static java.util.Objects.isNull;
 import static mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.RequisitionLineItem.ADJUSTED_CONSUMPTION;
+import static mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.RequisitionLineItem.AVERAGE_CONSUMPTION;
+import static mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.RequisitionLineItem.CALCULATED_ORDER_QUANTITY;
 
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 
-import org.hibernate.annotations.Fetch;
-import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.Type;
 import org.joda.money.CurrencyUnit;
 import org.joda.money.Money;
@@ -83,9 +83,8 @@ public class Requisition extends BaseTimestampedEntity {
   @OneToMany(
       mappedBy = REQUISITION,
       cascade = {CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REFRESH, CascadeType.REMOVE},
-      fetch = FetchType.EAGER,
+      fetch = FetchType.LAZY,
       orphanRemoval = true)
-  @Fetch(FetchMode.SELECT)
   @Getter
   @Setter
   private List<RequisitionLineItem> requisitionLineItems;
@@ -173,9 +172,8 @@ public class Requisition extends BaseTimestampedEntity {
   @OneToMany(
       mappedBy = REQUISITION,
       cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.REMOVE},
-      fetch = FetchType.EAGER,
+      fetch = FetchType.LAZY,
       orphanRemoval = true)
-  @Fetch(FetchMode.SELECT)
   @Getter
   @Setter
   private List<StatusMessage> statusMessages;
@@ -204,7 +202,7 @@ public class Requisition extends BaseTimestampedEntity {
    * @param products orderable products that will be used by line items to update packs to ship.
    */
   public void submit(Collection<Orderable> products, UUID submitter) {
-    if (!ExternalStatus.INITIATED.equals(status)) {
+    if (!status.isSubmittable()) {
       throw new IllegalStateException();
     }
 
@@ -274,7 +272,7 @@ public class Requisition extends BaseTimestampedEntity {
    * Rejects given requisition.
    */
   public void reject(Collection<Orderable> products, UUID rejector) {
-    status = ExternalStatus.INITIATED;
+    status = ExternalStatus.REJECTED;
     updateConsumptions();
     updateTotalCostAndPacksToShip(products);
 
@@ -403,7 +401,7 @@ public class Requisition extends BaseTimestampedEntity {
    * Sets appropriate value for Previous Adjusted Consumptions field in
    * each {@link RequisitionLineItem}.
    */
-  public void setPreviousAdjustedConsumptions(int numberOfPreviousPeriodsToAverage) {
+  void setPreviousAdjustedConsumptions(int numberOfPreviousPeriodsToAverage) {
     List<RequisitionLineItem> previousRequisitionLineItems = RequisitionHelper
         .getNonSkippedLineItems(previousRequisitions.subList(0, numberOfPreviousPeriodsToAverage));
 
@@ -447,7 +445,7 @@ public class Requisition extends BaseTimestampedEntity {
       ));
     }
 
-    if (template.isColumnInTemplateAndDisplayed(RequisitionLineItem.AVERAGE_CONSUMPTION)) {
+    if (template.isColumnInTemplateAndDisplayed(AVERAGE_CONSUMPTION)) {
       getNonSkippedFullSupplyRequisitionLineItems().forEach(
           RequisitionLineItem::calculateAndSetAverageConsumption);
     }
@@ -463,7 +461,7 @@ public class Requisition extends BaseTimestampedEntity {
   }
 
   private void populateApprovedQuantity() {
-    if (template.isColumnDisplayed(RequisitionLineItem.CALCULATED_ORDER_QUANTITY)) {
+    if (template.isColumnDisplayed(CALCULATED_ORDER_QUANTITY)) {
       getNonSkippedRequisitionLineItems().forEach(line -> {
         if (isNull(line.getRequestedQuantity())) {
           line.setApprovedQuantity(line.getCalculatedOrderQuantity());

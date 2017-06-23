@@ -24,8 +24,10 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -160,15 +162,46 @@ public class RequisitionGroup extends BaseEntity {
     name = requisitionGroup.getName();
     description = requisitionGroup.getDescription();
     supervisoryNode = requisitionGroup.getSupervisoryNode();
+    memberFacilities = requisitionGroup.getMemberFacilities();
 
-    if (requisitionGroupProgramSchedules != null) {
-      requisitionGroupProgramSchedules.clear();
-    } else {
+    updateProgramSchedulesListFrom(requisitionGroup.getRequisitionGroupProgramSchedules());
+  }
+
+  private void updateProgramSchedulesListFrom(List<RequisitionGroupProgramSchedule> schedules) {
+    if (requisitionGroupProgramSchedules == null) {
       requisitionGroupProgramSchedules = new ArrayList<>();
     }
 
-    requisitionGroupProgramSchedules.addAll(requisitionGroup.getRequisitionGroupProgramSchedules());
-    memberFacilities = requisitionGroup.getMemberFacilities();
+    List<UUID> existentIds = requisitionGroupProgramSchedules
+        .stream().map(BaseEntity::getId).collect(Collectors.toList());
+
+    List<UUID> replacementIds = schedules
+        .stream().map(BaseEntity::getId).collect(Collectors.toList());
+
+    List<RequisitionGroupProgramSchedule> added = schedules
+        .stream()
+        .filter(schedule -> !existentIds.contains(schedule.getId()))
+        .collect(Collectors.toList());
+
+    List<RequisitionGroupProgramSchedule> removed = requisitionGroupProgramSchedules
+        .stream()
+        .filter(schedule -> !replacementIds.contains(schedule.getId()))
+        .collect(Collectors.toList());
+
+    requisitionGroupProgramSchedules.removeAll(removed);
+
+    for (RequisitionGroupProgramSchedule schedule : requisitionGroupProgramSchedules) {
+      Optional<RequisitionGroupProgramSchedule> replacement = schedules
+          .stream()
+          .filter(obj -> obj.getId().equals(schedule.getId()))
+          .findFirst();
+
+      if (replacement.isPresent()) {
+        schedule.updateFrom(replacement.get());
+      }
+    }
+
+    requisitionGroupProgramSchedules.addAll(added);
   }
 
   /**

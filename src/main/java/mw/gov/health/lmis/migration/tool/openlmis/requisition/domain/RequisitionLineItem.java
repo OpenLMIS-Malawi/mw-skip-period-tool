@@ -193,7 +193,7 @@ public class RequisitionLineItem extends BaseEntity {
 
   @OneToMany(
       cascade = {CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REFRESH, CascadeType.REMOVE},
-      fetch = FetchType.EAGER,
+      fetch = FetchType.LAZY,
       orphanRemoval = true)
   @Getter
   @Setter
@@ -457,7 +457,7 @@ public class RequisitionLineItem extends BaseEntity {
    * Sets appropriate value for Adjusted Consumption field in {@link RequisitionLineItem}.
    */
   private void calculateAndSetAdjustedConsumption(RequisitionTemplate template,
-                                                  Integer monthsInThePeriod) {
+                                                 Integer monthsInThePeriod) {
     if (template.isColumnInTemplate(ADJUSTED_CONSUMPTION)) {
       int calculated = calculateAdjustedConsumption(this, monthsInThePeriod);
 

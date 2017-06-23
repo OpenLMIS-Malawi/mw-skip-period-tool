@@ -132,7 +132,7 @@ public class Order extends BaseEntity {
   @OneToMany(
       mappedBy = "order",
       cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.REMOVE},
-      fetch = FetchType.EAGER,
+      fetch = FetchType.LAZY,
       orphanRemoval = true)
   @Fetch(FetchMode.SELECT)
   @Getter
@@ -142,7 +142,7 @@ public class Order extends BaseEntity {
   @OneToMany(
       mappedBy = "order",
       cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.REMOVE},
-      fetch = FetchType.EAGER,
+      fetch = FetchType.LAZY,
       orphanRemoval = true)
   @Fetch(FetchMode.SELECT)
   @Getter
@@ -152,7 +152,7 @@ public class Order extends BaseEntity {
   @OneToMany(
       mappedBy = "order",
       cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.REMOVE},
-      fetch = FetchType.EAGER,
+      fetch = FetchType.LAZY,
       orphanRemoval = true)
   @Getter
   @Setter
@@ -207,9 +207,8 @@ public class Order extends BaseEntity {
 
   public void forEachStatusChange(Consumer<StatusChange> consumer) {
     Optional.ofNullable(statusChanges)
-        .ifPresent(list -> list.forEach(consumer));
+            .ifPresent(list -> list.forEach(consumer));
   }
-
 
   /**
    * Creates new order instance based on requisition.
