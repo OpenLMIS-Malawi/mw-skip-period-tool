@@ -48,6 +48,14 @@ public final class OpenLmisNumberUtils extends NumberUtils {
     return null != value && 0 != value;
   }
 
+  public static boolean isNotZero(Long value) {
+    return null != value && 0L != value;
+  }
+
+  public static boolean isNotZero(BigDecimal value) {
+    return !BigDecimal.ZERO.equals(value);
+  }
+
   private static <N extends Number> N defaultIfNull(N number, N defaultNumber) {
     return ObjectUtils.defaultIfNull(number, defaultNumber);
   }

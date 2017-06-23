@@ -109,11 +109,43 @@ public class BatchConfiguration {
   }
 
   /**
+   * Configure Spring Batch Step that will remove duplicates from database.
+   */
+  @Bean
+  public Step removeDuplicatesStep(StepBuilderFactory stepBuilderFactory,
+                                   DuplicateReader reader,
+                                   DuplicateReadListener readerListener,
+                                   RequisitionRemover writer,
+                                   RequisitionRemoveListener writerListener,
+                                   DuplicateProcessor processor,
+                                   DuplicateProcessListener processorListener,
+                                   ToolProperties toolProperties)
+      throws IllegalAccessException, InstantiationException {
+    ToolBatchConfiguration batchProperties = toolProperties
+        .getConfiguration()
+        .getBatch();
+
+    return stepBuilderFactory
+        .get("removeDuplicatesStep")
+        .<List<Requisition>, List<Requisition>>chunk(batchProperties.getChunk())
+        .reader(reader)
+        .listener(readerListener)
+        .processor(processor)
+        .listener(processorListener)
+        .writer(writer)
+        .listener(writerListener)
+        .faultTolerant()
+        .skipPolicy(batchProperties.getSkipPolicy().newInstance())
+        .build();
+  }
+
+  /**
    * Configure Spring Batch Migration Job.
    */
   @Bean
   public Job migrationJob(JobBuilderFactory jobBuilderFactory, Step migrationStep,
-                          Step skipPeriodsStep, ToolProperties toolProperties) {
+                          Step removeDuplicatesStep, Step skipPeriodsStep,
+                          ToolProperties toolProperties) {
     JobBuilder job = jobBuilderFactory
         .get("migrationJob")
         .incrementer(new RunIdIncrementer());
@@ -126,6 +158,10 @@ public class BatchConfiguration {
 
     if (toolProperties.getConfiguration().getBatch().isSkipPeriods()) {
       builder.next(skipPeriodsStep);
+    }
+    
+    if (toolProperties.getConfiguration().getBatch().isRemoveDuplicates()) {
+      builder.next(removeDuplicatesStep);
     }
 
     return builder.build();
