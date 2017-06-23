@@ -11,17 +11,17 @@ public class FacilityReadListener implements ItemReadListener<String> {
 
   @Override
   public void beforeRead() {
-    LOGGER.debug("Read SCM facility");
+    LOGGER.debug("Read OpenLMIS facility");
   }
 
   @Override
   public void afterRead(String item) {
-    LOGGER.info("Read SCM facility: {}", item);
+    LOGGER.info("Read OpenLMIS facility: {}", item);
   }
 
   @Override
   public void onReadError(Exception exp) {
-    LOGGER.error("Cannot read SCM facility", exp);
+    LOGGER.error("Cannot read OpenLMIS facility", exp);
   }
 
 }

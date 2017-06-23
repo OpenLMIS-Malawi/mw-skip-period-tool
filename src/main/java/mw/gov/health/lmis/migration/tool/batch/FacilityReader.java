@@ -4,27 +4,38 @@ import org.springframework.batch.item.ItemReader;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import mw.gov.health.lmis.migration.tool.config.MappingHelper;
+import mw.gov.health.lmis.migration.tool.config.ToolProperties;
 import mw.gov.health.lmis.migration.tool.scm.domain.Facility;
 import mw.gov.health.lmis.migration.tool.scm.repository.FacilityAccessRepository;
 
-import java.util.LinkedList;
+import java.util.NavigableSet;
+import java.util.TreeSet;
+import java.util.stream.Collectors;
 
 @Component
 public class FacilityReader implements ItemReader<String> {
-  private static LinkedList<Facility> facilities = null;
+  private static NavigableSet<String> facilities = null;
 
   @Autowired
   private FacilityAccessRepository facilityRepository;
+
+  @Autowired
+  private ToolProperties toolProperties;
 
   @Override
   public synchronized String read() {
     synchronized (FacilityReader.class) {
       if (null == facilities) {
-        facilities = new LinkedList<>(facilityRepository.findAll());
+        facilities = facilityRepository
+            .findAll()
+            .stream()
+            .map(Facility::getCode)
+            .map(code -> MappingHelper.getFacilityCode(toolProperties, code))
+            .collect(Collectors.toCollection(TreeSet::new));
       }
 
-      Facility facility = facilities.pollFirst();
-      return null == facility ? null : facility.getCode();
+      return facilities.pollFirst();
     }
   }
 

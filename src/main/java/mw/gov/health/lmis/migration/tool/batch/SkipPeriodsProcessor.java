@@ -12,7 +12,6 @@ import org.springframework.batch.item.ItemProcessor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import mw.gov.health.lmis.migration.tool.config.MappingHelper;
 import mw.gov.health.lmis.migration.tool.config.ToolProperties;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.Facility;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.ProcessingPeriod;
@@ -51,25 +50,33 @@ public class SkipPeriodsProcessor implements ItemProcessor<String, List<Requisit
   public List<Requisition> process(String item) throws Exception {
     List<Requisition> requisitions = Lists.newArrayList();
 
-    String code = MappingHelper.getFacilityCode(toolProperties, item);
-    Facility facility = facilityRepository.findByCode(code);
+    Facility facility = facilityRepository.findByCode(item);
 
     if (null == facility) {
-      LOGGER.error("Can't find facility with code {}", code);
+      LOGGER.error("Can't find facility with code {}", item);
       return requisitions;
     }
 
-    context.getPeriods()
-        .parallelStream()
-        .forEach(period -> context.getPrograms()
-            .parallelStream()
-            .forEach(program -> execute(requisitions, facility, period, program)));
+    for (int i = 0, programSize = context.getPrograms().size(); i < programSize; ++i) {
+      Program program = context.getPrograms().get(i);
+
+      for (int j = 0, periodSize = context.getPeriods().size(); j < periodSize; ++j) {
+        ProcessingPeriod period = context.getPeriods().get(j);
+        Requisition requisition = createIfPossible(facility, period, program);
+
+        if (null == requisition) {
+          continue;
+        }
+
+        requisitions.add(requisition);
+      }
+    }
 
     return requisitions;
   }
 
-  private void execute(List<Requisition> requisitions, Facility facility, ProcessingPeriod period,
-                       Program program) {
+  private Requisition createIfPossible(Facility facility, ProcessingPeriod period,
+                                       Program program) {
     boolean database = requisitionRepository
         .existsByFacilityIdAndProgramIdAndProcessingPeriodId(
             facility.getId(), program.getId(), period.getId()
@@ -80,15 +87,15 @@ public class SkipPeriodsProcessor implements ItemProcessor<String, List<Requisit
           "Requisition for facility {}, program {} and period {} exists. Skipping...",
           facility.getCode(), program.getCode(), period.getName()
       );
-      return;
+      return null;
     }
 
     if (!program.getPeriodsSkippable()) {
       LOGGER.error("Program {} does not allow to skipping periods", program.getCode());
-      return;
+      return null;
     }
 
-    requisitions.add(create(facility, period, program));
+    return create(facility, period, program);
   }
 
   private Requisition create(Facility facility, ProcessingPeriod period, Program program) {
@@ -114,7 +121,7 @@ public class SkipPeriodsProcessor implements ItemProcessor<String, List<Requisit
     requisition.setRequisitionLineItems(Lists.newArrayList());
 
     UUID authorId = context.getUser().getId();
-    
+
     requisition.getStatusChanges()
         .add(StatusChange.newStatusChange(requisition, authorId, INITIATED));
     requisition.getStatusChanges()
