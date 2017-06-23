@@ -2,6 +2,7 @@ package mw.gov.health.lmis.migration.tool.batch;
 
 import static mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.OpenLmisNumberUtils.isNotZero;
 
+import org.apache.commons.lang.ArrayUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.batch.item.ItemProcessor;
@@ -10,12 +11,35 @@ import org.springframework.stereotype.Component;
 import mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.Requisition;
 import mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.RequisitionLineItem;
 
+import java.beans.BeanInfo;
+import java.beans.IntrospectionException;
+import java.beans.Introspector;
+import java.beans.PropertyDescriptor;
+import java.lang.reflect.InvocationTargetException;
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Component
 public class DuplicateProcessor implements ItemProcessor<List<Requisition>, List<Requisition>> {
   private static final Logger LOGGER = LoggerFactory.getLogger(DuplicateProcessor.class);
+  private static final PropertyDescriptor[] RLI_DESCRIPTORS;
+  private static final String[] FIELDS = new String[]{
+      "beginningBalance", "totalReceivedQuantity", "totalLossesAndAdjustments", "stockOnHand",
+      "requestedQuantity", "totalConsumedQuantity", "total", "approvedQuantity",
+      "totalStockoutDays", "packsToShip", "numberOfNewPatientsAdded", "adjustedConsumption",
+      "averageConsumption", "maximumStockQuantity", "calculatedOrderQuantity"
+  };
+
+  static {
+    try {
+      BeanInfo beanInfo = Introspector.getBeanInfo(RequisitionLineItem.class);
+      RLI_DESCRIPTORS = beanInfo.getPropertyDescriptors();
+    } catch (IntrospectionException exp) {
+      LOGGER.error("An exception occurs during introspection", exp);
+      throw new ExceptionInInitializerError(exp);
+    }
+  }
 
   @Override
   public List<Requisition> process(List<Requisition> item) throws Exception {
@@ -41,86 +65,35 @@ public class DuplicateProcessor implements ItemProcessor<List<Requisition>, List
   }
 
   private boolean isEmpty(RequisitionLineItem line) {
-    if (isNotZero(line.getBeginningBalance())) {
-      logContainsNonZeroValue("beginningBalance");
-      return false;
-    }
-
-    if (isNotZero(line.getTotalReceivedQuantity())) {
-      logContainsNonZeroValue("totalReceivedQuantity");
-      return false;
-    }
-
-    if (isNotZero(line.getTotalLossesAndAdjustments())) {
-      logContainsNonZeroValue("totalLossesAndAdjustments");
-      return false;
-    }
-
-    if (isNotZero(line.getStockOnHand())) {
-      logContainsNonZeroValue("stockOnHand");
-      return false;
-    }
-
-    if (isNotZero(line.getRequestedQuantity())) {
-      logContainsNonZeroValue("requestedQuantity");
-      return false;
-    }
-
-    if (isNotZero(line.getTotalConsumedQuantity())) {
-      logContainsNonZeroValue("totalConsumedQuantity");
-      return false;
-    }
-
-    if (isNotZero(line.getTotal())) {
-      logContainsNonZeroValue("total");
-      return false;
-    }
-
-    if (isNotZero(line.getApprovedQuantity())) {
-      logContainsNonZeroValue("approvedQuantity");
-      return false;
-    }
-
-    if (isNotZero(line.getTotalStockoutDays())) {
-      logContainsNonZeroValue("totalStockoutDays");
-      return false;
-    }
-
-    if (isNotZero(line.getPacksToShip())) {
-      logContainsNonZeroValue("packsToShip");
-      return false;
-    }
-
-    if (isNotZero(line.getNumberOfNewPatientsAdded())) {
-      logContainsNonZeroValue("numberOfNewPatientsAdded");
-      return false;
-    }
-
-    if (isNotZero(line.getAdjustedConsumption())) {
-      logContainsNonZeroValue("adjustedConsumption");
-      return false;
-    }
-
-    if (isNotZero(line.getAverageConsumption())) {
-      logContainsNonZeroValue("averageConsumption");
-      return false;
-    }
-
-    if (isNotZero(line.getMaximumStockQuantity())) {
-      logContainsNonZeroValue("maximumStockQuantity");
-      return false;
-    }
-
-    if (isNotZero(line.getCalculatedOrderQuantity())) {
-      logContainsNonZeroValue("calculatedOrderQuantity");
-      return false;
+    try {
+      for (PropertyDescriptor descriptor : RLI_DESCRIPTORS) {
+        if (ArrayUtils.contains(FIELDS, descriptor.getName())
+            && containsValue(line, descriptor)) {
+          return false;
+        }
+      }
+    } catch (IllegalAccessException | InvocationTargetException exp) {
+      LOGGER.error("An exception occurs during reading the field", exp);
     }
 
     return true;
   }
 
-  private void logContainsNonZeroValue(String field) {
-    LOGGER.info("The '{}' field contains a non-zero value", field);
+  private boolean containsValue(RequisitionLineItem line, PropertyDescriptor descriptor)
+      throws IllegalAccessException, InvocationTargetException {
+    Class<?> propertyType = descriptor.getPropertyType();
+    Number value = Number.class.isAssignableFrom(propertyType)
+        ? (Number) descriptor.getReadMethod().invoke(line)
+        : 0;
+
+    if (value instanceof Integer && isNotZero((Integer) value)
+        || value instanceof Long && isNotZero((Long) value)
+        || value instanceof BigDecimal && isNotZero((BigDecimal) value)) {
+      LOGGER.info("The '{}' field contains a non-zero value", descriptor.getName());
+      return true;
+    }
+
+    return false;
   }
 
 }
