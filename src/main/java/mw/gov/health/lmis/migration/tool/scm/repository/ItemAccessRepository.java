@@ -20,7 +20,7 @@ import java.util.List;
 
 @Repository
 public class ItemAccessRepository extends BaseAccessRepository<Item> {
-  private Table<String, Date, ItemDetails> table = HashBasedTable.create();
+  private Table<String, Date, FormDetails> table = HashBasedTable.create();
 
   /**
    * Prepare data that would speed up search process.
@@ -36,10 +36,10 @@ public class ItemAccessRepository extends BaseAccessRepository<Item> {
       while ((row = cursor.getNextRow()) != null) {
         Item element = mapRow(row);
 
-        ItemDetails details = table.get(element.getFacility(), element.getProcessingDate());
+        FormDetails details = table.get(element.getFacility(), element.getProcessingDate());
 
         if (null == details) {
-          details = new ItemDetails();
+          details = new FormDetails();
           details.first = rows;
           details.count = 1;
 
@@ -61,7 +61,7 @@ public class ItemAccessRepository extends BaseAccessRepository<Item> {
    * Find items with the given processing date and facility.
    */
   public List<Item> search(java.util.Date processingDate, String facility) {
-    ItemDetails details = table.get(facility, processingDate);
+    FormDetails details = table.get(facility, processingDate);
 
     if (null == details) {
       return Lists.newArrayList();
@@ -85,7 +85,7 @@ public class ItemAccessRepository extends BaseAccessRepository<Item> {
     return new Item(row);
   }
 
-  public static final class ItemDetails {
+  public static final class FormDetails {
     private int first;
     private int count;
   }
