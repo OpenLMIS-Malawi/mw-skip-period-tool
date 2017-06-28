@@ -41,6 +41,10 @@ public class RequisitionUtil {
     throw new UnsupportedOperationException();
   }
 
+  /**
+   * Checks if the given requisition is empty. An empty requisition is when all line items contain
+   * only zero value in all columns.
+   */
   public static boolean isEmpty(Requisition requisition) {
     List<RequisitionLineItem> lines = requisition.getRequisitionLineItems();
     int lineCount = lines.size();
