@@ -156,14 +156,14 @@ public class BatchConfiguration {
       builder.next(migrationStep);
     }
 
-    if (toolProperties.getConfiguration().getBatch().isSkipPeriods()) {
-      builder.next(skipPeriodsStep);
-    }
-    
     if (toolProperties.getConfiguration().getBatch().isRemoveDuplicates()) {
       builder.next(removeDuplicatesStep);
     }
 
+    if (toolProperties.getConfiguration().getBatch().isSkipPeriods()) {
+      builder.next(skipPeriodsStep);
+    }
+    
     return builder.build();
   }
 
