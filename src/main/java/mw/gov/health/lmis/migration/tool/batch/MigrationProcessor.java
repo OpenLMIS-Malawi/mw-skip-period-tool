@@ -9,6 +9,7 @@ import static org.springframework.util.CollectionUtils.isEmpty;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
+import org.apache.commons.lang3.ObjectUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.batch.item.ItemProcessor;
@@ -40,6 +41,7 @@ import mw.gov.health.lmis.migration.tool.scm.service.MainService;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
@@ -142,7 +144,7 @@ public class MigrationProcessor implements ItemProcessor<Main, List<Requisition>
           "Created empty requisition (all lines have zero for all columns). Skipping..."
       );
     }
-    
+
     return !isEmpty;
   }
 
@@ -184,7 +186,9 @@ public class MigrationProcessor implements ItemProcessor<Main, List<Requisition>
     requisition.setCreatedDate(convert(main.getModifiedDate(), period.getStartDate()));
     requisition.setModifiedDate(convert(main.getModifiedDate(), period.getEndDate()));
     requisition.setStatus(APPROVED);
-    requisition.setRequisitionLineItems(itemConverter.convert(items, requisition));
+    requisition.setRequisitionLineItems(
+        itemConverter.convert(items, requisition, getRecentRequisition(requisition))
+    );
 
     List<RequisitionGroupProgramSchedule> schedule = requisitionGroupProgramScheduleRepository
         .findByProgramAndFacility(program.getId(), facility.getId());
@@ -230,6 +234,45 @@ public class MigrationProcessor implements ItemProcessor<Main, List<Requisition>
     }
 
     return null;
+  }
+
+  private Requisition getRecentRequisition(Requisition requisition) {
+    ProcessingPeriod previousPeriod = findPreviousPeriod(requisition.getProcessingPeriodId());
+
+    if (null == previousPeriod) {
+      return null;
+    }
+
+    List<Requisition> requisitionsByPeriod = requisitionRepository
+        .findByFacilityIdAndProgramIdAndProcessingPeriodId(
+            requisition.getFacilityId(), requisition.getProgramId(), previousPeriod.getId()
+        );
+
+    return requisitionsByPeriod.isEmpty() ? null : requisitionsByPeriod.get(0);
+  }
+
+  private ProcessingPeriod findPreviousPeriod(UUID periodId) {
+    ProcessingPeriod period = context.findPeriodById(periodId);
+
+    if (null == period) {
+      return null;
+    }
+
+    List<ProcessingPeriod> collection = context
+        .searchPeriods(period.getProcessingSchedule(), period.getStartDate());
+
+    if (null == collection || collection.isEmpty()) {
+      return null;
+    }
+
+    // create a list...
+    List<ProcessingPeriod> list = new ArrayList<>(collection);
+    // ...remove the latest period from the list...
+    list.removeIf(p -> p.getId().equals(periodId));
+    // .. and sort elements by startDate property DESC.
+    list.sort((one, two) -> ObjectUtils.compare(two.getStartDate(), one.getStartDate()));
+
+    return list.isEmpty() ? null : list.get(0);
   }
 
 }

@@ -11,6 +11,7 @@ import org.springframework.stereotype.Component;
 import lombok.Getter;
 import mw.gov.health.lmis.migration.tool.config.ToolProperties;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.ProcessingPeriod;
+import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.ProcessingSchedule;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.Program;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.User;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.ProcessingPeriodRepository;
@@ -24,6 +25,7 @@ import java.util.List;
 import java.util.TimeZone;
 import java.util.UUID;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 @Component
 final class AppBatchContext implements InitializingBean {
@@ -106,5 +108,13 @@ final class AppBatchContext implements InitializingBean {
 
   ProcessingPeriod findPeriodById(UUID id) {
     return periods.stream().filter(elem -> id.equals(elem.getId())).findFirst().orElse(null);
+  }
+
+  List<ProcessingPeriod> searchPeriods(ProcessingSchedule schedule, LocalDate startDate) {
+    return periods
+        .stream()
+        .filter(elem -> schedule.equals(elem.getProcessingSchedule())
+            && !elem.getStartDate().isAfter(startDate))
+        .collect(Collectors.toList());
   }
 }

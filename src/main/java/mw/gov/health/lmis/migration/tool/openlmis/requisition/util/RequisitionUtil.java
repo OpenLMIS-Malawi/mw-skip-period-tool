@@ -77,7 +77,7 @@ public class RequisitionUtil {
     if (value instanceof Integer && isNotZero((Integer) value)
         || value instanceof Long && isNotZero((Long) value)
         || value instanceof BigDecimal && isNotZero((BigDecimal) value)) {
-      LOGGER.info("The '{}' field contains a non-zero value", descriptor.getName());
+      LOGGER.debug("The '{}' field contains a non-zero value", descriptor.getName());
       return true;
     }
 

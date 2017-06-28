@@ -1,6 +1,7 @@
 package mw.gov.health.lmis.migration.tool.batch;
 
 import static mw.gov.health.lmis.migration.tool.openlmis.CurrencyConfig.CURRENCY_CODE;
+import static mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.LineItemFieldsCalculator.calculateBeginningBalance;
 import static mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.LineItemFieldsCalculator.calculateTotalLossesAndAdjustments;
 import static mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.OpenLmisNumberUtils.zeroIfNull;
 import static mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.RequisitionLineItem.PRICE_PER_PACK_IF_NULL;
@@ -73,18 +74,19 @@ public class ItemConverter {
   /**
    * Converts {@link Item} object into {@link RequisitionLineItem} object.
    */
-  public List<RequisitionLineItem> convert(Collection<Item> items, Requisition requisition) {
+  public List<RequisitionLineItem> convert(Collection<Item> items, Requisition requisition,
+                                           Requisition previous) {
     List<Integer> ids = items.stream().map(Item::getId).collect(Collectors.toList());
     Map<Integer, List<Adjustment>> adjustments = adjustmentRepository.search(ids);
 
     return items
         .parallelStream()
-        .map(item -> convert(item, requisition, adjustments.get(item.getId())))
+        .map(item -> convert(item, requisition, previous, adjustments.get(item.getId())))
         .filter(Objects::nonNull)
         .collect(Collectors.toList());
   }
 
-  private RequisitionLineItem convert(Item item, Requisition requisition,
+  private RequisitionLineItem convert(Item item, Requisition requisition, Requisition previous,
                                       List<Adjustment> adjustments) {
     Optional<String> productCode = productService.getProductCode(item.getProduct());
 
@@ -111,6 +113,12 @@ public class ItemConverter {
     );
 
     requisitionLineItem.setSkipped(false);
+
+    if (null != previous) {
+      requisitionLineItem.setBeginningBalance(
+          calculateBeginningBalance(previous.findLineByProductId(orderable.getId()))
+      );
+    }
 
     requisitionLineItem.setTotalReceivedQuantity(item.getReceipts());
     requisitionLineItem.setTotalConsumedQuantity(item.getDispensedQuantity());
