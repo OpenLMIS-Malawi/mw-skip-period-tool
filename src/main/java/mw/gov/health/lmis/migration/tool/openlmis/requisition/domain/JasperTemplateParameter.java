@@ -107,7 +107,7 @@ public class JasperTemplateParameter extends BaseEntity {
   @OneToMany(
       mappedBy = "parameter",
       cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.REMOVE},
-      fetch = FetchType.LAZY,
+      fetch = FetchType.EAGER,
       orphanRemoval = true)
   @Getter
   @Setter

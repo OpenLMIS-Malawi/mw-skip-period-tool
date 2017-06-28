@@ -132,7 +132,7 @@ public class Order extends BaseEntity {
   @OneToMany(
       mappedBy = "order",
       cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.REMOVE},
-      fetch = FetchType.LAZY,
+      fetch = FetchType.EAGER,
       orphanRemoval = true)
   @Fetch(FetchMode.SELECT)
   @Getter
@@ -142,7 +142,7 @@ public class Order extends BaseEntity {
   @OneToMany(
       mappedBy = "order",
       cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.REMOVE},
-      fetch = FetchType.LAZY,
+      fetch = FetchType.EAGER,
       orphanRemoval = true)
   @Fetch(FetchMode.SELECT)
   @Getter
@@ -152,7 +152,7 @@ public class Order extends BaseEntity {
   @OneToMany(
       mappedBy = "order",
       cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.REMOVE},
-      fetch = FetchType.LAZY,
+      fetch = FetchType.EAGER,
       orphanRemoval = true)
   @Getter
   @Setter

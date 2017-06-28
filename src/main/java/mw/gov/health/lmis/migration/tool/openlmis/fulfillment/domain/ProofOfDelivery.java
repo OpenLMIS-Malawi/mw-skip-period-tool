@@ -62,7 +62,7 @@ public class ProofOfDelivery extends BaseEntity {
   @OneToMany(
       mappedBy = "proofOfDelivery",
       cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.REMOVE},
-      fetch = FetchType.LAZY,
+      fetch = FetchType.EAGER,
       orphanRemoval = true)
   @Fetch(FetchMode.SELECT)
   @Getter

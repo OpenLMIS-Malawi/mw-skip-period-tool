@@ -45,7 +45,7 @@ public class AvailableRequisitionColumn extends BaseEntity {
 
   private String name;
 
-  @ElementCollection(fetch = FetchType.LAZY, targetClass = SourceType.class)
+  @ElementCollection(fetch = FetchType.EAGER, targetClass = SourceType.class)
   @Enumerated(EnumType.STRING)
   @Column(name = "value")
   @CollectionTable(
@@ -58,7 +58,7 @@ public class AvailableRequisitionColumn extends BaseEntity {
   @OneToMany(
       mappedBy = "requisitionColumn",
       cascade = {CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REFRESH, CascadeType.REMOVE},
-      fetch = FetchType.LAZY)
+      fetch = FetchType.EAGER)
   private Set<AvailableRequisitionColumnOption> options;
 
   private String label;
