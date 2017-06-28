@@ -25,7 +25,7 @@ public final class MappingHelper {
     return toolProperties
         .getMapping()
         .getFacilities()
-        .getProperty(defaultCode, defaultCode);
+        .getOrDefault(defaultCode, defaultCode);
   }
 
   /**
