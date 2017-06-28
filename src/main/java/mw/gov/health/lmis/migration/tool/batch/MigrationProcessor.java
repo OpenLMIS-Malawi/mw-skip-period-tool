@@ -31,6 +31,7 @@ import mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.StatusChang
 import mw.gov.health.lmis.migration.tool.openlmis.requisition.repository.RequisitionRepository;
 import mw.gov.health.lmis.migration.tool.openlmis.requisition.repository.RequisitionTemplateRepository;
 import mw.gov.health.lmis.migration.tool.openlmis.requisition.service.RequisitionService;
+import mw.gov.health.lmis.migration.tool.openlmis.requisition.util.RequisitionUtil;
 import mw.gov.health.lmis.migration.tool.scm.domain.Item;
 import mw.gov.health.lmis.migration.tool.scm.domain.Main;
 import mw.gov.health.lmis.migration.tool.scm.service.ItemService;
@@ -42,7 +43,6 @@ import java.time.ZonedDateTime;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
-import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -126,8 +126,24 @@ public class MigrationProcessor implements ItemProcessor<Main, List<Requisition>
         .entrySet()
         .parallelStream()
         .map(entry -> create(entry.getKey(), entry.getValue(), item, facility, period))
-        .filter(Objects::nonNull)
+        .filter(this::isCorrect)
         .collect(Collectors.toList());
+  }
+
+  private boolean isCorrect(Requisition requisition) {
+    if (null == requisition) {
+      return false;
+    }
+
+    boolean isEmpty = RequisitionUtil.isEmpty(requisition);
+
+    if (isEmpty) {
+      LOGGER.warn(
+          "Created empty requisition (all lines have zero for all columns). Skipping..."
+      );
+    }
+    
+    return !isEmpty;
   }
 
   private Requisition create(String programCode, Collection<Item> items, Main main,
