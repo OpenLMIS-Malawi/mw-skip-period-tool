@@ -10,6 +10,10 @@ public class ToolExcludeForm {
   private String period;
   private String program;
 
+  /**
+   * Checks if this exclude form entry match the given facility, period and program.
+   */
+  @SuppressWarnings("PMD.CyclomaticComplexity")
   public boolean match(String facility, String period, String program) {
     if (null == this.facility && null == this.period && null == this.program) {
       return false;
