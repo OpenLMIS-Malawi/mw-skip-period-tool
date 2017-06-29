@@ -41,6 +41,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.UUID;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Component
@@ -81,13 +83,74 @@ public class ItemConverter {
 
     return items
         .parallelStream()
-        .map(item -> convert(item, requisition, previous, adjustments.get(item.getId())))
+        .map(item -> create(item, requisition, previous, adjustments.get(item.getId())))
         .filter(Objects::nonNull)
+        .collect(Collectors.groupingBy(RequisitionLineItem::getOrderableId))
+        .entrySet()
+        .parallelStream()
+        .map(entry -> merge(requisition, entry.getKey(), entry.getValue()))
         .collect(Collectors.toList());
   }
 
-  private RequisitionLineItem convert(Item item, Requisition requisition, Requisition previous,
-                                      List<Adjustment> adjustments) {
+  private RequisitionLineItem merge(Requisition requisition, UUID orderable,
+                                    List<RequisitionLineItem> lines) {
+    RequisitionLineItem merged = new RequisitionLineItem();
+    merged.setStockAdjustments(Lists.newArrayList());
+    merged.setPreviousAdjustedConsumptions(Lists.newArrayList());
+    merged.setRequisition(requisition);
+    merged.setOrderableId(orderable);
+    merged.setPricePerPack(
+        Money.of(CurrencyUnit.of(CURRENCY_CODE), PRICE_PER_PACK_IF_NULL)
+    );
+    merged.setSkipped(false);
+
+    merged.setBeginningBalance(sum(lines, RequisitionLineItem::getBeginningBalance));
+    merged.setTotalReceivedQuantity(sum(lines, RequisitionLineItem::getTotalReceivedQuantity));
+    merged.setTotalConsumedQuantity(sum(lines, RequisitionLineItem::getTotalConsumedQuantity));
+    merged.setStockAdjustments(mergeList(lines, RequisitionLineItem::getStockAdjustments));
+    merged.setTotalLossesAndAdjustments(
+        sum(lines, RequisitionLineItem::getTotalLossesAndAdjustments)
+    );
+    merged.setTotalStockoutDays(sum(lines, RequisitionLineItem::getTotalStockoutDays));
+    merged.setStockOnHand(sum(lines, RequisitionLineItem::getStockOnHand));
+    merged.setCalculatedOrderQuantity(sum(lines, RequisitionLineItem::getCalculatedOrderQuantity));
+    merged.setRequestedQuantity(sum(lines, RequisitionLineItem::getRequestedQuantity));
+    merged.setRequestedQuantityExplanation(
+        toolProperties.getParameters().getRequestedQuantityExplanation()
+    );
+    merged.setAdjustedConsumption(sum(lines, RequisitionLineItem::getAdjustedConsumption));
+    merged.setNonFullSupply(false);
+    merged.setApprovedQuantity(sum(lines, RequisitionLineItem::getApprovedQuantity));
+    merged.setMaxPeriodsOfStock(getMonthsOfStock(merged));
+
+    String remarks = join(lines, RequisitionLineItem::getRemarks);
+
+    if (length(remarks) > 250) {
+      LOGGER.warn("The remarks ({}) are too long. Skipping...", remarks);
+    } else {
+      merged.setRemarks(remarks);
+    }
+
+    return merged;
+  }
+
+  private int sum(List<RequisitionLineItem> lines,
+                  Function<RequisitionLineItem, Integer> field) {
+    return lines.stream().map(field).filter(Objects::nonNull).reduce(0, Integer::sum);
+  }
+
+  private String join(List<RequisitionLineItem> lines,
+                      Function<RequisitionLineItem, String> field) {
+    return lines.stream().map(field).filter(Objects::nonNull).collect(Collectors.joining("; "));
+  }
+
+  private <T> List<T> mergeList(List<RequisitionLineItem> lines,
+                                Function<RequisitionLineItem, List<T>> field) {
+    return lines.stream().map(field).flatMap(Collection::stream).collect(Collectors.toList());
+  }
+
+  private RequisitionLineItem create(Item item, Requisition requisition, Requisition previous,
+                                     List<Adjustment> adjustments) {
     Optional<String> productCode = productService.getProductCode(item.getProduct());
 
     if (!productCode.isPresent()) {
