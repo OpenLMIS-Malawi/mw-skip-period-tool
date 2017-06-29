@@ -31,12 +31,14 @@ tool:
     parameters:
     configuration:
     mapping:
+    exclude:
 ```
 This section is used only by the tool and it is devided into smaller sections
 * tableNames - set appropriate table name for tables that wre used by the tool.
 * parameters - parameters that would be used during ETL process.
 * configuration - this section contains details about SCM/OpenLMIS databases and additionally Spring Batch settins
 * mapping - in this section a user can change the way SCM data will be handled. For example if SCM facility code need to be changed before it will be used then the user should add single line which will say that the given facility code should changed to another facility code.
+* exclude - set what data should be excluded by the migration tool.
 
 #### parameters section
 ```
@@ -129,3 +131,18 @@ The following list presents available mapping:
 * products - define a key-value pair for each SCM product name/code to find a proper OpenLMSI product by code.
 * stockAdjustmentReasons - define a key-value pair for each SCM stock adjustment reason to find a proper OpenLMIS stock adjustment reason.
 * categoryProductJoins - define a key-value pair of Category Product Join IDs. This mapping will be used only if the tool will not be able to find correct CPJ instance based on data from the Item table. If the CPJ exists, the tool will not use the related mapping.
+
+#### exclude section
+```
+tool:
+    exclude:
+        forms:
+            - facility:
+              period:
+              program:
+        products:
+```
+The following list presents available excludes:
+
+* forms - define for which facility, period and program requisition should not be created. It is required to define at least one field. If the given field is empty then it is equal to match all values for this field. For example if program field is empty then there will be no requisitions for the given facility in the given period for all available programs.
+* products - define a list of product codes that should be excluded.
