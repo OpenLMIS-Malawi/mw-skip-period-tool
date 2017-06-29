@@ -137,10 +137,13 @@ The following list presents available mapping:
 tool:
     exclude:
         forms:
-            - facility:
-              period:
-              program:
+            - facility: string
+              period: string
+              program: string
         products:
+            - string
+            - string
+            - ...
 ```
 The following list presents available excludes:
 
