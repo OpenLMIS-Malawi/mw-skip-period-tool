@@ -158,6 +158,12 @@ public class ItemConverter {
     }
 
     String productCodeValue = productCode.get();
+
+    if (toolProperties.getExclude().getProducts().contains(productCodeValue)) {
+      LOGGER.warn("The product code {} is on exclude list. Skipping...", productCodeValue);
+      return null;
+    }
+
     Code orderableCode = new Code(productCodeValue);
     OnlyId orderable = orderableRepository.findFirstByProductCode(orderableCode);
 

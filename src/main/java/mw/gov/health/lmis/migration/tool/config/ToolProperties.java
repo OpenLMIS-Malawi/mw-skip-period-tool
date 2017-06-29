@@ -15,4 +15,5 @@ public class ToolProperties {
   private ToolConfiguration configuration = new ToolConfiguration();
   private ToolMapping mapping = new ToolMapping();
   private ToolTableNames tableNames = new ToolTableNames();
+  private ToolExclude exclude = new ToolExclude();
 }

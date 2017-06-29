@@ -157,6 +157,20 @@ public class MigrationProcessor implements ItemProcessor<Main, List<Requisition>
       return null;
     }
 
+    boolean exclude = toolProperties
+        .getExclude()
+        .getForms()
+        .stream()
+        .anyMatch(form -> form.match(facility.getCode(), period.getName(), program.getCodeValue()));
+
+    if (exclude) {
+      LOGGER.warn(
+          "Requisition for facility {}, program {} and period {} is on exclude list. Skipping...",
+          facility.getCode(), program.getCode(), period.getName()
+      );
+      return null;
+    }
+
     boolean database = requisitionRepository
         .existsByFacilityIdAndProgramIdAndProcessingPeriodId(
             facility.getId(), program.getId(), period.getId()

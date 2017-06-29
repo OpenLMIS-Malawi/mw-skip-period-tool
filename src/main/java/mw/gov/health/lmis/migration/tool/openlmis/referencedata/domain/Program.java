@@ -22,6 +22,7 @@ import lombok.Setter;
 import mw.gov.health.lmis.migration.tool.openlmis.BaseEntity;
 
 import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
 
 import javax.persistence.Column;
@@ -90,6 +91,10 @@ public class Program extends BaseEntity {
     if (this.periodsSkippable == null) {
       this.periodsSkippable = false;
     }
+  }
+
+  public String getCodeValue() {
+    return Optional.ofNullable(code).orElse(new Code()).toString();
   }
 
   /**

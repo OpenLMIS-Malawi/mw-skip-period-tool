@@ -108,3 +108,6 @@ tool:
         categoryProductJoins:
             10: 20
             15: 30
+    exclude:
+        forms:
+        products:
