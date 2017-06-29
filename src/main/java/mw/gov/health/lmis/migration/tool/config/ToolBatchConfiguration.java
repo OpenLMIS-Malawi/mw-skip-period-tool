@@ -12,6 +12,6 @@ public class ToolBatchConfiguration {
   private Integer chunk = 10;
   private Class<? extends SkipPolicy> skipPolicy = AlwaysSkipItemSkipPolicy.class;
   private boolean migration = true;
-  private boolean removeDuplicates = true;
+  private boolean removeDuplicates = false;
   private boolean skipPeriods = true;
 }
