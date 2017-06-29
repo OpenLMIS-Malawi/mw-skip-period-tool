@@ -110,4 +110,7 @@ tool:
             15: 30
     exclude:
         forms:
+            - facility:
+              period:
+              program:
         products:
