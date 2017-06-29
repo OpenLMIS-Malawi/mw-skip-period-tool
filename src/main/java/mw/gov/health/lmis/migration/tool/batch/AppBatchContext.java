@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
 import lombok.Getter;
@@ -17,8 +18,7 @@ import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.User;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.ProcessingPeriodRepository;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.ProgramRepository;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.UserRepository;
-import mw.gov.health.lmis.migration.tool.scm.repository.AdjustmentAccessRepository;
-import mw.gov.health.lmis.migration.tool.scm.repository.ItemAccessRepository;
+import mw.gov.health.lmis.migration.tool.scm.repository.BaseAccessRepository;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -44,10 +44,7 @@ final class AppBatchContext implements InitializingBean {
   private ToolProperties toolProperties;
 
   @Autowired
-  private ItemAccessRepository itemRepository;
-
-  @Autowired
-  private AdjustmentAccessRepository adjustmentRepository;
+  private ApplicationContext context;
 
   @Getter
   private List<Program> programs;
@@ -80,8 +77,10 @@ final class AppBatchContext implements InitializingBean {
       LOGGER.info("Found user with username: {}", username);
     }
 
-    itemRepository.init();
-    adjustmentRepository.init();
+    context
+        .getBeansOfType(BaseAccessRepository.class)
+        .values()
+        .forEach(BaseAccessRepository::init);
 
     LOGGER.info("Initialized batch context...");
   }

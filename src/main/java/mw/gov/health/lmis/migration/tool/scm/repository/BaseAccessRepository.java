@@ -25,13 +25,17 @@ import java.util.function.Predicate;
 
 
 public abstract class BaseAccessRepository<T> {
-  private final Logger logger = LoggerFactory.getLogger(getClass());
+  final Logger logger = LoggerFactory.getLogger(getClass());
 
   @Autowired
   private ScmDatabaseHandler handler;
 
   @Autowired
   protected ToolProperties properties;
+
+  public void init() {
+    // nothing to do here
+  }
 
   /**
    * Find all rows from the given table.
@@ -54,17 +58,17 @@ public abstract class BaseAccessRepository<T> {
   }
 
   List<T> findAll(Predicate<T> predicate) {
-    return findAll(predicate, null, null);
+    return findAll(predicate, null);
   }
 
-  List<T> findAll(Predicate<T> predicate, Integer first, Integer count) {
+  List<T> findAll(Predicate<T> predicate, Details details) {
     Database database = getDatabase();
 
     try {
       Cursor cursor = getCursor(database);
 
-      if (null != first) {
-        cursor.moveNextRows(first);
+      if (null != details) {
+        cursor.moveNextRows(details.getFirst());
       }
 
       List<T> list = Lists.newArrayList();
@@ -77,13 +81,16 @@ public abstract class BaseAccessRepository<T> {
           list.add(element);
         }
 
-        if (Objects.equals(list.size(), count)) {
+        if (null != details && Objects.equals(list.size(), details.getCount())) {
           break;
         }
       }
 
-      if (null != count && !Objects.equals(list.size(), count)) {
-        logger.warn("List contains less elements ({}) than required: {}", list.size(), count);
+      if (null != details && !Objects.equals(list.size(), details.getCount())) {
+        logger.warn(
+            "List contains less elements ({}) than required: {}",
+            list.size(), details.getCount()
+        );
       }
 
       return list;
@@ -138,6 +145,14 @@ public abstract class BaseAccessRepository<T> {
     } catch (IOException exp) {
       throw new IllegalStateException("Can't find a row in table: " + getTableName(), exp);
     }
+  }
+
+  interface Details {
+
+    int getFirst();
+
+    int getCount();
+
   }
 
 }

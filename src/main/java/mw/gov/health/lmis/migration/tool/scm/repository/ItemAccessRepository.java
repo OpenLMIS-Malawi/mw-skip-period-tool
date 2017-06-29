@@ -12,6 +12,7 @@ import com.healthmarketscience.jackcess.Row;
 import org.apache.commons.io.IOUtils;
 import org.springframework.stereotype.Repository;
 
+import lombok.Getter;
 import mw.gov.health.lmis.migration.tool.scm.domain.Item;
 
 import java.io.IOException;
@@ -23,8 +24,9 @@ public class ItemAccessRepository extends BaseAccessRepository<Item> {
   private Table<String, Date, FormDetails> table = HashBasedTable.create();
 
   /**
-   * Prepare data that would speed up search process.
+   * Prepare data that will speed up the search process.
    */
+  @Override
   public void init() {
     Database database = getDatabase();
 
@@ -55,23 +57,23 @@ public class ItemAccessRepository extends BaseAccessRepository<Item> {
     } finally {
       IOUtils.closeQuietly(database);
     }
+
+    logger.info("Prepared data that will speed up the item search process");
   }
 
   /**
    * Find items with the given processing date and facility.
    */
-  public List<Item> search(java.util.Date processingDate, String facility) {
-    FormDetails details = table.get(facility, processingDate);
+  public List<Item> search(Date date, String facility) {
+    FormDetails details = table.get(facility, date);
 
     if (null == details) {
       return Lists.newArrayList();
     }
 
     return findAll(
-        item ->
-            processingDate.equals(item.getProcessingDate()) && facility.equals(item.getFacility()),
-        details.first,
-        details.count
+        item -> date.equals(item.getProcessingDate()) && facility.equals(item.getFacility()),
+        details
     );
   }
 
@@ -85,7 +87,8 @@ public class ItemAccessRepository extends BaseAccessRepository<Item> {
     return new Item(row);
   }
 
-  public static final class FormDetails {
+  @Getter
+  private static final class FormDetails implements Details {
     private int first;
     private int count;
   }
