@@ -2,69 +2,36 @@ package mw.gov.health.lmis.migration.tool.scm.repository;
 
 import static mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.OpenLmisNumberUtils.isNotZero;
 
-import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Multimap;
 
-import com.healthmarketscience.jackcess.Cursor;
-import com.healthmarketscience.jackcess.Database;
 import com.healthmarketscience.jackcess.Row;
 
-import org.apache.commons.io.IOUtils;
 import org.springframework.stereotype.Repository;
 
-import lombok.Getter;
 import mw.gov.health.lmis.migration.tool.scm.domain.Adjustment;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Repository
-public class AdjustmentAccessRepository extends BaseAccessRepository<Adjustment> {
-  private Multimap<Integer, Integer> validItemIds = HashMultimap.create();
+public class AdjustmentAccessRepository extends PreparedAccessRepository<Adjustment> {
 
-  /**
-   * Prepare data that would speed up search process.
-   */
   @Override
-  public void init() {
-    Database database = getDatabase();
+  boolean isNotValid(Adjustment element) {
+    return !isNotZero(element.getQuantity());
+  }
 
-    try {
-      Cursor cursor = getCursor(database);
-      Row row;
-
-      int rows = 0;
-      while ((row = cursor.getNextRow()) != null) {
-        Adjustment element = mapRow(row);
-
-        if (!isNotZero(element.getQuantity())) {
-          continue;
-        }
-
-        validItemIds.put(element.getItem(), rows);
-        ++rows;
-      }
-    } catch (IOException exp) {
-      throw new IllegalStateException("Can't retrieve data for table: " + getTableName(), exp);
-    } finally {
-      IOUtils.closeQuietly(database);
-    }
-
-    logger.info("Prepared data that will speed up the adjustment search process");
+  @Override
+  Integer mapToKey(Adjustment element) {
+    return element.getItem();
   }
 
   /**
    * Finds all adjustments for the given item.
    */
   public Map<Integer, List<Adjustment>> search(List<Integer> itemIds) {
-    List<Integer> filtered = itemIds
-        .stream()
-        .filter(validItemIds::containsKey)
-        .collect(Collectors.toList());
+    List<Integer> filtered = getValid(itemIds);
 
     if (filtered.isEmpty()) {
       return Maps.newHashMap();
@@ -85,28 +52,6 @@ public class AdjustmentAccessRepository extends BaseAccessRepository<Adjustment>
   @Override
   Adjustment mapRow(Row row) {
     return new Adjustment(row);
-  }
-
-  @Getter
-  private final class SearchDetails implements Details {
-    private int first;
-    private int count;
-
-    SearchDetails(List<Integer> list) {
-      List<Integer> rows = validItemIds
-          .entries()
-          .stream()
-          .filter(entry -> list.contains(entry.getKey()))
-          .map(Map.Entry::getValue)
-          .filter(Objects::nonNull)
-          .collect(Collectors.toList());
-
-      count = rows.size();
-      first = count == 1
-          ? rows.get(0)
-          : rows.stream().min(Integer::compare).orElse(0);
-    }
-
   }
 
 }

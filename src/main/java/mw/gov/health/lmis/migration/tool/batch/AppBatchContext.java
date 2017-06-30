@@ -18,7 +18,7 @@ import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.User;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.ProcessingPeriodRepository;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.ProgramRepository;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.UserRepository;
-import mw.gov.health.lmis.migration.tool.scm.repository.BaseAccessRepository;
+import mw.gov.health.lmis.migration.tool.scm.repository.PreparedAccessRepository;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -78,9 +78,9 @@ final class AppBatchContext implements InitializingBean {
     }
 
     context
-        .getBeansOfType(BaseAccessRepository.class)
+        .getBeansOfType(PreparedAccessRepository.class)
         .values()
-        .forEach(BaseAccessRepository::init);
+        .forEach(PreparedAccessRepository::init);
 
     LOGGER.info("Initialized batch context...");
   }

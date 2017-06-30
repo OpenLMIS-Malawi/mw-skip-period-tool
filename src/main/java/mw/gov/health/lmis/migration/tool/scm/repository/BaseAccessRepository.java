@@ -33,10 +33,6 @@ public abstract class BaseAccessRepository<T> {
   @Autowired
   protected ToolProperties properties;
 
-  public void init() {
-    // nothing to do here
-  }
-
   /**
    * Find all rows from the given table.
    */

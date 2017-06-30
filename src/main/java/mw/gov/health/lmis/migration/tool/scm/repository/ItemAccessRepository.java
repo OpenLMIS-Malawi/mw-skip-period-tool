@@ -20,7 +20,7 @@ import java.util.Date;
 import java.util.List;
 
 @Repository
-public class ItemAccessRepository extends BaseAccessRepository<Item> {
+public class ItemAccessRepository extends PreparedAccessRepository<Item> {
   private Table<String, Date, FormDetails> table = HashBasedTable.create();
 
   /**
@@ -59,6 +59,16 @@ public class ItemAccessRepository extends BaseAccessRepository<Item> {
     }
 
     logger.info("Prepared data that will speed up the item search process");
+  }
+
+  @Override
+  boolean isNotValid(Item element) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  Integer mapToKey(Item element) {
+    throw new UnsupportedOperationException();
   }
 
   /**

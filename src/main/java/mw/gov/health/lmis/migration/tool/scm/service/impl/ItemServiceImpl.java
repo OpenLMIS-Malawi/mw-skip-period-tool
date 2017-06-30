@@ -19,7 +19,6 @@ import mw.gov.health.lmis.migration.tool.scm.domain.Comment;
 import mw.gov.health.lmis.migration.tool.scm.domain.Item;
 import mw.gov.health.lmis.migration.tool.scm.domain.Program;
 import mw.gov.health.lmis.migration.tool.scm.repository.CategoryProductJoinAccessRepository;
-import mw.gov.health.lmis.migration.tool.scm.repository.CommentAccessRepository;
 import mw.gov.health.lmis.migration.tool.scm.repository.ItemAccessRepository;
 import mw.gov.health.lmis.migration.tool.scm.repository.ProgramAccessRepository;
 import mw.gov.health.lmis.migration.tool.scm.service.ItemService;
@@ -42,9 +41,6 @@ public class ItemServiceImpl implements ItemService {
 
   @Autowired
   private ItemAccessRepository itemRepository;
-
-  @Autowired
-  private CommentAccessRepository commentRepository;
 
   @Autowired
   private ToolProperties toolProperties;
