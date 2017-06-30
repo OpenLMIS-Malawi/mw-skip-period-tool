@@ -57,6 +57,12 @@
             <groupId>org.hibernate</groupId>
             <artifactId>hibernate-spatial</artifactId>
             <version>5.0.11.Final</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>postgresql</groupId>
+                    <artifactId>postgresql</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <!-- jackcess -->
         <dependency>
