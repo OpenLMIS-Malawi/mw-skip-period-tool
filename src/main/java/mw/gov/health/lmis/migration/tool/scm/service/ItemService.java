@@ -1,5 +1,6 @@
 package mw.gov.health.lmis.migration.tool.scm.service;
 
+import mw.gov.health.lmis.migration.tool.scm.domain.Comment;
 import mw.gov.health.lmis.migration.tool.scm.domain.Item;
 
 import java.util.Collection;
@@ -13,6 +14,6 @@ public interface ItemService {
 
   Map<String, Collection<Item>> groupByCategory(List<Item> items);
 
-  String getNotes(Item item);
+  String getNotes(String note, List<Comment> comments);
 
 }

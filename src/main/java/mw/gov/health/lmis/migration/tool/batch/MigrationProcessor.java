@@ -27,14 +27,19 @@ import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.User;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.FacilityRepository;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.RequisitionGroupProgramScheduleRepository;
 import mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.Requisition;
+import mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.RequisitionLineItem;
 import mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.RequisitionTemplate;
 import mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.StatusChange;
 import mw.gov.health.lmis.migration.tool.openlmis.requisition.repository.RequisitionRepository;
 import mw.gov.health.lmis.migration.tool.openlmis.requisition.repository.RequisitionTemplateRepository;
 import mw.gov.health.lmis.migration.tool.openlmis.requisition.service.RequisitionService;
 import mw.gov.health.lmis.migration.tool.openlmis.requisition.util.RequisitionUtil;
+import mw.gov.health.lmis.migration.tool.scm.domain.Adjustment;
+import mw.gov.health.lmis.migration.tool.scm.domain.Comment;
 import mw.gov.health.lmis.migration.tool.scm.domain.Item;
 import mw.gov.health.lmis.migration.tool.scm.domain.Main;
+import mw.gov.health.lmis.migration.tool.scm.repository.AdjustmentAccessRepository;
+import mw.gov.health.lmis.migration.tool.scm.repository.CommentAccessRepository;
 import mw.gov.health.lmis.migration.tool.scm.service.ItemService;
 import mw.gov.health.lmis.migration.tool.scm.service.MainService;
 
@@ -45,6 +50,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -78,6 +84,12 @@ public class MigrationProcessor implements ItemProcessor<Main, List<Requisition>
   private RequisitionRepository requisitionRepository;
 
   @Autowired
+  private AdjustmentAccessRepository adjustmentRepository;
+
+  @Autowired
+  private CommentAccessRepository commentRepository;
+
+  @Autowired
   private ToolProperties toolProperties;
 
   @Autowired
@@ -105,6 +117,10 @@ public class MigrationProcessor implements ItemProcessor<Main, List<Requisition>
       return Lists.newArrayList();
     }
 
+    List<Integer> ids = items.stream().map(Item::getId).collect(Collectors.toList());
+    Map<Integer, List<Adjustment>> adjustmens = adjustmentRepository.search(ids);
+    Map<Integer, List<Comment>> comments = commentRepository.search(ids);
+
     String code = MappingHelper.getFacilityCode(toolProperties, item.getFacility());
     Facility facility = facilityRepository.findByCode(code);
 
@@ -127,7 +143,7 @@ public class MigrationProcessor implements ItemProcessor<Main, List<Requisition>
         .groupByCategory(items)
         .entrySet()
         .parallelStream()
-        .map(entry -> create(entry.getKey(), entry.getValue(), item, facility, period))
+        .map(entry -> create(entry, item, facility, period, adjustmens, comments))
         .filter(this::isCorrect)
         .collect(Collectors.toList());
   }
@@ -148,12 +164,14 @@ public class MigrationProcessor implements ItemProcessor<Main, List<Requisition>
     return !isEmpty;
   }
 
-  private Requisition create(String programCode, Collection<Item> items, Main main,
-                             Facility facility, ProcessingPeriod period) {
-    Program program = context.findProgramByCode(programCode);
+  private Requisition create(Map.Entry<String, Collection<Item>> entry, Main main,
+                             Facility facility, ProcessingPeriod period,
+                             Map<Integer, List<Adjustment>> adjustmens,
+                             Map<Integer, List<Comment>> comments) {
+    Program program = context.findProgramByCode(entry.getKey());
 
     if (null == program) {
-      LOGGER.error("Can't find program with code {}", programCode);
+      LOGGER.error("Can't find program with code {}", entry.getKey());
       return null;
     }
 
@@ -200,9 +218,11 @@ public class MigrationProcessor implements ItemProcessor<Main, List<Requisition>
     requisition.setCreatedDate(convert(main.getModifiedDate(), period.getStartDate()));
     requisition.setModifiedDate(convert(main.getModifiedDate(), period.getEndDate()));
     requisition.setStatus(APPROVED);
-    requisition.setRequisitionLineItems(
-        itemConverter.convert(items, requisition, getRecentRequisition(requisition))
-    );
+
+    Requisition previousRequisition = getPreviousRequisition(requisition);
+    List<RequisitionLineItem> lineItems = itemConverter
+        .convert(entry.getValue(), requisition, previousRequisition, adjustmens, comments);
+    requisition.setRequisitionLineItems(lineItems);
 
     List<RequisitionGroupProgramSchedule> schedule = requisitionGroupProgramScheduleRepository
         .findByProgramAndFacility(program.getId(), facility.getId());
@@ -250,7 +270,7 @@ public class MigrationProcessor implements ItemProcessor<Main, List<Requisition>
     return null;
   }
 
-  private Requisition getRecentRequisition(Requisition requisition) {
+  private Requisition getPreviousRequisition(Requisition requisition) {
     ProcessingPeriod previousPeriod = findPreviousPeriod(requisition.getProcessingPeriodId());
 
     if (null == previousPeriod) {

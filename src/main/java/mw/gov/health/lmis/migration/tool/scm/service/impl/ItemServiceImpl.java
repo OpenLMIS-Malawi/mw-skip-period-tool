@@ -79,11 +79,9 @@ public class ItemServiceImpl implements ItemService {
   }
 
   @Override
-  public String getNotes(Item item) {
-    List<Comment> comments = commentRepository.search(item.getId());
-
+  public String getNotes(String note, List<Comment> comments) {
     List<String> notes = Lists.newArrayList();
-    notes.add(item.getNote());
+    notes.add(note);
     notes.addAll(comments.stream().map(Comment::getComment).collect(Collectors.toList()));
     notes.removeIf(StringUtils::isBlank);
 

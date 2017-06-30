@@ -29,8 +29,8 @@ import mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.Requisition
 import mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.StockAdjustment;
 import mw.gov.health.lmis.migration.tool.scm.domain.Adjustment;
 import mw.gov.health.lmis.migration.tool.scm.domain.AdjustmentType;
+import mw.gov.health.lmis.migration.tool.scm.domain.Comment;
 import mw.gov.health.lmis.migration.tool.scm.domain.Item;
-import mw.gov.health.lmis.migration.tool.scm.repository.AdjustmentAccessRepository;
 import mw.gov.health.lmis.migration.tool.scm.repository.AdjustmentTypeAccessRepository;
 import mw.gov.health.lmis.migration.tool.scm.service.ItemService;
 import mw.gov.health.lmis.migration.tool.scm.service.ProductService;
@@ -48,9 +48,6 @@ import java.util.stream.Collectors;
 @Component
 public class ItemConverter {
   private static final Logger LOGGER = LoggerFactory.getLogger(ItemConverter.class);
-
-  @Autowired
-  private AdjustmentAccessRepository adjustmentRepository;
 
   @Autowired
   private AdjustmentTypeAccessRepository adjustmentTypeRepository;
@@ -77,13 +74,20 @@ public class ItemConverter {
    * Converts {@link Item} object into {@link RequisitionLineItem} object.
    */
   public List<RequisitionLineItem> convert(Collection<Item> items, Requisition requisition,
-                                           Requisition previous) {
-    List<Integer> ids = items.stream().map(Item::getId).collect(Collectors.toList());
-    Map<Integer, List<Adjustment>> adjustments = adjustmentRepository.search(ids);
-
+                                           Requisition previous,
+                                           Map<Integer, List<Adjustment>> adjustments,
+                                           Map<Integer, List<Comment>> comments) {
     return items
         .parallelStream()
-        .map(item -> create(item, requisition, previous, adjustments.get(item.getId())))
+        .map(item -> {
+          List<Adjustment> itemAdjustments = adjustments.get(item.getId());
+          itemAdjustments = Optional.ofNullable(itemAdjustments).orElse(Lists.newArrayList());
+
+          List<Comment> itemComments = comments.get(item.getId());
+          itemComments = Optional.ofNullable(itemComments).orElse(Lists.newArrayList());
+
+          return create(item, requisition, previous, itemAdjustments, itemComments);
+        })
         .filter(Objects::nonNull)
         .collect(Collectors.groupingBy(RequisitionLineItem::getOrderableId))
         .entrySet()
@@ -150,7 +154,7 @@ public class ItemConverter {
   }
 
   private RequisitionLineItem create(Item item, Requisition requisition, Requisition previous,
-                                     List<Adjustment> adjustments) {
+                                     List<Adjustment> adjustments, List<Comment> comments) {
     Optional<String> productCode = productService.getProductCode(item.getProduct());
 
     if (!productCode.isPresent()) {
@@ -220,7 +224,7 @@ public class ItemConverter {
 
     requisitionLineItem.setMaxPeriodsOfStock(getMonthsOfStock(requisitionLineItem));
 
-    String remarks = itemService.getNotes(item);
+    String remarks = itemService.getNotes(item.getNote(), comments);
 
     if (length(remarks) > 250) {
       LOGGER.warn("The remarks ({}) are too long. Skipping...", remarks);
