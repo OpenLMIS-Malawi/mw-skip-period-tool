@@ -18,6 +18,7 @@ import org.springframework.stereotype.Component;
 
 import mw.gov.health.lmis.migration.tool.config.MappingHelper;
 import mw.gov.health.lmis.migration.tool.config.ToolProperties;
+import mw.gov.health.lmis.migration.tool.openlmis.BaseRequisition;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.Facility;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.ProcessingPeriod;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.Program;
@@ -153,7 +154,7 @@ public class MigrationProcessor implements ItemProcessor<Main, List<Requisition>
       return false;
     }
 
-    boolean isEmpty = RequisitionUtil.isEmpty(requisition);
+    boolean isEmpty = RequisitionUtil.isEmpty(requisition.getRequisitionLineItems());
 
     if (isEmpty) {
       LOGGER.warn(
@@ -219,7 +220,7 @@ public class MigrationProcessor implements ItemProcessor<Main, List<Requisition>
     requisition.setModifiedDate(convert(main.getModifiedDate(), period.getEndDate()));
     requisition.setStatus(APPROVED);
 
-    Requisition previousRequisition = getPreviousRequisition(requisition);
+    BaseRequisition previousRequisition = getPreviousRequisition(requisition);
     List<RequisitionLineItem> lineItems = itemConverter
         .convert(entry.getValue(), requisition, previousRequisition, adjustmens, comments);
     requisition.setRequisitionLineItems(lineItems);
@@ -270,14 +271,14 @@ public class MigrationProcessor implements ItemProcessor<Main, List<Requisition>
     return null;
   }
 
-  private Requisition getPreviousRequisition(Requisition requisition) {
+  private BaseRequisition getPreviousRequisition(Requisition requisition) {
     ProcessingPeriod previousPeriod = findPreviousPeriod(requisition.getProcessingPeriodId());
 
     if (null == previousPeriod) {
       return null;
     }
 
-    List<Requisition> requisitionsByPeriod = requisitionRepository
+    List<BaseRequisition> requisitionsByPeriod = requisitionRepository
         .findByFacilityIdAndProgramIdAndProcessingPeriodId(
             requisition.getFacilityId(), requisition.getProgramId(), previousPeriod.getId()
         );

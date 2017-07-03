@@ -18,6 +18,7 @@ import org.springframework.stereotype.Component;
 
 import mw.gov.health.lmis.migration.tool.config.MappingHelper;
 import mw.gov.health.lmis.migration.tool.config.ToolProperties;
+import mw.gov.health.lmis.migration.tool.openlmis.BaseRequisition;
 import mw.gov.health.lmis.migration.tool.openlmis.OnlyId;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.Code;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.Program;
@@ -74,7 +75,7 @@ public class ItemConverter {
    * Converts {@link Item} object into {@link RequisitionLineItem} object.
    */
   public List<RequisitionLineItem> convert(Collection<Item> items, Requisition requisition,
-                                           Requisition previous,
+                                           BaseRequisition previous,
                                            Map<Integer, List<Adjustment>> adjustments,
                                            Map<Integer, List<Comment>> comments) {
     return items
@@ -153,7 +154,7 @@ public class ItemConverter {
     return lines.stream().map(field).flatMap(Collection::stream).collect(Collectors.toList());
   }
 
-  private RequisitionLineItem create(Item item, Requisition requisition, Requisition previous,
+  private RequisitionLineItem create(Item item, Requisition requisition, BaseRequisition previous,
                                      List<Adjustment> adjustments, List<Comment> comments) {
     Optional<String> productCode = productService.getProductCode(item.getProduct());
 

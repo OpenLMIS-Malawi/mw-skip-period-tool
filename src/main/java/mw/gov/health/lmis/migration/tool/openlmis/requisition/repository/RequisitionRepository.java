@@ -3,6 +3,7 @@ package mw.gov.health.lmis.migration.tool.openlmis.requisition.repository;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
+import mw.gov.health.lmis.migration.tool.openlmis.BaseRequisition;
 import mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.Requisition;
 
 import java.util.List;
@@ -10,9 +11,9 @@ import java.util.UUID;
 
 public interface RequisitionRepository extends JpaRepository<Requisition, UUID> {
 
-  List<Requisition> findByFacilityIdAndProgramIdAndProcessingPeriodId(UUID facilityId,
-                                                                      UUID programId,
-                                                                      UUID processingPeriodId);
+  List<BaseRequisition> findByFacilityIdAndProgramIdAndProcessingPeriodId(UUID facilityId,
+                                                                          UUID programId,
+                                                                          UUID processingPeriodId);
 
   boolean existsByFacilityIdAndProgramIdAndProcessingPeriodId(UUID facilityId,
                                                               UUID programId,

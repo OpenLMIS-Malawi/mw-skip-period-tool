@@ -6,7 +6,7 @@ import org.apache.commons.lang.ArrayUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.Requisition;
+import mw.gov.health.lmis.migration.tool.openlmis.BaseRequisition;
 import mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.RequisitionLineItem;
 
 import java.beans.BeanInfo;
@@ -45,8 +45,14 @@ public class RequisitionUtil {
    * Checks if the given requisition is empty. An empty requisition is when all line items contain
    * only zero value in all columns.
    */
-  public static boolean isEmpty(Requisition requisition) {
-    List<RequisitionLineItem> lines = requisition.getRequisitionLineItems();
+  public static boolean isEmpty(BaseRequisition requisition) {
+    return isEmpty(requisition.getRequisitionLineItems());
+  }
+
+  /**
+   * Checks if the given requisition line items are empty.
+   */
+  public static boolean isEmpty(List<RequisitionLineItem> lines) {
     int lineCount = lines.size();
     int emptyLineCount = (int) lines.stream().filter(RequisitionUtil::isEmpty).count();
     return lineCount == emptyLineCount;

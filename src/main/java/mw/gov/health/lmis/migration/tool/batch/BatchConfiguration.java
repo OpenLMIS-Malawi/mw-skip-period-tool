@@ -21,6 +21,7 @@ import org.springframework.core.task.SimpleAsyncTaskExecutor;
 
 import mw.gov.health.lmis.migration.tool.config.ToolBatchConfiguration;
 import mw.gov.health.lmis.migration.tool.config.ToolProperties;
+import mw.gov.health.lmis.migration.tool.openlmis.BaseRequisition;
 import mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.Requisition;
 import mw.gov.health.lmis.migration.tool.scm.domain.Main;
 
@@ -127,7 +128,7 @@ public class BatchConfiguration {
 
     return stepBuilderFactory
         .get("removeDuplicatesStep")
-        .<List<Requisition>, List<Requisition>>chunk(batchProperties.getChunk())
+        .<List<BaseRequisition>, List<BaseRequisition>>chunk(batchProperties.getChunk())
         .reader(reader)
         .listener(readerListener)
         .processor(processor)

@@ -4,7 +4,7 @@ import org.springframework.batch.item.ItemReader;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.Requisition;
+import mw.gov.health.lmis.migration.tool.openlmis.BaseRequisition;
 import mw.gov.health.lmis.migration.tool.openlmis.requisition.repository.RequisitionRepository;
 
 import java.util.LinkedList;
@@ -13,14 +13,14 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Component
-public class DuplicateReader implements ItemReader<List<Requisition>> {
-  private static LinkedList<List<Requisition>> duplicates = null;
+public class DuplicateReader implements ItemReader<List<BaseRequisition>> {
+  private static LinkedList<List<BaseRequisition>> duplicates = null;
 
   @Autowired
   private RequisitionRepository requisitionRepository;
 
   @Override
-  public List<Requisition> read() {
+  public List<BaseRequisition> read() {
     synchronized (DuplicateReader.class) {
       if (null == duplicates) {
         duplicates = requisitionRepository

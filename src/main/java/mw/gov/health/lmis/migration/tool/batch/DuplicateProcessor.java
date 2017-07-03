@@ -5,18 +5,19 @@ import org.slf4j.LoggerFactory;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.stereotype.Component;
 
-import mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.Requisition;
+import mw.gov.health.lmis.migration.tool.openlmis.BaseRequisition;
 import mw.gov.health.lmis.migration.tool.openlmis.requisition.util.RequisitionUtil;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Component
-public class DuplicateProcessor implements ItemProcessor<List<Requisition>, List<Requisition>> {
+public class DuplicateProcessor
+    implements ItemProcessor<List<BaseRequisition>, List<BaseRequisition>> {
   private static final Logger LOGGER = LoggerFactory.getLogger(DuplicateProcessor.class);
 
   @Override
-  public List<Requisition> process(List<Requisition> item) throws Exception {
+  public List<BaseRequisition> process(List<BaseRequisition> item) throws Exception {
     return item
         .stream()
         .filter(requisition -> {
