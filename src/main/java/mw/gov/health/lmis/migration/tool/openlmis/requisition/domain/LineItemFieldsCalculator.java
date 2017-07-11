@@ -29,6 +29,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 public final class LineItemFieldsCalculator {
@@ -103,11 +104,11 @@ public final class LineItemFieldsCalculator {
   public static int calculateTotalLossesAndAdjustments(RequisitionLineItem lineItem,
                                                        Collection<StockAdjustmentReason> reasons) {
     int totalLossesAndAdjustments = 0;
-    if (null != lineItem.getStockAdjustments()) {
+    if (null != lineItem.getStockAdjustments() && null != reasons) {
       for (StockAdjustment adjustment : lineItem.getStockAdjustments()) {
         Optional<StockAdjustmentReason> reason = reasons
             .stream()
-            .filter(r -> r.getId().equals(adjustment.getReasonId()))
+            .filter(r -> Objects.equals(r.getId(), adjustment.getReasonId()))
             .findFirst();
 
         if (reason.isPresent()) {
