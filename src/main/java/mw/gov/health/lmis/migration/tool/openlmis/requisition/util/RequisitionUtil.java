@@ -21,7 +21,7 @@ public class RequisitionUtil {
   private static final Logger LOGGER = LoggerFactory.getLogger(RequisitionUtil.class);
   private static final PropertyDescriptor[] RLI_DESCRIPTORS;
   private static final String[] FIELDS = new String[]{
-      "beginningBalance", "totalReceivedQuantity", "totalLossesAndAdjustments", "stockOnHand",
+      "totalReceivedQuantity", "totalLossesAndAdjustments", "stockOnHand",
       "requestedQuantity", "totalConsumedQuantity", "total", "approvedQuantity",
       "totalStockoutDays", "packsToShip", "numberOfNewPatientsAdded", "adjustedConsumption",
       "averageConsumption", "maximumStockQuantity", "calculatedOrderQuantity"
