@@ -108,6 +108,7 @@ public final class LineItemFieldsCalculator {
       for (StockAdjustment adjustment : lineItem.getStockAdjustments()) {
         Optional<StockAdjustmentReason> reason = reasons
             .stream()
+            .filter(Objects::nonNull)
             .filter(r -> Objects.equals(r.getId(), adjustment.getReasonId()))
             .findFirst();
 
