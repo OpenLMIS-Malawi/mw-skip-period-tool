@@ -1,6 +1,5 @@
 package mw.gov.health.lmis.migration.tool.scm.repository;
 
-import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import com.google.common.collect.Maps;
@@ -20,7 +19,7 @@ public class CommentAccessRepository extends PreparedAccessRepository<Comment> {
 
   @Override
   boolean isNotValid(Comment element) {
-    return !isBlank(element.getComment());
+    return !isNotBlank(element.getComment());
   }
 
   @Override
