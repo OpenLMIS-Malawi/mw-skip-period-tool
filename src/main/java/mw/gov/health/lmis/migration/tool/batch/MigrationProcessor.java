@@ -154,7 +154,7 @@ public class MigrationProcessor implements ItemProcessor<Main, List<Requisition>
       return false;
     }
 
-    boolean isEmpty = RequisitionUtil.isEmpty(requisition.getRequisitionLineItems());
+    boolean isEmpty = RequisitionUtil.isEmpty(requisition);
 
     if (isEmpty) {
       LOGGER.warn(
