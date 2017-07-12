@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.util.CollectionUtils;
 
 import mw.gov.health.lmis.migration.tool.config.MappingHelper;
 import mw.gov.health.lmis.migration.tool.config.ToolProperties;
@@ -176,18 +177,22 @@ public class MigrationProcessor implements ItemProcessor<Main, List<Requisition>
       return null;
     }
 
-    boolean exclude = toolProperties
-        .getExclude()
-        .getForms()
-        .stream()
-        .anyMatch(form -> form.match(facility.getCode(), period.getName(), program.getCodeValue()));
+    if (!CollectionUtils.isEmpty(toolProperties.getExclude().getForms())) {
+      boolean exclude = toolProperties
+          .getExclude()
+          .getForms()
+          .stream()
+          .anyMatch(
+              form -> form.match(facility.getCode(), period.getName(), program.getCodeValue())
+          );
 
-    if (exclude) {
-      LOGGER.warn(
-          "Requisition for facility {}, program {} and period {} is on exclude list. Skipping...",
-          facility.getCode(), program.getCode(), period.getName()
-      );
-      return null;
+      if (exclude) {
+        LOGGER.warn(
+            "Requisition for facility {}, program {} and period {} is on exclude list. Skipping...",
+            facility.getCode(), program.getCode(), period.getName()
+        );
+        return null;
+      }
     }
 
     boolean database = requisitionRepository
