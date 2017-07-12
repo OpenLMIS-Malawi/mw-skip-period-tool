@@ -119,7 +119,7 @@ public class MigrationProcessor implements ItemProcessor<Main, List<Requisition>
     }
 
     List<Integer> ids = items.stream().map(Item::getId).collect(Collectors.toList());
-    Map<Integer, List<Adjustment>> adjustmens = adjustmentRepository.search(ids);
+    Map<Integer, List<Adjustment>> adjustments = adjustmentRepository.search(ids);
     Map<Integer, List<Comment>> comments = commentRepository.search(ids);
 
     String code = MappingHelper.getFacilityCode(toolProperties, item.getFacility());
@@ -144,7 +144,7 @@ public class MigrationProcessor implements ItemProcessor<Main, List<Requisition>
         .groupByCategory(items)
         .entrySet()
         .parallelStream()
-        .map(entry -> create(entry, item, facility, period, adjustmens, comments))
+        .map(entry -> create(entry, item, facility, period, adjustments, comments))
         .filter(this::isCorrect)
         .collect(Collectors.toList());
   }
