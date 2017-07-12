@@ -1,5 +1,7 @@
 package mw.gov.health.lmis.migration.tool.batch;
 
+import com.google.common.collect.Maps;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -10,19 +12,14 @@ import mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.Requisition
 import mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.RequisitionLineItem;
 import mw.gov.health.lmis.migration.tool.openlmis.requisition.repository.RequisitionRepository;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.UUID;
-import java.util.WeakHashMap;
 
 @Component
-public class ProductHelper {
-  private static final Map<Signature, Integer> CLOSING_BALANCES = new WeakHashMap<>();
-  private static final Set<Signature> CHECKED_PREVIOUS_REQUISITIONS = Collections
-      .newSetFromMap(new WeakHashMap<>());
+class ProductHelper {
+  private static final Map<Signature, Integer> CLOSING_BALANCES = Maps.newConcurrentMap();
 
   @Autowired
   private RequisitionRepository requisitionRepository;
@@ -48,28 +45,23 @@ public class ProductHelper {
     }
 
     Signature signature = new Signature(requisition, previousPeriod.getId(), product);
-    boolean checked = CHECKED_PREVIOUS_REQUISITIONS.contains(signature);
 
-    return getClosingBalance(signature, checked);
+    return getClosingBalance(signature, false);
   }
 
   private Integer getClosingBalance(Signature signature, boolean checked) {
-    if (CLOSING_BALANCES.containsKey(signature)) {
-      return Optional.ofNullable(CLOSING_BALANCES.get(signature)).orElse(0);
-    } else if (checked) {
-      // in this case the previous requisition does not contain the given product.
-      return CLOSING_BALANCES.computeIfAbsent(signature, key -> 0);
-    } else {
-      Requisition previousRequisition = getPreviousRequisition(signature);
-
-      if (null != previousRequisition) {
-        add(previousRequisition);
-      }
-
-      CHECKED_PREVIOUS_REQUISITIONS.add(signature);
-
-      return getClosingBalance(signature, true);
+    if (checked || CLOSING_BALANCES.containsKey(signature)) {
+      Integer value = CLOSING_BALANCES.computeIfAbsent(signature, key -> 0);
+      return Optional.ofNullable(value).orElse(0);
     }
+
+    Requisition previousRequisition = getPreviousRequisition(signature);
+
+    if (null != previousRequisition) {
+      add(previousRequisition);
+    }
+
+    return getClosingBalance(signature, true);
   }
 
   private Requisition getPreviousRequisition(Signature signature) {

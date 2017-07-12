@@ -24,6 +24,7 @@ import mw.gov.health.lmis.migration.tool.scm.repository.PreparedAccessRepository
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.TimeZone;
 import java.util.UUID;
 import java.util.function.Predicate;
@@ -51,6 +52,8 @@ final class AppBatchContext implements InitializingBean {
   @Getter
   private List<Program> programs;
 
+  private List<ProcessingPeriod> allPeriods;
+
   @Getter
   private List<ProcessingPeriod> periods;
 
@@ -65,10 +68,17 @@ final class AppBatchContext implements InitializingBean {
     programs = Lists.newArrayList(programRepository.findAll());
     LOGGER.info("Found {} programs", programs.size());
 
+    allPeriods = periodRepository.findAll();
+    LOGGER.info("Found {} periods", allPeriods.size());
+
     LocalDate startDate = toolProperties.getParameters().getStartDate();
     LocalDate endDate = toolProperties.getParameters().getEndDate();
-    periods = periodRepository.findInPeriod(startDate, endDate);
-    LOGGER.info("Found {} periods between {} and {}", periods.size(), startDate, endDate);
+    periods = allPeriods
+        .stream()
+        .filter(period ->
+            !period.getStartDate().isBefore(startDate) && !period.getEndDate().isAfter(endDate))
+        .collect(Collectors.toList());
+    LOGGER.info("Select {} periods between {} and {}", periods.size(), startDate, endDate);
 
     String username = toolProperties.getParameters().getCreator();
     user = userRepository.findByUsername(username);
@@ -87,20 +97,16 @@ final class AppBatchContext implements InitializingBean {
     LOGGER.info("Initialized batch context...");
   }
 
-  Program findProgram(Predicate<Program> predicate) {
-    return programs.stream().filter(predicate).findFirst().orElse(null);
-  }
-
   Program findProgramById(UUID id) {
-    return programs.stream().filter(elem -> id.equals(elem.getId())).findFirst().orElse(null);
+    return findProgram(elem -> id.equals(elem.getId()));
   }
 
   Program findProgramByCode(String code) {
-    return programs
-        .stream()
-        .filter(elem -> code.equals(elem.getCode().toString()))
-        .findFirst()
-        .orElse(null);
+    return findProgram(elem -> code.equals(elem.getCode().toString()));
+  }
+
+  private Program findProgram(Predicate<Program> predicate) {
+    return programs.stream().filter(predicate).findFirst().orElse(null);
   }
 
   ProcessingPeriod findPeriod(Predicate<ProcessingPeriod> predicate) {
@@ -137,10 +143,11 @@ final class AppBatchContext implements InitializingBean {
   }
 
   private List<ProcessingPeriod> searchPeriods(ProcessingSchedule schedule, LocalDate startDate) {
-    return periods
+    return allPeriods
         .stream()
-        .filter(elem -> schedule.equals(elem.getProcessingSchedule())
-            && !elem.getStartDate().isAfter(startDate))
+        .filter(period ->
+            Objects.equals(schedule, period.getProcessingSchedule())
+                && !period.getStartDate().isAfter(startDate))
         .collect(Collectors.toList());
   }
 
