@@ -9,7 +9,6 @@ import static org.springframework.util.CollectionUtils.isEmpty;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
-import org.apache.commons.lang3.ObjectUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.batch.item.ItemProcessor;
@@ -18,7 +17,6 @@ import org.springframework.stereotype.Component;
 
 import mw.gov.health.lmis.migration.tool.config.MappingHelper;
 import mw.gov.health.lmis.migration.tool.config.ToolProperties;
-import mw.gov.health.lmis.migration.tool.openlmis.BaseRequisition;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.Facility;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.ProcessingPeriod;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.Program;
@@ -47,7 +45,6 @@ import mw.gov.health.lmis.migration.tool.scm.service.MainService;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
@@ -92,6 +89,9 @@ public class MigrationProcessor implements ItemProcessor<Main, List<Requisition>
 
   @Autowired
   private ToolProperties toolProperties;
+
+  @Autowired
+  private ProductHelper productHelper;
 
   @Autowired
   private AppBatchContext context;
@@ -220,10 +220,11 @@ public class MigrationProcessor implements ItemProcessor<Main, List<Requisition>
     requisition.setModifiedDate(convert(main.getModifiedDate(), period.getEndDate()));
     requisition.setStatus(APPROVED);
 
-    BaseRequisition previousRequisition = getPreviousRequisition(requisition);
     List<RequisitionLineItem> lineItems = itemConverter
-        .convert(entry.getValue(), requisition, previousRequisition, adjustmens, comments);
+        .convert(entry.getValue(), requisition, adjustmens, comments);
+
     requisition.setRequisitionLineItems(lineItems);
+    productHelper.add(requisition);
 
     List<RequisitionGroupProgramSchedule> schedule = requisitionGroupProgramScheduleRepository
         .findByProgramAndFacility(program.getId(), facility.getId());
@@ -269,45 +270,6 @@ public class MigrationProcessor implements ItemProcessor<Main, List<Requisition>
     }
 
     return null;
-  }
-
-  private BaseRequisition getPreviousRequisition(Requisition requisition) {
-    ProcessingPeriod previousPeriod = findPreviousPeriod(requisition.getProcessingPeriodId());
-
-    if (null == previousPeriod) {
-      return null;
-    }
-
-    List<BaseRequisition> requisitionsByPeriod = requisitionRepository
-        .findByFacilityIdAndProgramIdAndProcessingPeriodId(
-            requisition.getFacilityId(), requisition.getProgramId(), previousPeriod.getId()
-        );
-
-    return requisitionsByPeriod.isEmpty() ? null : requisitionsByPeriod.get(0);
-  }
-
-  private ProcessingPeriod findPreviousPeriod(UUID periodId) {
-    ProcessingPeriod period = context.findPeriodById(periodId);
-
-    if (null == period) {
-      return null;
-    }
-
-    List<ProcessingPeriod> collection = context
-        .searchPeriods(period.getProcessingSchedule(), period.getStartDate());
-
-    if (null == collection || collection.isEmpty()) {
-      return null;
-    }
-
-    // create a list...
-    List<ProcessingPeriod> list = new ArrayList<>(collection);
-    // ...remove the latest period from the list...
-    list.removeIf(p -> p.getId().equals(periodId));
-    // .. and sort elements by startDate property DESC.
-    list.sort((one, two) -> ObjectUtils.compare(two.getStartDate(), one.getStartDate()));
-
-    return list.isEmpty() ? null : list.get(0);
   }
 
 }

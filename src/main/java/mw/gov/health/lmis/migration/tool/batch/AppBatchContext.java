@@ -2,6 +2,7 @@ package mw.gov.health.lmis.migration.tool.batch;
 
 import com.google.common.collect.Lists;
 
+import org.apache.commons.lang3.ObjectUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
@@ -21,6 +22,7 @@ import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.UserR
 import mw.gov.health.lmis.migration.tool.scm.repository.PreparedAccessRepository;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.TimeZone;
 import java.util.UUID;
@@ -105,15 +107,41 @@ final class AppBatchContext implements InitializingBean {
     return periods.stream().filter(predicate).findFirst().orElse(null);
   }
 
-  ProcessingPeriod findPeriodById(UUID id) {
+  ProcessingPeriod findPreviousPeriod(UUID periodId) {
+    ProcessingPeriod period = findPeriodById(periodId);
+
+    if (null == period) {
+      return null;
+    }
+
+    List<ProcessingPeriod> collection = searchPeriods(
+        period.getProcessingSchedule(), period.getStartDate()
+    );
+
+    if (null == collection || collection.isEmpty()) {
+      return null;
+    }
+
+    // create a list...
+    List<ProcessingPeriod> list = new ArrayList<>(collection);
+    // ...remove the latest period from the list...
+    list.removeIf(p -> p.getId().equals(periodId));
+    // .. and sort elements by startDate property DESC.
+    list.sort((one, two) -> ObjectUtils.compare(two.getStartDate(), one.getStartDate()));
+
+    return list.isEmpty() ? null : list.get(0);
+  }
+
+  private ProcessingPeriod findPeriodById(UUID id) {
     return periods.stream().filter(elem -> id.equals(elem.getId())).findFirst().orElse(null);
   }
 
-  List<ProcessingPeriod> searchPeriods(ProcessingSchedule schedule, LocalDate startDate) {
+  private List<ProcessingPeriod> searchPeriods(ProcessingSchedule schedule, LocalDate startDate) {
     return periods
         .stream()
         .filter(elem -> schedule.equals(elem.getProcessingSchedule())
             && !elem.getStartDate().isAfter(startDate))
         .collect(Collectors.toList());
   }
+
 }

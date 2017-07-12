@@ -18,7 +18,6 @@ import org.springframework.stereotype.Component;
 
 import mw.gov.health.lmis.migration.tool.config.MappingHelper;
 import mw.gov.health.lmis.migration.tool.config.ToolProperties;
-import mw.gov.health.lmis.migration.tool.openlmis.BaseRequisition;
 import mw.gov.health.lmis.migration.tool.openlmis.OnlyId;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.Code;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.Program;
@@ -69,13 +68,15 @@ public class ItemConverter {
   private ToolProperties toolProperties;
 
   @Autowired
+  private ProductHelper productHelper;
+
+  @Autowired
   private AppBatchContext context;
 
   /**
    * Converts {@link Item} object into {@link RequisitionLineItem} object.
    */
   public List<RequisitionLineItem> convert(Collection<Item> items, Requisition requisition,
-                                           BaseRequisition previous,
                                            Map<Integer, List<Adjustment>> adjustments,
                                            Map<Integer, List<Comment>> comments) {
     return items
@@ -87,7 +88,7 @@ public class ItemConverter {
           List<Comment> itemComments = comments.get(item.getId());
           itemComments = Optional.ofNullable(itemComments).orElse(Lists.newArrayList());
 
-          return create(item, requisition, previous, itemAdjustments, itemComments);
+          return create(item, requisition, itemAdjustments, itemComments);
         })
         .filter(Objects::nonNull)
         .collect(Collectors.groupingBy(RequisitionLineItem::getOrderableId))
@@ -154,7 +155,7 @@ public class ItemConverter {
     return lines.stream().map(field).flatMap(Collection::stream).collect(Collectors.toList());
   }
 
-  private RequisitionLineItem create(Item item, Requisition requisition, BaseRequisition previous,
+  private RequisitionLineItem create(Item item, Requisition requisition,
                                      List<Adjustment> adjustments, List<Comment> comments) {
     Optional<String> productCode = productService.getProductCode(item.getProduct());
 
@@ -188,11 +189,8 @@ public class ItemConverter {
 
     requisitionLineItem.setSkipped(false);
 
-    if (null != previous) {
-      requisitionLineItem.setBeginningBalance(
-          calculateBeginningBalance(previous.findLineByProductId(orderable.getId()))
-      );
-    }
+    Integer closingBalance = productHelper.getClosingBalance(requisition, orderable.getId());
+    requisitionLineItem.setBeginningBalance(closingBalance);
 
     requisitionLineItem.setTotalReceivedQuantity(item.getReceipts());
     requisitionLineItem.setTotalConsumedQuantity(item.getDispensedQuantity());
