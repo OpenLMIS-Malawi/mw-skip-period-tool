@@ -47,7 +47,6 @@ tool:
             chunk: 10
             skipPolicy: "org.springframework.batch.core.step.skip.AlwaysSkipItemSkipPolicy"
             migration: true
-            removeDuplicates: false
             skipPeriods: true
     mapping:
         programs:
