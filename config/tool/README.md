@@ -46,7 +46,6 @@ tool:
     parameters:
         startDate: YYYY-MM-DD
         endDate: YYYY-MM-DD
-        numberOfPeriodsToAverage: integer
         creator: string
         requestedQuantityExplanation: string
         timeZone: string
@@ -55,20 +54,33 @@ tool:
             includeOrderNumberPrefix: boolean
             includeProgramCode: boolean
             includeTypeSuffix: boolean
+        requisitionTemplates:
+            - program: string
+              numberOfPeriodsToAverage: integer
+              columns:
+                  string:
+                      name: string
+                      label: string
+                      source: (USER_INPUT|CALCULATED|REFERENCE_DATA)
+                      displayed: boolean
+                      definition: string
+                      displayOrder: integer
 ```
 The following list explains all settings in the *parameters* section:
 * start/end date - set from what period data should be migrated into OpenLMIS system. By default the start date is set to today date minus 5 years and with first day of month. The end date is set to today date with last day of month. The format for dates is the following: YYYY-MM-DD
-* numberOfPeriodsToAverage - set number of periods to calculate value for average consumption in the requisition template
 * creator - when a requisition is created we need to set who create/submit/authorize/approve and so on. This field should contain a username.
 * requestedQuantityExplanation - the value of this field will be populated into *Requested Quantity Explanation* column in each requisition.
 * timeZone - set time zone for dates
 * orderNumberConfiguration - set how order code should be generated. By default a order code has the following pattern ```O${requsition_id}```.
+* requisitionTemplates - set requisition template for the given program. If the property is not set, there must be templates in database.
+  * program: define program code or ```__ALL_PROGRAMS__``` if all programs should have the same template.
+  * numberOfPeriodsToAverage - set number of periods to calculate value for average consumption in the requisition template
+  * columns - define columns in the given template. Each column have to have name, label, source type, define if it displayed, column definition ID and display order.
 
 #### configuration section
 ```
 tool:
     configuration:
-        createRequisitionTemplate: boolean
         accessFile: string
         olmis:
             dialect: string
@@ -90,7 +102,6 @@ tool:
 ```
 Before the tool can migrate data from supply manager into OpenLMIS system, it needs to know where SCM database file is located and where is a OpenLMIS database. This section also contains addictional Spring Batch settings.
 
-* createRequisitionTemplate - decide if the tool should create requisition template before migration process. If the property is set to **false**, there must be templates in database.
 * accessFile - defaine where is SCMgr database file. You can set absolute path like ```/home/user/data.mdb``` or relate path like ```../../data.mdb```.
 * olmis - provide details about OpenLMIS database
   * dialect - select what dialect should by used by Hibernate
