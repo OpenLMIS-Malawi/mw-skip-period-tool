@@ -25,8 +25,6 @@ import static mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.Line
 import static mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.LineItemFieldsCalculator.calculateTotalConsumedQuantity;
 import static mw.gov.health.lmis.migration.tool.openlmis.requisition.domain.LineItemFieldsCalculator.calculateTotalLossesAndAdjustments;
 
-import org.apache.commons.lang3.builder.EqualsBuilder;
-import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.hibernate.annotations.Parameter;
 import org.hibernate.annotations.Type;
 import org.joda.money.Money;
@@ -457,7 +455,7 @@ public class RequisitionLineItem extends BaseEntity {
    * Sets appropriate value for Adjusted Consumption field in {@link RequisitionLineItem}.
    */
   private void calculateAndSetAdjustedConsumption(RequisitionTemplate template,
-                                                  Integer monthsInThePeriod) {
+                                                 Integer monthsInThePeriod) {
     if (template.isColumnInTemplate(ADJUSTED_CONSUMPTION)) {
       int calculated = calculateAdjustedConsumption(this, monthsInThePeriod);
 
@@ -497,49 +495,4 @@ public class RequisitionLineItem extends BaseEntity {
     }
   }
 
-  @Override
-  public boolean equals(Object obj) {
-    if (this == obj) {
-      return true;
-    }
-
-    if (obj == null || getClass() != obj.getClass()) {
-      return false;
-    }
-
-    RequisitionLineItem lineItem = (RequisitionLineItem) obj;
-
-    return new EqualsBuilder()
-        .append(orderableId, lineItem.orderableId)
-        .append(beginningBalance, lineItem.beginningBalance)
-        .append(totalReceivedQuantity, lineItem.totalReceivedQuantity)
-        .append(totalConsumedQuantity, lineItem.totalConsumedQuantity)
-        .append(stockAdjustments, lineItem.stockAdjustments)
-        .append(totalLossesAndAdjustments, lineItem.totalLossesAndAdjustments)
-        .append(totalStockoutDays, lineItem.totalStockoutDays)
-        .append(stockOnHand, lineItem.stockOnHand)
-        .append(calculatedOrderQuantity, lineItem.calculatedOrderQuantity)
-        .append(requestedQuantity, lineItem.requestedQuantity)
-        .append(adjustedConsumption, lineItem.adjustedConsumption)
-        .append(approvedQuantity, lineItem.approvedQuantity)
-        .isEquals();
-  }
-
-  @Override
-  public int hashCode() {
-    return new HashCodeBuilder(17, 37)
-        .append(orderableId)
-        .append(beginningBalance)
-        .append(totalReceivedQuantity)
-        .append(totalConsumedQuantity)
-        .append(stockAdjustments)
-        .append(totalLossesAndAdjustments)
-        .append(totalStockoutDays)
-        .append(stockOnHand)
-        .append(calculatedOrderQuantity)
-        .append(requestedQuantity)
-        .append(adjustedConsumption)
-        .append(approvedQuantity)
-        .toHashCode();
-  }
 }
