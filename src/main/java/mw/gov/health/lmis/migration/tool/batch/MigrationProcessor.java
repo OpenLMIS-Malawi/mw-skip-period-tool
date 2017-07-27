@@ -225,8 +225,9 @@ public class MigrationProcessor implements ItemProcessor<Main, List<Requisition>
     requisition.setModifiedDate(convert(main.getModifiedDate(), period.getEndDate()));
     requisition.setStatus(APPROVED);
 
+    Collection<Item> items = entry.getValue().stream().distinct().collect(Collectors.toList());
     List<RequisitionLineItem> lineItems = itemConverter
-        .convert(entry.getValue(), requisition, adjustmens, comments);
+        .convert(items, requisition, adjustmens, comments);
 
     requisition.setRequisitionLineItems(lineItems);
     productHelper.add(requisition);

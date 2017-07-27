@@ -2,6 +2,9 @@ package mw.gov.health.lmis.migration.tool.scm.domain;
 
 import com.healthmarketscience.jackcess.Row;
 
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
+
 import java.util.Date;
 
 public class Item extends BaseEntity {
@@ -156,5 +159,43 @@ public class Item extends BaseEntity {
 
   public Boolean getErrorMaxStockQuantity() {
     return getBoolean("ERR_MaxStock");
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
+    }
+
+    if (obj == null || getClass() != obj.getClass()) {
+      return false;
+    }
+
+    Item that = (Item) obj;
+
+    return new EqualsBuilder()
+        .append(getProduct(), that.getProduct())
+        .append(getReceipts(), that.getReceipts())
+        .append(getDispensedQuantity(), that.getDispensedQuantity())
+        .append(getStockedOutDays(), that.getStockedOutDays())
+        .append(getClosingBalance(), that.getClosingBalance())
+        .append(getCalculatedRequiredQuantity(), that.getCalculatedRequiredQuantity())
+        .append(getRequiredQuantity(), that.getRequiredQuantity())
+        .append(getAdjustedDispensedQuantity(), that.getAdjustedDispensedQuantity())
+        .isEquals();
+  }
+
+  @Override
+  public int hashCode() {
+    return new HashCodeBuilder(17, 37)
+        .append(getProduct())
+        .append(getReceipts())
+        .append(getDispensedQuantity())
+        .append(getStockedOutDays())
+        .append(getClosingBalance())
+        .append(getCalculatedRequiredQuantity())
+        .append(getRequiredQuantity())
+        .append(getAdjustedDispensedQuantity())
+        .toHashCode();
   }
 }
