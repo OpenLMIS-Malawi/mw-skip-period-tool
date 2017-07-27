@@ -109,26 +109,30 @@ public class ItemConverter {
     );
     merged.setSkipped(false);
 
-    merged.setBeginningBalance(sum(lines, RequisitionLineItem::getBeginningBalance));
-    merged.setTotalReceivedQuantity(sum(lines, RequisitionLineItem::getTotalReceivedQuantity));
-    merged.setTotalConsumedQuantity(sum(lines, RequisitionLineItem::getTotalConsumedQuantity));
-    merged.setStockAdjustments(mergeList(lines, RequisitionLineItem::getStockAdjustments));
+    List<RequisitionLineItem> distinct = lines.stream().distinct().collect(Collectors.toList());
+
+    merged.setBeginningBalance(sum(distinct, RequisitionLineItem::getBeginningBalance));
+    merged.setTotalReceivedQuantity(sum(distinct, RequisitionLineItem::getTotalReceivedQuantity));
+    merged.setTotalConsumedQuantity(sum(distinct, RequisitionLineItem::getTotalConsumedQuantity));
+    merged.setStockAdjustments(mergeList(distinct, RequisitionLineItem::getStockAdjustments));
     merged.setTotalLossesAndAdjustments(
-        sum(lines, RequisitionLineItem::getTotalLossesAndAdjustments)
+        sum(distinct, RequisitionLineItem::getTotalLossesAndAdjustments)
     );
-    merged.setTotalStockoutDays(sum(lines, RequisitionLineItem::getTotalStockoutDays));
-    merged.setStockOnHand(sum(lines, RequisitionLineItem::getStockOnHand));
-    merged.setCalculatedOrderQuantity(sum(lines, RequisitionLineItem::getCalculatedOrderQuantity));
-    merged.setRequestedQuantity(sum(lines, RequisitionLineItem::getRequestedQuantity));
+    merged.setTotalStockoutDays(sum(distinct, RequisitionLineItem::getTotalStockoutDays));
+    merged.setStockOnHand(sum(distinct, RequisitionLineItem::getStockOnHand));
+    merged.setCalculatedOrderQuantity(
+        sum(distinct, RequisitionLineItem::getCalculatedOrderQuantity)
+    );
+    merged.setRequestedQuantity(sum(distinct, RequisitionLineItem::getRequestedQuantity));
     merged.setRequestedQuantityExplanation(
         toolProperties.getParameters().getRequestedQuantityExplanation()
     );
-    merged.setAdjustedConsumption(sum(lines, RequisitionLineItem::getAdjustedConsumption));
+    merged.setAdjustedConsumption(sum(distinct, RequisitionLineItem::getAdjustedConsumption));
     merged.setNonFullSupply(false);
-    merged.setApprovedQuantity(sum(lines, RequisitionLineItem::getApprovedQuantity));
+    merged.setApprovedQuantity(sum(distinct, RequisitionLineItem::getApprovedQuantity));
     merged.setMaxPeriodsOfStock(getMonthsOfStock(merged));
 
-    String remarks = join(lines, RequisitionLineItem::getRemarks);
+    String remarks = join(distinct, RequisitionLineItem::getRemarks);
 
     if (length(remarks) > 250) {
       LOGGER.warn("The remarks ({}) are too long. Skipping...", remarks);
