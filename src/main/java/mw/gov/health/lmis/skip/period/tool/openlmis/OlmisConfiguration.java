@@ -10,7 +10,6 @@ import static org.hibernate.cfg.AvailableSettings.SHOW_SQL;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Primary;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.springframework.orm.jpa.JpaTransactionManager;
@@ -27,7 +26,7 @@ import java.util.Properties;
 import javax.sql.DataSource;
 
 @Configuration
-@EnableJpaRepositories(basePackages = "mw.gov.health.lmis.migration.tool.openlmis",
+@EnableJpaRepositories(basePackages = "mw.gov.health.lmis.skip.period.tool.openlmis",
     entityManagerFactoryRef = "olmisEntityManagerFactory",
     transactionManagerRef = "olmisTransactionManager")
 public class OlmisConfiguration {
@@ -36,7 +35,6 @@ public class OlmisConfiguration {
    * Declare the SCMgr transaction manager.
    */
   @Bean
-  @Primary
   PlatformTransactionManager olmisTransactionManager(ToolProperties properties) {
     return new JpaTransactionManager(olmisEntityManagerFactory(properties).getObject());
   }
@@ -45,16 +43,14 @@ public class OlmisConfiguration {
    * Declare the SCMgr entity manager factory.
    */
   @Bean
-  @Primary
   LocalContainerEntityManagerFactoryBean olmisEntityManagerFactory(ToolProperties properties) {
     LocalContainerEntityManagerFactoryBean entityManagerFactory =
         new LocalContainerEntityManagerFactoryBean();
 
     entityManagerFactory.setDataSource(olmisDataSource(properties));
     entityManagerFactory.setPackagesToScan(
-        "mw.gov.health.lmis.migration.tool.openlmis.fulfillment.domain",
-        "mw.gov.health.lmis.migration.tool.openlmis.requisition.domain",
-        "mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain"
+        "mw.gov.health.lmis.skip.period.tool.openlmis.requisition.domain",
+        "mw.gov.health.lmis.skip.period.tool.openlmis.referencedata.domain"
     );
 
     HibernateJpaVendorAdapter vendorAdapter = new HibernateJpaVendorAdapter();
@@ -85,7 +81,6 @@ public class OlmisConfiguration {
    * Declare the SCMgr data source.
    */
   @Bean
-  @Primary
   DataSource olmisDataSource(ToolProperties properties) {
     ToolOlmisDataSourceConfiguration dataSource = properties
         .getConfiguration()
