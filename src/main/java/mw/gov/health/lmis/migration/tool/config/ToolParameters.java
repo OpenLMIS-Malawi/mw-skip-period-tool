@@ -16,10 +16,9 @@ import java.util.TimeZone;
 public class ToolParameters {
   private LocalDate startDate = LocalDate.now().minusYears(5);
   private LocalDate endDate = LocalDate.now().with(lastDayOfMonth());
-  private String creator = "scm";
-  private String requestedQuantityExplanation = "transferred from supply manager";
+  private String creator = "admin";
   private TimeZone timeZone = TimeZone.getTimeZone("Africa/Johannesburg");
-  private List<RequisitionTemplateConfiguration> requisitionTemplates = Lists.newArrayList();
+  private List<String> facilities = Lists.newArrayList();
 
   public void setTimeZone(String timeZone) {
     this.timeZone = TimeZone.getTimeZone(timeZone);

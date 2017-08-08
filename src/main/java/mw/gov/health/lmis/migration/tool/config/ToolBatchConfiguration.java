@@ -11,6 +11,5 @@ import lombok.Setter;
 public class ToolBatchConfiguration {
   private Integer chunk = 10;
   private Class<? extends SkipPolicy> skipPolicy = AlwaysSkipItemSkipPolicy.class;
-  private boolean migration = true;
   private boolean skipPeriods = true;
 }

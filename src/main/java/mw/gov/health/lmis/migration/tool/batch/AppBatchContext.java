@@ -2,7 +2,6 @@ package mw.gov.health.lmis.migration.tool.batch;
 
 import com.google.common.collect.Lists;
 
-import org.apache.commons.lang3.ObjectUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
@@ -12,7 +11,6 @@ import org.springframework.stereotype.Component;
 import lombok.Getter;
 import mw.gov.health.lmis.migration.tool.config.ToolProperties;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.ProcessingPeriod;
-import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.ProcessingSchedule;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.Program;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.domain.User;
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.ProcessingPeriodRepository;
@@ -20,13 +18,8 @@ import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.Progr
 import mw.gov.health.lmis.migration.tool.openlmis.referencedata.repository.UserRepository;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.TimeZone;
-import java.util.UUID;
-import java.util.function.Predicate;
-import java.util.stream.Collectors;
 
 @Component
 final class AppBatchContext implements InitializingBean {
@@ -47,8 +40,6 @@ final class AppBatchContext implements InitializingBean {
   @Getter
   private List<Program> programs;
 
-  private List<ProcessingPeriod> allPeriods;
-
   @Getter
   private List<ProcessingPeriod> periods;
 
@@ -63,17 +54,10 @@ final class AppBatchContext implements InitializingBean {
     programs = Lists.newArrayList(programRepository.findAll());
     LOGGER.info("Found {} programs", programs.size());
 
-    allPeriods = periodRepository.findAll();
-    LOGGER.info("Found {} periods", allPeriods.size());
-
     LocalDate startDate = toolProperties.getParameters().getStartDate();
     LocalDate endDate = toolProperties.getParameters().getEndDate();
-    periods = allPeriods
-        .stream()
-        .filter(period ->
-            !period.getStartDate().isBefore(startDate) && !period.getEndDate().isAfter(endDate))
-        .collect(Collectors.toList());
-    LOGGER.info("Select {} periods between {} and {}", periods.size(), startDate, endDate);
+    periods = periodRepository.findInPeriod(startDate, endDate);
+    LOGGER.info("Found {} periods between {} and {}", periods.size(), startDate, endDate);
 
     String username = toolProperties.getParameters().getCreator();
     user = userRepository.findByUsername(username);
@@ -85,60 +69,6 @@ final class AppBatchContext implements InitializingBean {
     }
 
     LOGGER.info("Initialized batch context...");
-  }
-
-  Program findProgramById(UUID id) {
-    return findProgram(elem -> id.equals(elem.getId()));
-  }
-
-  Program findProgramByCode(String code) {
-    return findProgram(elem -> code.equals(elem.getCode().toString()));
-  }
-
-  private Program findProgram(Predicate<Program> predicate) {
-    return programs.stream().filter(predicate).findFirst().orElse(null);
-  }
-
-  ProcessingPeriod findPeriod(Predicate<ProcessingPeriod> predicate) {
-    return periods.stream().filter(predicate).findFirst().orElse(null);
-  }
-
-  ProcessingPeriod findPreviousPeriod(UUID periodId) {
-    ProcessingPeriod period = findPeriodById(periodId);
-
-    if (null == period) {
-      return null;
-    }
-
-    List<ProcessingPeriod> collection = searchPeriods(
-        period.getProcessingSchedule(), period.getStartDate()
-    );
-
-    if (null == collection || collection.isEmpty()) {
-      return null;
-    }
-
-    // create a list...
-    List<ProcessingPeriod> list = new ArrayList<>(collection);
-    // ...remove the latest period from the list...
-    list.removeIf(p -> p.getId().equals(periodId));
-    // .. and sort elements by startDate property DESC.
-    list.sort((one, two) -> ObjectUtils.compare(two.getStartDate(), one.getStartDate()));
-
-    return list.isEmpty() ? null : list.get(0);
-  }
-
-  private ProcessingPeriod findPeriodById(UUID id) {
-    return periods.stream().filter(elem -> id.equals(elem.getId())).findFirst().orElse(null);
-  }
-
-  private List<ProcessingPeriod> searchPeriods(ProcessingSchedule schedule, LocalDate startDate) {
-    return allPeriods
-        .stream()
-        .filter(period ->
-            Objects.equals(schedule, period.getProcessingSchedule())
-                && !period.getStartDate().isAfter(startDate))
-        .collect(Collectors.toList());
   }
 
 }
