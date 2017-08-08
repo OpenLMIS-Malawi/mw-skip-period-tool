@@ -6,7 +6,6 @@ import com.google.common.collect.Lists;
 
 import lombok.Getter;
 import lombok.Setter;
-import mw.gov.health.lmis.migration.tool.openlmis.fulfillment.domain.OrderNumberConfiguration;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -20,9 +19,6 @@ public class ToolParameters {
   private String creator = "scm";
   private String requestedQuantityExplanation = "transferred from supply manager";
   private TimeZone timeZone = TimeZone.getTimeZone("Africa/Johannesburg");
-  private OrderNumberConfiguration orderNumberConfiguration = new OrderNumberConfiguration(
-      "O", true, false, false
-  );
   private List<RequisitionTemplateConfiguration> requisitionTemplates = Lists.newArrayList();
 
   public void setTimeZone(String timeZone) {

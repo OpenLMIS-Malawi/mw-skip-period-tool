@@ -22,11 +22,6 @@ tool:
         creator: "scm"
         requestedQuantityExplanation: "transferred from supply manager"
         timeZone: "Africa/Johannesburg"
-        orderNumberConfiguration:
-            orderNumberPrefix: "O"
-            includeOrderNumberPrefix: true
-            includeProgramCode: false
-            includeTypeSuffix: false
         requisitionTemplates:
            - program: "__ALL_PROGRAMS__"
              numberOfPeriodsToAverage: 2
