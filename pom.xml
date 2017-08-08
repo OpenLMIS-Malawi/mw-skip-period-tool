@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>mw.gov.health.lmis</groupId>
-    <artifactId>migration-tool</artifactId>
+    <artifactId>skip-period-tool</artifactId>
     <version>1.0-SNAPSHOT</version>
 
     <parent>
@@ -15,8 +15,6 @@
     </parent>
 
     <properties>
-        <main.class>mw.gov.health.lmis.migration.tool.App</main.class>
-
         <jdk.version>1.8</jdk.version>
 
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
