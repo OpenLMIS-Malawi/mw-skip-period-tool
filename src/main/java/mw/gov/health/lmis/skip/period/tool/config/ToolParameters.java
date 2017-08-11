@@ -19,6 +19,7 @@ public class ToolParameters {
   private String creator = "admin";
   private TimeZone timeZone = TimeZone.getTimeZone("Africa/Johannesburg");
   private List<String> facilities = Lists.newArrayList();
+  private List<String> programs = Lists.newArrayList();
 
   public void setTimeZone(String timeZone) {
     this.timeZone = TimeZone.getTimeZone(timeZone);

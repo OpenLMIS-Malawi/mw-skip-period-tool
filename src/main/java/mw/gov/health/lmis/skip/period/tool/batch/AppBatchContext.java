@@ -2,6 +2,7 @@ package mw.gov.health.lmis.skip.period.tool.batch;
 
 import com.google.common.collect.Lists;
 
+import mw.gov.health.lmis.skip.period.tool.config.ToolParameters;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
@@ -20,6 +21,7 @@ import mw.gov.health.lmis.skip.period.tool.openlmis.referencedata.repository.Use
 import java.time.LocalDate;
 import java.util.List;
 import java.util.TimeZone;
+import java.util.stream.Collectors;
 
 @Component
 final class AppBatchContext implements InitializingBean {
@@ -54,12 +56,22 @@ final class AppBatchContext implements InitializingBean {
     programs = Lists.newArrayList(programRepository.findAll());
     LOGGER.info("Found {} programs", programs.size());
 
-    LocalDate startDate = toolProperties.getParameters().getStartDate();
-    LocalDate endDate = toolProperties.getParameters().getEndDate();
+    ToolParameters parameters = toolProperties.getParameters();
+
+    if (null != parameters.getPrograms()) {
+      programs = programs
+              .stream()
+              .filter(program -> parameters.getPrograms().contains(program.getCodeValue()))
+              .collect(Collectors.toList());
+      LOGGER.info("Select {} programs based on configuration", programs.size());
+    }
+
+    LocalDate startDate = parameters.getStartDate();
+    LocalDate endDate = parameters.getEndDate();
     periods = periodRepository.findInPeriod(startDate, endDate);
     LOGGER.info("Found {} periods between {} and {}", periods.size(), startDate, endDate);
 
-    String username = toolProperties.getParameters().getCreator();
+    String username = parameters.getCreator();
     user = userRepository.findByUsername(username);
 
     if (null == user) {

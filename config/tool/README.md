@@ -45,12 +45,16 @@ tool:
         facilities:
             - string
             - string
+        programs:
+            - string
+            - string
 ```
 The following list explains all settings in the *parameters* section:
 * start/end date - set from/to what period periods should be skipped. By default the start date is set to today date minus 5 years and with first day of month. The end date is set to today date with last day of month. The format for dates is the following: YYYY-MM-DD
 * creator - when a requisition is created we need to set who create/skipped. This field should contain a username.
 * timeZone - set time zone for dates
 * facilities - set for what facilities periods should be skipped.
+* programs - set for what programs periods should be skipped.
 
 #### configuration section
 ```
