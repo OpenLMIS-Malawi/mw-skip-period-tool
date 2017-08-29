@@ -58,7 +58,7 @@ final class AppBatchContext implements InitializingBean {
 
     ToolParameters parameters = toolProperties.getParameters();
 
-    if (null != parameters.getPrograms()) {
+    if (null != parameters.getPrograms() && !parameters.getPrograms().isEmpty()) {
       programs = programs
               .stream()
               .filter(program -> parameters.getPrograms().contains(program.getCodeValue()))
