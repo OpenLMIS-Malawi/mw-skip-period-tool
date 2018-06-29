@@ -17,53 +17,51 @@ package mw.gov.health.lmis.skip.period.tool.openlmis.referencedata.domain;
 
 import lombok.Getter;
 
-import javax.persistence.Embeddable;
+import javax.persistence.CollectionTable;
+import javax.persistence.Column;
+import javax.persistence.DiscriminatorColumn;
+import javax.persistence.DiscriminatorType;
+import javax.persistence.DiscriminatorValue;
+import javax.persistence.ElementCollection;
+import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.Inheritance;
+import javax.persistence.InheritanceType;
+import javax.persistence.JoinColumn;
+import javax.persistence.MapKeyColumn;
+import javax.persistence.Table;
+import java.util.HashMap;
+import java.util.Map;
+import mw.gov.health.lmis.skip.period.tool.openlmis.BaseEntity;
 
 /**
- * A Dispensable describes how product is dispensed/given to a patient.
- * Description of the Dispensable contains information about product form,
+ * A dispensable describes how product is dispensed/given to a patient.
+ * Description of the dispensable contains information about product form,
  * dosage, dispensing unit etc.
  */
-@Embeddable
-public class Dispensable {
+@Entity
+@Table(name = "dispensables", schema = "referencedata")
+@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
+@DiscriminatorColumn(name = "type", discriminatorType = DiscriminatorType.STRING)
+@DiscriminatorValue("abstract")
+public abstract class Dispensable extends BaseEntity {
 
+  @ElementCollection(fetch = FetchType.EAGER)
+  @MapKeyColumn(name = "key")
+  @Column(name = "value")
+  @CollectionTable(
+      name = "dispensable_attributes",
+      joinColumns = @JoinColumn(name = "dispensableid"))
   @Getter
-  private final String dispensingUnit;
+  protected Map<String, String> attributes;
 
   protected Dispensable() {
-    this.dispensingUnit = "";
+    attributes = new HashMap<>();
   }
 
-  protected Dispensable(String dispensingUnit) {
-    this.dispensingUnit = dispensingUnit.trim();
-  }
+  public abstract boolean equals(Object object);
 
-  @Override
-  public final boolean equals(Object object) {
-    if (null == object) {
-      return false;
-    }
+  public abstract int hashCode();
 
-    if (!(object instanceof Dispensable)) {
-      return false;
-    }
-
-    return this.dispensingUnit.equalsIgnoreCase(((Dispensable) object).dispensingUnit);
-  }
-
-  @Override
-  public final int hashCode() {
-    return dispensingUnit.toLowerCase().hashCode();
-  }
-
-  @Override
-  public String toString() {
-    return dispensingUnit;
-  }
-
-  public static final Dispensable createNew(String dispensingUnit) {
-    String correctDispensingUnit = (null == dispensingUnit) ? "" : dispensingUnit;
-    return new Dispensable(correctDispensingUnit);
-  }
-
+  public abstract String toString();
 }

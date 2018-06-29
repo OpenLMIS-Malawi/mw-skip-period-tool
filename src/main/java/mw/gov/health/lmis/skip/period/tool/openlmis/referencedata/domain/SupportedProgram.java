@@ -15,68 +15,47 @@
 
 package mw.gov.health.lmis.skip.period.tool.openlmis.referencedata.domain;
 
-import com.fasterxml.jackson.annotation.JsonIdentityInfo;
-import com.fasterxml.jackson.annotation.ObjectIdGenerators;
-
-import mw.gov.health.lmis.skip.period.tool.openlmis.BaseEntity;
-
+import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
-
+import java.io.Serializable;
 import java.time.LocalDate;
-import java.util.Objects;
 import java.util.UUID;
-
 import javax.persistence.Column;
+import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
 @Entity
 @Table(name = "supported_programs", schema = "referencedata")
-@JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
 @NoArgsConstructor
-public class SupportedProgram extends BaseEntity {
+@AllArgsConstructor
+@EqualsAndHashCode(of = "facilityProgram")
+public final class SupportedProgram implements Serializable {
 
-  @ManyToOne
-  @JoinColumn(name = "facilityId", nullable = false)
+  @EmbeddedId
   @Getter
-  @Setter
-  private Facility facility;
-
-  @ManyToOne
-  @JoinColumn(name = "programId", nullable = false)
-  @Getter
-  @Setter
-  private Program program;
+  private SupportedProgramPrimaryKey facilityProgram;
 
   @Column(nullable = false)
+  @Getter
   private Boolean active;
 
+  @Column(nullable = false)
+  @Getter
+  private Boolean locallyFulfilled;
+
+  @SuppressWarnings("squid:S3437")
+  // https://github.com/jhipster/generator-jhipster/issues/4553
   private LocalDate startDate;
 
-  private SupportedProgram(Facility facility, Program program, boolean active) {
-    this.facility = Objects.requireNonNull(facility);
-    this.program = Objects.requireNonNull(program);
-    this.active = active;
+  public boolean isActiveFor(Program program) {
+    return facilityProgram.getProgram().equals(program) && active;
   }
 
-  private SupportedProgram(Facility facility, Program program, boolean active,
-                           LocalDate startDate) {
-    this(facility, program, active);
-    this.startDate = startDate;
-  }
-
-  public static SupportedProgram newSupportedProgram(Facility facility, Program program,
-                                                     boolean active) {
-    return new SupportedProgram(facility, program, active);
-  }
-
-  public static SupportedProgram newSupportedProgram(Facility facility, Program program,
-                                                     boolean active, LocalDate startDate) {
-    return new SupportedProgram(facility, program, active, startDate);
+  public UUID programId() {
+    return facilityProgram.getProgram().getId();
   }
 
   /**
@@ -85,18 +64,18 @@ public class SupportedProgram extends BaseEntity {
    * @param exporter exporter to export to
    */
   public void export(Exporter exporter) {
-    exporter.setId(id);
-    exporter.setProgram(program);
+    exporter.setProgram(facilityProgram.getProgram());
     exporter.setSupportActive(active);
     exporter.setSupportStartDate(startDate);
+    exporter.setSupportLocallyFulfilled(locallyFulfilled);
   }
 
   public interface Exporter {
-    void setId(UUID id);
-
     void setProgram(Program program);
 
     void setSupportActive(boolean supportActive);
+
+    void setSupportLocallyFulfilled(boolean supportLocallyFulfilled);
 
     void setSupportStartDate(LocalDate supportStartDate);
   }

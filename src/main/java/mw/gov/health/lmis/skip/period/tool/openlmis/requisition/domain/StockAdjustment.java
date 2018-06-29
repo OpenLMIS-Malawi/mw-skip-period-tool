@@ -15,18 +15,15 @@
 
 package mw.gov.health.lmis.skip.period.tool.openlmis.requisition.domain;
 
-import org.hibernate.annotations.Type;
-import mw.gov.health.lmis.skip.period.tool.openlmis.BaseEntity;
-
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-
 import java.util.UUID;
-
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Table;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import mw.gov.health.lmis.skip.period.tool.openlmis.BaseEntity;
+import org.hibernate.annotations.Type;
 
 @Entity
 @Table(name = "stock_adjustments", schema = "requisition")

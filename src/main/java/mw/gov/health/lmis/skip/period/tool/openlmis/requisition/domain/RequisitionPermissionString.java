@@ -13,8 +13,10 @@
  * http://www.gnu.org/licenses.  For additional information contact info@OpenLMIS.org. 
  */
 
-package mw.gov.health.lmis.skip.period.tool.openlmis.referencedata.domain;
+package mw.gov.health.lmis.skip.period.tool.openlmis.requisition.domain;
 
+import java.util.Objects;
+import java.util.UUID;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -27,34 +29,39 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import mw.gov.health.lmis.skip.period.tool.openlmis.BaseEntity;
 
-
 @Entity
-@Table(name = "stock_adjustment_reasons", schema = "referencedata")
+@Table(name = "requisition_permission_strings")
 @NoArgsConstructor
 @AllArgsConstructor
-public class StockAdjustmentReason extends BaseEntity {
+public class RequisitionPermissionString extends BaseEntity {
 
-  @ManyToOne(cascade = CascadeType.REFRESH)
-  @JoinColumn(name = "programId", nullable = false)
+  @ManyToOne(cascade = {CascadeType.REFRESH})
+  @JoinColumn(name = "requisitionId", nullable = false)
   @Getter
   @Setter
-  private Program program;
+  private Requisition requisition;
 
-  @Column(nullable = false, columnDefinition = "text")
+  @Column(columnDefinition = TEXT_COLUMN_DEFINITION, nullable = false)
   @Getter
   @Setter
-  private String name;
+  private String permissionString;
 
-  @Column(columnDefinition = "text")
-  @Getter
-  @Setter
-  private String description;
-
-  @Getter
-  @Setter
-  private Boolean additive;
-
-  @Getter
-  @Setter
-  private Integer displayOrder;
+  /**
+   * Convenience constructor to create permission string based on a set of values, which all must
+   * not be null.
+   * 
+   * @param requisition requisition associated with permission string
+   * @param rightName right name of string
+   * @param facilityId facility ID of string
+   * @param programId program ID of string
+   */
+  public static RequisitionPermissionString newRequisitionPermissionString(Requisition requisition,
+      String rightName, UUID facilityId, UUID programId) {
+    Objects.requireNonNull(requisition);
+    Objects.requireNonNull(rightName);
+    Objects.requireNonNull(facilityId);
+    Objects.requireNonNull(programId);
+    return new RequisitionPermissionString(requisition,
+        String.join("|", rightName, facilityId.toString(), programId.toString()));
+  }
 }

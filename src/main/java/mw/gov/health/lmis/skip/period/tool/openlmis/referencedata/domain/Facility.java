@@ -18,20 +18,12 @@ package mw.gov.health.lmis.skip.period.tool.openlmis.referencedata.domain;
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import com.vividsolutions.jts.geom.Point;
-
-import org.hibernate.annotations.Type;
-
-import lombok.Getter;
-import lombok.Setter;
-import mw.gov.health.lmis.skip.period.tool.openlmis.BaseEntity;
-
 import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
-
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Convert;
@@ -41,6 +33,10 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
+import lombok.Getter;
+import lombok.Setter;
+import mw.gov.health.lmis.skip.period.tool.openlmis.BaseEntity;
+import org.hibernate.annotations.Type;
 
 @Entity
 @Table(name = "facilities", schema = "referencedata")
@@ -110,8 +106,8 @@ public class Facility extends BaseEntity {
   @Setter
   private Boolean openLmisAccessible;
 
-  @OneToMany(mappedBy = "facility", cascade = CascadeType.ALL, orphanRemoval = true,
-      fetch = FetchType.EAGER)
+  @OneToMany(mappedBy = "facilityProgram.facility", cascade = CascadeType.ALL, orphanRemoval = true,
+      fetch = FetchType.LAZY)
   @Getter
   @Setter
   private Set<SupportedProgram> supportedPrograms = new HashSet<>();
@@ -127,12 +123,16 @@ public class Facility extends BaseEntity {
   @Setter
   private Map<String, String> extraData;
 
-  public Facility() {
+  private Facility() {
 
   }
 
   public Facility(String code) {
     this.code = code;
+  }
+
+  public Facility(UUID id) {
+    this.id = id;
   }
 
   /**
@@ -247,7 +247,7 @@ public class Facility extends BaseEntity {
   public boolean supports(Program program) {
     return supportedPrograms
         .stream()
-        .anyMatch(supported -> supported.getProgram().equals(program));
+        .anyMatch(supported -> supported.isActiveFor(program));
   }
 
   public interface Exporter {

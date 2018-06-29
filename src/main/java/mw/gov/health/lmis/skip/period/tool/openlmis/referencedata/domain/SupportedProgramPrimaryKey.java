@@ -13,15 +13,34 @@
  * http://www.gnu.org/licenses.  For additional information contact info@OpenLMIS.org. 
  */
 
-package mw.gov.health.lmis.skip.period.tool.openlmis.requisition.domain;
+package mw.gov.health.lmis.skip.period.tool.openlmis.referencedata.domain;
 
-public enum SourceType {
-  USER_INPUT,
-  CALCULATED,
-  REFERENCE_DATA,
-  STOCK_CARDS;
+import java.io.Serializable;
+import javax.persistence.Embeddable;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
 
-  public boolean isReferenceSource() {
-    return REFERENCE_DATA.equals(this) || STOCK_CARDS.equals(this);
+@Embeddable
+@AllArgsConstructor
+@EqualsAndHashCode
+public class SupportedProgramPrimaryKey implements Serializable {
+
+  @ManyToOne
+  @JoinColumn(name = "facilityId", nullable = false)
+  @Getter
+  private final Facility facility;
+
+  @ManyToOne
+  @JoinColumn(name = "programId", nullable = false)
+  @Getter
+  private final Program program;
+
+  // Default constructor needed by hibernate
+  private SupportedProgramPrimaryKey() {
+    facility = null;
+    program = null;
   }
 }

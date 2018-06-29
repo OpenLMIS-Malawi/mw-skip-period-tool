@@ -15,17 +15,9 @@
 
 package mw.gov.health.lmis.skip.period.tool.openlmis.requisition.domain;
 
-import org.hibernate.annotations.Type;
-
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import mw.gov.health.lmis.skip.period.tool.openlmis.ExternalStatus;
-
 import java.time.ZonedDateTime;
 import java.util.Objects;
 import java.util.UUID;
-
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -33,7 +25,12 @@ import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToOne;
 import javax.persistence.Table;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import org.hibernate.annotations.Type;
 
 @Entity
 @Table(name = "status_changes", schema = "requisition")
@@ -46,32 +43,36 @@ public class StatusChange extends BaseTimestampedEntity {
   @Setter
   private Requisition requisition;
 
+  @OneToOne(mappedBy = "statusChange")
+  @Getter
+  @Setter
+  private StatusMessage statusMessage;
+
   @Getter
   @Setter
   @Type(type = UUID_TYPE)
   private UUID authorId;
 
+  @Getter
+  @Setter
+  @Type(type = UUID_TYPE)
+  private UUID supervisoryNodeId;
+
   @Column(nullable = false)
   @Enumerated(EnumType.STRING)
   @Getter
   @Setter
-  private ExternalStatus status;
+  private RequisitionStatus status;
 
-  private StatusChange(Requisition requisition, UUID authorId, ExternalStatus status) {
+  private StatusChange(Requisition requisition, UUID authorId) {
     this.requisition = Objects.requireNonNull(requisition);
     this.authorId = authorId;
-    this.status = Objects.requireNonNull(status);
-    this.setCreatedDate(requisition.getCreatedDate());
-    this.setModifiedDate(requisition.getModifiedDate());
+    this.supervisoryNodeId = requisition.getSupervisoryNodeId();
+    this.status = Objects.requireNonNull(requisition.getStatus());
   }
 
   public static StatusChange newStatusChange(Requisition requisition, UUID authorId) {
-    return new StatusChange(requisition, authorId, requisition.getStatus());
-  }
-
-  public static StatusChange newStatusChange(Requisition requisition, UUID authorId,
-                                             ExternalStatus status) {
-    return new StatusChange(requisition, authorId, status);
+    return new StatusChange(requisition, authorId);
   }
 
   /**
@@ -79,9 +80,10 @@ public class StatusChange extends BaseTimestampedEntity {
    *
    * @param exporter exporter to export to
    */
-  public void export(Exporter exporter) {
+  public void export(StatusChange.Exporter exporter) {
     exporter.setCreatedDate(getCreatedDate());
     exporter.setStatus(status);
+    exporter.setStatusMessage(statusMessage);
     exporter.setAuthorId(authorId);
   }
 
@@ -89,7 +91,9 @@ public class StatusChange extends BaseTimestampedEntity {
 
     void setCreatedDate(ZonedDateTime createdDate);
 
-    void setStatus(ExternalStatus status);
+    void setStatus(RequisitionStatus status);
+
+    void setStatusMessage(StatusMessage statusMessage);
 
     void setAuthorId(UUID authorId);
   }

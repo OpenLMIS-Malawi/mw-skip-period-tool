@@ -3,6 +3,7 @@ package mw.gov.health.lmis.skip.period.tool.batch;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
+import mw.gov.health.lmis.skip.period.tool.openlmis.requisition.domain.RequisitionStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.batch.item.ItemProcessor;
@@ -19,7 +20,6 @@ import mw.gov.health.lmis.skip.period.tool.openlmis.requisition.domain.Requisiti
 import mw.gov.health.lmis.skip.period.tool.openlmis.requisition.domain.StatusChange;
 import mw.gov.health.lmis.skip.period.tool.openlmis.requisition.repository.RequisitionRepository;
 import mw.gov.health.lmis.skip.period.tool.openlmis.requisition.repository.RequisitionTemplateRepository;
-import mw.gov.health.lmis.skip.period.tool.openlmis.ExternalStatus;
 
 import java.time.ZoneId;
 import java.util.List;
@@ -109,21 +109,25 @@ public class SkipPeriodsProcessor implements ItemProcessor<String, List<Requisit
 
     requisition.setTemplate(template);
     requisition.setPreviousRequisitions(Lists.newArrayList());
-    requisition.setAvailableNonFullSupplyProducts(Sets.newHashSet());
+    requisition.setAvailableProducts(Sets.newHashSet());
 
     ZoneId zoneId = toolProperties.getParameters().getTimeZone().toZoneId();
 
     requisition.setCreatedDate(period.getStartDate().atStartOfDay(zoneId));
     requisition.setModifiedDate(requisition.getCreatedDate());
-    requisition.setStatus(ExternalStatus.SKIPPED);
     requisition.setRequisitionLineItems(Lists.newArrayList());
 
     UUID authorId = context.getUser().getId();
 
+    requisition.setStatus(RequisitionStatus.INITIATED);
+
     requisition.getStatusChanges()
-        .add(StatusChange.newStatusChange(requisition, authorId, ExternalStatus.INITIATED));
+        .add(StatusChange.newStatusChange(requisition, authorId));
+
+    requisition.setStatus(RequisitionStatus.SKIPPED);
+
     requisition.getStatusChanges()
-        .add(StatusChange.newStatusChange(requisition, authorId, ExternalStatus.SKIPPED));
+        .add(StatusChange.newStatusChange(requisition, authorId));
 
     return requisition;
   }

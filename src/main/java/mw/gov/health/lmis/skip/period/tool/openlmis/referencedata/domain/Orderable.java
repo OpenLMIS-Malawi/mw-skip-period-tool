@@ -15,6 +15,7 @@
 
 package mw.gov.health.lmis.skip.period.tool.openlmis.referencedata.domain;
 
+import javax.persistence.ManyToOne;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -53,8 +54,9 @@ public class Orderable extends BaseEntity {
   @Setter
   private Code productCode;
 
-  @Embedded
-  @Getter(AccessLevel.PACKAGE)
+  @ManyToOne(cascade = CascadeType.ALL)
+  @JoinColumn(name = "dispensableid", nullable = false)
+  @Getter
   private Dispensable dispensable;
 
   @Getter

@@ -13,15 +13,10 @@
  * http://www.gnu.org/licenses.  For additional information contact info@OpenLMIS.org. 
  */
 
-package mw.gov.health.lmis.skip.period.tool.openlmis.requisition.domain;
+package mw.gov.health.lmis.skip.period.tool.openlmis.requisition.dto;
 
-public enum SourceType {
-  USER_INPUT,
-  CALCULATED,
-  REFERENCE_DATA,
-  STOCK_CARDS;
-
-  public boolean isReferenceSource() {
-    return REFERENCE_DATA.equals(this) || STOCK_CARDS.equals(this);
-  }
+public enum ReasonCategory {
+  TRANSFER,
+  ADJUSTMENT,
+  PHYSICAL_INVENTORY
 }

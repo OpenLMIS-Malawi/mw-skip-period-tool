@@ -34,6 +34,7 @@ import javax.persistence.MappedSuperclass;
 public abstract class BaseEntity {
   public static final String TEXT_COLUMN_DEFINITION = "text";
   public static final String UUID_TYPE = "pg-uuid";
+  public static final String REQUISITION = "requisition";
 
   @Id
   @GeneratedValue(generator = "uuid-gen")

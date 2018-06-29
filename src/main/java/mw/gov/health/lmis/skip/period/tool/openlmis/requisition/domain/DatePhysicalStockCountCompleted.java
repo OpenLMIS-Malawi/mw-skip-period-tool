@@ -15,13 +15,34 @@
 
 package mw.gov.health.lmis.skip.period.tool.openlmis.requisition.domain;
 
-public enum SourceType {
-  USER_INPUT,
-  CALCULATED,
-  REFERENCE_DATA,
-  STOCK_CARDS;
+import java.time.LocalDate;
+import javax.persistence.Embeddable;
+import javax.validation.constraints.NotNull;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
 
-  public boolean isReferenceSource() {
-    return REFERENCE_DATA.equals(this) || STOCK_CARDS.equals(this);
+@Embeddable
+@EqualsAndHashCode
+public class DatePhysicalStockCountCompleted {
+  @Getter
+  private final LocalDate localDate;
+
+  /**
+   * Creates a new DatePhysicalStockCountCompleted.
+   *
+   * @param date the local code
+   */
+  public DatePhysicalStockCountCompleted(@NotNull LocalDate date) {
+    if (date == null) {
+      throw new IllegalArgumentException("Date can't be null");
+    }
+    this.localDate = date;
   }
+
+  private DatePhysicalStockCountCompleted() {
+    //Hibernate will replace this with proper date using reflection,
+    //LocalDate.MIN used instead of null to satisfy static code analyzers
+    localDate = LocalDate.MIN;
+  }
+
 }

@@ -13,15 +13,19 @@
  * http://www.gnu.org/licenses.  For additional information contact info@OpenLMIS.org. 
  */
 
-package mw.gov.health.lmis.skip.period.tool.openlmis.requisition.domain;
+package mw.gov.health.lmis.skip.period.tool.openlmis.requisition.dto;
 
-public enum SourceType {
-  USER_INPUT,
-  CALCULATED,
-  REFERENCE_DATA,
-  STOCK_CARDS;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import java.util.UUID;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
 
-  public boolean isReferenceSource() {
-    return REFERENCE_DATA.equals(this) || STOCK_CARDS.equals(this);
-  }
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@EqualsAndHashCode
+public class BaseDto {
+
+  @Getter
+  @Setter
+  protected UUID id;
 }

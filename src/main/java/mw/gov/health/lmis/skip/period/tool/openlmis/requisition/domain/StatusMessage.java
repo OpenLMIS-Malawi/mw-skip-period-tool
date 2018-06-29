@@ -15,17 +15,9 @@
 
 package mw.gov.health.lmis.skip.period.tool.openlmis.requisition.domain;
 
-import org.hibernate.annotations.Type;
-
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import mw.gov.health.lmis.skip.period.tool.openlmis.ExternalStatus;
-
 import java.time.ZonedDateTime;
 import java.util.Objects;
 import java.util.UUID;
-
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -33,12 +25,19 @@ import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToOne;
 import javax.persistence.Table;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import org.hibernate.annotations.Type;
 
 @Entity
 @Table(name = "status_messages", schema = "requisition")
 @NoArgsConstructor
 public class StatusMessage extends BaseTimestampedEntity {
+
+  private static final String UUID = "pg-uuid";
 
   @ManyToOne(cascade = {CascadeType.REFRESH})
   @JoinColumn(name = "requisitionId", nullable = false)
@@ -46,9 +45,15 @@ public class StatusMessage extends BaseTimestampedEntity {
   @Setter
   private Requisition requisition;
 
+  @OneToOne(cascade = {CascadeType.ALL})
+  @JoinColumn(name = "statusChangeId", nullable = false, unique = true)
   @Getter
   @Setter
-  @Type(type = UUID_TYPE)
+  private StatusChange statusChange;
+
+  @Getter
+  @Setter
+  @Type(type = UUID)
   private UUID authorId;
 
   @Getter
@@ -63,29 +68,29 @@ public class StatusMessage extends BaseTimestampedEntity {
   @Enumerated(EnumType.STRING)
   @Getter
   @Setter
-  private ExternalStatus status;
+  private RequisitionStatus status;
 
   @Column(nullable = false)
   @Getter
   @Setter
   private String body;
 
-  private StatusMessage(Requisition requisition, UUID authorId, String authorFirstName,
-                        String authorLastName, String body, ExternalStatus status) {
+  private StatusMessage(Requisition requisition, StatusChange statusChange, UUID authorId,
+                        String authorFirstName, String authorLastName, String body) {
     this.requisition = Objects.requireNonNull(requisition);
+    this.statusChange = Objects.requireNonNull(statusChange);
     this.authorId = authorId;
     this.authorFirstName = authorFirstName;
     this.authorLastName = authorLastName;
-    this.status = Objects.requireNonNull(status);
+    this.status = Objects.requireNonNull(requisition.getStatus());
     this.body = Objects.requireNonNull(body);
-    this.setCreatedDate(requisition.getCreatedDate());
-    this.setModifiedDate(requisition.getModifiedDate());
   }
-
-  public static StatusMessage newStatusMessage(Requisition requisition, UUID authorId,
-                                               String authorFirstName, String authorLastName,
-                                               String body, ExternalStatus status) {
-    return new StatusMessage(requisition, authorId, authorFirstName, authorLastName, body, status);
+  
+  public static StatusMessage newStatusMessage(Requisition requisition, StatusChange statusChange,
+                                               UUID authorId, String authorFirstName,
+                                               String authorLastName, String body) {
+    return new StatusMessage(requisition, statusChange, authorId,
+        authorFirstName, authorLastName, body);
   }
 
   /**
@@ -99,6 +104,7 @@ public class StatusMessage extends BaseTimestampedEntity {
     exporter.setAuthorFirstName(authorFirstName);
     exporter.setAuthorLastName(authorLastName);
     exporter.setRequisitionId(requisition.getId());
+    exporter.setStatusChangeId(statusChange.getId());
     exporter.setStatus(status);
     exporter.setBody(body);
     exporter.setCreatedDate(getCreatedDate());
@@ -116,9 +122,11 @@ public class StatusMessage extends BaseTimestampedEntity {
 
     void setRequisitionId(UUID requisitionId);
 
-    void setBody(String body);
+    void setStatusChangeId(UUID statusChangeId);
 
-    void setStatus(ExternalStatus status);
+    void setBody(String body);
+    
+    void setStatus(RequisitionStatus status);
 
     void setCreatedDate(ZonedDateTime createdDate);
   }
