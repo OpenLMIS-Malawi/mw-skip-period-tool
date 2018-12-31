@@ -90,11 +90,6 @@ public class User extends BaseEntity {
   @Setter
   private boolean active;
 
-  @Column(nullable = false, columnDefinition = "boolean DEFAULT false")
-  @Getter
-  @Setter
-  private boolean loginRestricted;
-
   @Column(columnDefinition = "boolean DEFAULT true")
   @Getter
   @Setter
@@ -132,7 +127,6 @@ public class User extends BaseEntity {
 
     verified = importer.isVerified();
     active = importer.isActive();
-    loginRestricted = importer.isLoginRestricted();
     if (importer.getAllowNotify() == null) {
       allowNotify = Boolean.TRUE;
     } else {
@@ -153,7 +147,6 @@ public class User extends BaseEntity {
     this.homeFacility = homeFacility;
     this.active = active;
     this.verified = verified;
-    this.loginRestricted = loginRestricted;
     this.allowNotify = allowNotify;
     this.extraData = extraData;
   }
@@ -272,7 +265,6 @@ public class User extends BaseEntity {
 
     exporter.setActive(active);
     exporter.setVerified(verified);
-    exporter.setLoginRestricted(loginRestricted);
     exporter.setAllowNotify(allowNotify);
     exporter.setExtraData(extraData);
     exporter.addRoleAssignments(roleAssignments);
@@ -314,8 +306,6 @@ public class User extends BaseEntity {
 
     void setActive(boolean active);
 
-    void setLoginRestricted(boolean loginRestricted);
-
     void setAllowNotify(Boolean allowNotify);
 
     void addRoleAssignments(Set<RoleAssignment> roleAssignments);
@@ -341,8 +331,6 @@ public class User extends BaseEntity {
     boolean isVerified();
 
     boolean isActive();
-
-    boolean isLoginRestricted();
 
     Boolean getAllowNotify();
 
