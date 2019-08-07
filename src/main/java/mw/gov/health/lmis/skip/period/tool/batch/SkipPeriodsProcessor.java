@@ -105,7 +105,7 @@ public class SkipPeriodsProcessor implements ItemProcessor<String, List<Requisit
     requisition.setNumberOfMonthsInPeriod(period.getDurationInMonths());
 
     RequisitionTemplate template = requisitionTemplateRepository
-        .findFirstByProgramIdOrderByCreatedDateDesc(program.getId());
+        .findTemplate(program.getId(), facility.getType().getId());
 
     requisition.setTemplate(template);
     requisition.setPreviousRequisitions(Lists.newArrayList());

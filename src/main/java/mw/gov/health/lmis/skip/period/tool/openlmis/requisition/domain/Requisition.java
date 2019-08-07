@@ -15,6 +15,7 @@
 
 package mw.gov.health.lmis.skip.period.tool.openlmis.requisition.domain;
 
+
 import static mw.gov.health.lmis.skip.period.tool.openlmis.BaseEntity.REQUISITION;
 
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
@@ -40,6 +41,7 @@ import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
+import javax.persistence.Version;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -58,7 +60,7 @@ public class Requisition extends BaseTimestampedEntity {
   private static final int LINE_ITEMS_BATCH_SIZE = 100;
 
   @OneToMany(
-      mappedBy = REQUISITION,
+      mappedBy = "requisition",
       cascade = {CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REFRESH, CascadeType.REMOVE},
       fetch = FetchType.LAZY,
       orphanRemoval = true)
@@ -66,6 +68,11 @@ public class Requisition extends BaseTimestampedEntity {
   @Getter
   @Setter
   private List<RequisitionLineItem> requisitionLineItems;
+
+  @Version
+  @Getter
+  @Setter
+  private Long version;
 
   @Getter
   private String draftStatusMessage;
@@ -106,7 +113,7 @@ public class Requisition extends BaseTimestampedEntity {
   private RequisitionStatus status;
 
   @OneToMany(
-      mappedBy = REQUISITION,
+      mappedBy = "requisition",
       cascade = CascadeType.ALL)
   @Getter
   @Setter
@@ -116,6 +123,10 @@ public class Requisition extends BaseTimestampedEntity {
   @Getter
   @Setter
   private Boolean emergency;
+
+  @Getter
+  @Setter
+  private Boolean reportOnly;
 
   @Column(nullable = false)
   @Getter
@@ -164,10 +175,14 @@ public class Requisition extends BaseTimestampedEntity {
   private List<StockAdjustmentReason> stockAdjustmentReasons = new ArrayList<>();
 
   @OneToMany(
-      mappedBy = REQUISITION,
-      cascade = CascadeType.ALL)
+      mappedBy = "requisition",
+      cascade = CascadeType.ALL,
+      orphanRemoval = true)
   @Getter
   private List<RequisitionPermissionString> permissionStrings = new ArrayList<>();
+
+  @Embedded
+  private ExtraDataEntity extraData = new ExtraDataEntity();
 
   /**
    * Constructor.
