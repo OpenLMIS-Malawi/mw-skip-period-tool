@@ -76,12 +76,12 @@ public class SkipPeriodsProcessor implements ItemProcessor<String, List<Requisit
   private Requisition createIfPossible(Facility facility, ProcessingPeriod period,
                                        Program program) {
     boolean database = requisitionRepository
-        .existsByFacilityIdAndProgramIdAndProcessingPeriodId(
-            facility.getId(), program.getId(), period.getId()
+        .existsByFacilityIdAndProgramIdAndProcessingPeriodIdAndEmergency(
+            facility.getId(), program.getId(), period.getId(), false
         );
 
     if (database) {
-      LOGGER.debug(
+      LOGGER.warn(
           "Requisition for facility {}, program {} and period {} exists. Skipping...",
           facility.getCode(), program.getCode(), period.getName()
       );
