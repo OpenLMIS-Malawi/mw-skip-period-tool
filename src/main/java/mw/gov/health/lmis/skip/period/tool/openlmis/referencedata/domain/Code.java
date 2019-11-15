@@ -15,9 +15,7 @@
 
 package mw.gov.health.lmis.skip.period.tool.openlmis.referencedata.domain;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
-
 import javax.persistence.Embeddable;
 
 /**
@@ -25,6 +23,7 @@ import javax.persistence.Embeddable;
  */
 @Embeddable
 public class Code {
+
   private final String code;
 
   public Code() {
@@ -65,15 +64,4 @@ public class Code {
     return code;
   }
 
-  /**
-   * Creates a new Code value.
-   *
-   * @param code the code
-   * @return a new Code with the given code.  Uses a blank code if given null.
-   */
-  @JsonCreator
-  public static final Code code(String code) {
-    String workingCode = (null == code) ? "" : code;
-    return new Code(workingCode);
-  }
 }

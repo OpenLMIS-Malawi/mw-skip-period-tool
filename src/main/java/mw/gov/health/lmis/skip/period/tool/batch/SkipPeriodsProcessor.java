@@ -1,5 +1,7 @@
 package mw.gov.health.lmis.skip.period.tool.batch;
 
+import static org.apache.commons.lang3.BooleanUtils.isNotTrue;
+
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
@@ -88,7 +90,7 @@ public class SkipPeriodsProcessor implements ItemProcessor<String, List<Requisit
       return null;
     }
 
-    if (!program.getPeriodsSkippable()) {
+    if (isNotTrue(program.getPeriodsSkippable())) {
       LOGGER.error("Program {} does not allow to skipping periods", program.getCode());
       return null;
     }

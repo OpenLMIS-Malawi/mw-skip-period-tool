@@ -15,8 +15,7 @@
 
 package mw.gov.health.lmis.skip.period.tool.openlmis.requisition.domain;
 
-
-import static mw.gov.health.lmis.skip.period.tool.openlmis.BaseEntity.REQUISITION;
+import static mw.gov.health.lmis.skip.period.tool.openlmis.requisition.domain.Requisition.SCHEMA;
 
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
@@ -24,13 +23,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
-import javax.persistence.AttributeOverride;
-import javax.persistence.AttributeOverrides;
 import javax.persistence.CascadeType;
 import javax.persistence.CollectionTable;
 import javax.persistence.Column;
 import javax.persistence.ElementCollection;
-import javax.persistence.Embedded;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
@@ -41,41 +37,29 @@ import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
-import javax.persistence.Version;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.Type;
 
-@SuppressWarnings("PMD.TooManyMethods")
 @Entity
-@Table(name = "requisitions", schema = REQUISITION)
+@Table(name = "requisitions", schema = SCHEMA)
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
 public class Requisition extends BaseTimestampedEntity {
 
-  private static final int LINE_ITEMS_BATCH_SIZE = 100;
+  public static final String SCHEMA = "requisition";
 
   @OneToMany(
       mappedBy = "requisition",
       cascade = {CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REFRESH, CascadeType.REMOVE},
       fetch = FetchType.LAZY,
       orphanRemoval = true)
-  @BatchSize(size = LINE_ITEMS_BATCH_SIZE)
   @Getter
   @Setter
   private List<RequisitionLineItem> requisitionLineItems;
-
-  @Version
-  @Getter
-  @Setter
-  private Long version;
-
-  @Getter
-  private String draftStatusMessage;
 
   @ManyToOne
   @JoinColumn(name = "templateId", nullable = false)
@@ -101,11 +85,6 @@ public class Requisition extends BaseTimestampedEntity {
   @Type(type = UUID_TYPE)
   private UUID processingPeriodId;
 
-  @Getter
-  @Setter
-  @Type(type = UUID_TYPE)
-  private UUID supplyingFacilityId;
-
   @Column(nullable = false)
   @Enumerated(EnumType.STRING)
   @Getter
@@ -113,7 +92,7 @@ public class Requisition extends BaseTimestampedEntity {
   private RequisitionStatus status;
 
   @OneToMany(
-      mappedBy = "requisition",
+      mappedBy = SCHEMA,
       cascade = CascadeType.ALL)
   @Getter
   @Setter
@@ -123,10 +102,6 @@ public class Requisition extends BaseTimestampedEntity {
   @Getter
   @Setter
   private Boolean emergency;
-
-  @Getter
-  @Setter
-  private Boolean reportOnly;
 
   @Column(nullable = false)
   @Getter
@@ -140,67 +115,17 @@ public class Requisition extends BaseTimestampedEntity {
 
   @ManyToMany
   @JoinTable(name = "requisitions_previous_requisitions",
+      schema = SCHEMA,
       joinColumns = {@JoinColumn(name = "requisitionId")},
       inverseJoinColumns = {@JoinColumn(name = "previousRequisitionId")})
   @Getter
   @Setter
   private List<Requisition> previousRequisitions;
 
-  @ElementCollection(fetch = FetchType.EAGER, targetClass = UUID.class)
-  @Column(name = "value")
-  @CollectionTable(
-      name = "available_products",
+  @ElementCollection(fetch = FetchType.LAZY)
+  @CollectionTable(name = "available_products", schema = SCHEMA,
       joinColumns = @JoinColumn(name = "requisitionId"))
   @Getter
   @Setter
-  @Type(type = UUID_TYPE)
-  private Set<UUID> availableProducts;
-
-  @Getter
-  @Setter
-  @Embedded
-  @AttributeOverrides({
-      @AttributeOverride(name = "localDate",
-          column = @Column(name = "datephysicalstockcountcompleted"))
-      })
-  private DatePhysicalStockCountCompleted datePhysicalStockCountCompleted;
-
-  @OneToMany(
-      cascade = {CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REFRESH, CascadeType.REMOVE},
-      fetch = FetchType.LAZY,
-      orphanRemoval = true)
-  @JoinColumn(name = "requisitionId")
-  @Getter
-  @Setter
-  private List<StockAdjustmentReason> stockAdjustmentReasons = new ArrayList<>();
-
-  @OneToMany(
-      mappedBy = "requisition",
-      cascade = CascadeType.ALL,
-      orphanRemoval = true)
-  @Getter
-  private List<RequisitionPermissionString> permissionStrings = new ArrayList<>();
-
-  @Embedded
-  private ExtraDataEntity extraData = new ExtraDataEntity();
-
-  /**
-   * Constructor.
-   *
-   * @param facilityId         id of the Facility
-   * @param programId          id of the Program
-   * @param processingPeriodId id of the ProcessingPeriod
-   * @param status             status of the Requisition
-   * @param emergency          whether this Requisition is emergency
-   */
-  public Requisition(UUID facilityId, UUID programId, UUID processingPeriodId,
-                     RequisitionStatus status, Boolean emergency) {
-    this.facilityId = facilityId;
-    this.programId = programId;
-    this.processingPeriodId = processingPeriodId;
-    this.status = status;
-    this.emergency = emergency;
-    permissionStrings.add(RequisitionPermissionString.newRequisitionPermissionString(this,
-        "REQUISITION_VIEW", facilityId, programId));
-  }
+  private Set<ApprovedProductReference> availableProducts;
 }

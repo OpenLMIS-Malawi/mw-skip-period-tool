@@ -15,37 +15,39 @@
 
 package mw.gov.health.lmis.skip.period.tool.openlmis.requisition.domain;
 
-import java.util.UUID;
-import javax.persistence.CascadeType;
+import javax.persistence.AttributeOverride;
+import javax.persistence.AttributeOverrides;
 import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
-import javax.persistence.Table;
-import lombok.AccessLevel;
+import javax.persistence.Embeddable;
+import javax.persistence.Embedded;
 import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import mw.gov.health.lmis.skip.period.tool.openlmis.BaseEntity;
-import org.hibernate.annotations.Type;
+import lombok.ToString;
 
-@Entity
+@Getter
+@Embeddable
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "requisition_template_assignments", schema = "requisition")
-public class RequisitionTemplateAssignment extends BaseEntity {
+@EqualsAndHashCode
+@ToString
+public class ApprovedProductReference {
 
-  @Column(nullable = false)
-  @Type(type = BaseEntity.UUID_TYPE)
-  @Getter(AccessLevel.PACKAGE)
-  private UUID programId;
+  @Embedded
+  @AttributeOverrides({
+      @AttributeOverride(name = "id", column = @Column(name = "orderableId")),
+      @AttributeOverride(name = "versionNumber", column = @Column(name = "orderableVersionNumber"))
+  })
+  private VersionEntityReference orderable;
 
-  @Type(type = BaseEntity.UUID_TYPE)
-  @Getter(AccessLevel.PACKAGE)
-  private UUID facilityTypeId;
-
-  @ManyToOne(cascade = CascadeType.REFRESH)
-  @JoinColumn(name = "templateId", nullable = false)
-  private RequisitionTemplate template;
+  @Embedded
+  @AttributeOverrides({
+      @AttributeOverride(name = "id", column = @Column(
+          name = "facilityTypeApprovedProductId")),
+      @AttributeOverride(name = "versionNumber", column = @Column(
+          name = "facilityTypeApprovedProductVersionNumber"))
+  })
+  private VersionEntityReference facilityTypeApprovedProduct;
 
 }

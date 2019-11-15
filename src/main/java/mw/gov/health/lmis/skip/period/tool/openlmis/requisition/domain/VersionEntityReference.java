@@ -5,42 +5,39 @@
  * This program is free software: you can redistribute it and/or modify it under the terms
  * of the GNU Affero General Public License as published by the Free Software Foundation, either
  * version 3 of the License, or (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
- * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU Affero General Public License for more details. You should have received a copy of
  * the GNU Affero General Public License along with this program. If not, see
- * http://www.gnu.org/licenses.  For additional information contact info@OpenLMIS.org. 
+ * http://www.gnu.org/licenses.  For additional information contact info@OpenLMIS.org.
  */
 
-package mw.gov.health.lmis.skip.period.tool.openlmis.referencedata.domain;
+package mw.gov.health.lmis.skip.period.tool.openlmis.requisition.domain;
 
-import java.io.Serializable;
+import java.util.UUID;
 import javax.persistence.Embeddable;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
+import mw.gov.health.lmis.skip.period.tool.openlmis.BaseEntity;
+import org.hibernate.annotations.Type;
 
-@Embeddable
+@Getter
+@Setter
+@NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode
-public class SupportedProgramPrimaryKey implements Serializable {
+@ToString
+@Embeddable
+public class VersionEntityReference {
 
-  @ManyToOne
-  @JoinColumn(name = "facilityId", nullable = false)
-  @Getter
-  private final Facility facility;
+  @Type(type = BaseEntity.UUID_TYPE)
+  private UUID id;
 
-  @ManyToOne
-  @JoinColumn(name = "programId", nullable = false)
-  @Getter
-  private final Program program;
+  private Long versionNumber;
 
-  // Default constructor needed by hibernate
-  private SupportedProgramPrimaryKey() {
-    facility = null;
-    program = null;
-  }
 }

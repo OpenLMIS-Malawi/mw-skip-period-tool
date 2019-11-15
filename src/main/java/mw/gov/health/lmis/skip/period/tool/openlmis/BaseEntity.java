@@ -15,31 +15,24 @@
 
 package mw.gov.health.lmis.skip.period.tool.openlmis;
 
-import com.fasterxml.jackson.annotation.JsonView;
-
-import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.Type;
-import org.openlmis.util.View;
-
-import lombok.Getter;
-import lombok.Setter;
-
 import java.util.UUID;
-
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.MappedSuperclass;
+import lombok.Getter;
+import lombok.Setter;
+import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.Type;
 
 @MappedSuperclass
 public abstract class BaseEntity {
+
   public static final String TEXT_COLUMN_DEFINITION = "text";
   public static final String UUID_TYPE = "pg-uuid";
-  public static final String REQUISITION = "requisition";
 
   @Id
   @GeneratedValue(generator = "uuid-gen")
   @GenericGenerator(name = "uuid-gen", strategy = "uuid2")
-  @JsonView(View.BasicInformation.class)
   @Type(type = UUID_TYPE)
   @Getter
   @Setter
